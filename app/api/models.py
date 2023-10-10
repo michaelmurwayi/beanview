@@ -36,3 +36,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def user_name (self) :
         return self.first_name + " " +  self.last_name
     
+class Coffee(models.Model):
+    id = models.AutoField(primary_key=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    grade = models.CharField(max_length=10)
+    weight = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
