@@ -1,3 +1,38 @@
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
+from .manage import UserManager
 
-# Create your models here.
+# creating model for system roles
+class Roles(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50)
+
+
+
+# Creating custom user model 
+class User(AbstractBaseUser, PermissionsMixin):
+    id = models.AutoField(primary_key=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)
+    phonenumber = models.IntegerField()
+    country = models.CharField(max_length=50)
+    city = models.CharField(max_length=50)
+    id_no = models.IntegerField(null=True)
+    reg_no = models.IntegerField(null=True)
+    role = models.ForeignKey(Roles, on_delete=models.PROTECT)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_admin = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name','last_name','phonenumber','country','city','role',]
+
+    objects = UserManager()
+
+    def user_name (self) :
+        return self.first_name + " " +  self.last_name
+    
