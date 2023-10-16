@@ -51,3 +51,10 @@ class Coffee(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+class Catalogue(models.Model):
+    id = models.AutoField(primary_key=True)
+    lot = models.CharField(max_length=100)
+    coffee = models.ForeignKey('Coffee', on_delete=models.PROTECT)
+    certificate = models.CharField(max_length=100)
+    price = models.IntegerField()
+    buyer = models.CharField(max_length=255)
