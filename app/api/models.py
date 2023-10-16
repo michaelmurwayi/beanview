@@ -33,6 +33,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     def user_name (self) :
         return self.first_name + " " +  self.last_name
     
+    def __str__(self):
+        return self.email
+    
 class Coffee(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
@@ -48,6 +51,9 @@ class Coffee(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.outturn
+
 class Catalogue(models.Model):
     id = models.AutoField(primary_key=True)
     lot = models.CharField(max_length=100)
@@ -58,11 +64,17 @@ class Catalogue(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.lot
+
 class Status(models.Model):
     id = models.AutoField(primary_key=True)
     status = models.CharField(max_length=15)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.status
 
 class Grade(models.Model):
     id = models.AutoField(primary_key=True)
@@ -70,20 +82,11 @@ class Grade(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-class Farmer(models.Model):
-    id = models.AutoField(primary_key=True)
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
-    phonenumber = models.IntegerField()
-    country = models.CharField(max_length=50)
-    city = models.CharField(max_length=50)
-    id_no = models.IntegerField(null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.grade
 
 
-class Mill(models.Model):
+class Organization(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
@@ -91,16 +94,18 @@ class Mill(models.Model):
     country = models.CharField(max_length=50)
     city = models.CharField(max_length=50)
     reg_no = models.IntegerField(null=True)
+    type = models.ForeignKey("organization_type", on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-class warehouse(models.Model):
+    def __str__(self):
+        return self.name
+
+class Organization_type(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=150)
-    email = models.EmailField(unique=True)
-    phonenumber = models.IntegerField()
-    country = models.CharField(max_length=50)
-    city = models.CharField(max_length=50)
-    reg_no = models.IntegerField(null=True)
+    type = models.CharField(max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.type
