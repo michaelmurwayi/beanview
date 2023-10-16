@@ -11,7 +11,6 @@ class Roles(models.Model):
 
 # Creating custom user model 
 class User(AbstractBaseUser, PermissionsMixin):
-    id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
@@ -20,11 +19,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     city = models.CharField(max_length=50)
     role = models.ForeignKey(Roles, on_delete=models.PROTECT)
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name','last_name','phonenumber','country','city','role',]
@@ -36,16 +35,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     
 class Coffee(models.Model):
     id = models.AutoField(primary_key=True)
-    estate = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
     outturn = models.CharField(max_length=100)
     grade = models.CharField(max_length=10)
-    bags = models.IntegerField()
+    bags = models.IntegerField(null=True)
     pockets = models.IntegerField()
     net_weight = models.IntegerField()
     tare_weight = models.IntegerField()
     variance = models.IntegerField()
-    ticket = models.IntegerField()
-    location = models.CharField(max_length=100)
+    ticket = models.CharField(max_length=50)
+    location = models.CharField(max_length=100, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
