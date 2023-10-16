@@ -38,8 +38,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     
 class Coffee(models.Model):
     id = models.AutoField(primary_key=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    estate = models.ForeignKey(User, on_delete=models.CASCADE)
+    outturn = models.CharField(max_length=100)
     grade = models.CharField(max_length=10)
-    weight = models.IntegerField()
+    bags = models.IntegerField()
+    pockets = models.IntegerField()
+    net_weight = models.IntegerField()
+    tare_weight = models.IntegerField()
+    variance = models.IntegerField()
+    ticket = models.IntegerField()
+    location = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
