@@ -93,7 +93,17 @@ class Mill(models.Model):
     phonenumber = models.IntegerField()
     country = models.CharField(max_length=50)
     city = models.CharField(max_length=50)
-    id_no = models.IntegerField(null=True)
+    reg_no = models.IntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+class warehouse(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=150)
+    email = models.EmailField(unique=True)
+    phonenumber = models.IntegerField()
+    country = models.CharField(max_length=50)
+    city = models.CharField(max_length=50)
+    reg_no = models.IntegerField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
