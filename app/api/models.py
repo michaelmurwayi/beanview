@@ -18,8 +18,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     phonenumber = models.IntegerField()
     country = models.CharField(max_length=50)
     city = models.CharField(max_length=50)
-    id_no = models.IntegerField(null=True)
-    reg_no = models.IntegerField(null=True)
     role = models.ForeignKey(Roles, on_delete=models.PROTECT)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
