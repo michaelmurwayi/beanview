@@ -31,17 +31,17 @@ class CoffeeModelTest(TestCase):
         except Exception as e:
             print(f"Errot in coffee test function: {e}")
 
-# class CatalogueModelTest(TestCase):
-#     def create_catalogue(self, lot="UID502",certificate="CAFE", price="4200", buyer="SomeGuy"):
-#         coffee = CoffeeModelTest()
-#         coffee = coffee.create_coffee()
-#         return Catalogue.objects.create(lot=lot, coffee=coffee, certificate=certificate, price=price, buyer=buyer)
+class CatalogueModelTest(TestCase):
+    def create_catalogue(self, lot="UID502",certificate="CAFE", price="4200", buyer="SomeGuy"):
+        coffee = CoffeeModelTest()
+        coffee = coffee.create_coffee()
+        return Catalogue.objects.create(lot=lot, coffee=coffee, certificate=certificate, price=price, buyer=buyer)
         
-#     def test_create_catalogue(self):
-#         catalogue = self.create_catalogue()
-#         try:
-#             self.assertTrue(isinstance(catalogue, Catalogue))
-#         except Exception as e:
-#             print(f"Error in Catalogue test function: {e}")
+    def test_create_catalogue(self):
+        catalogue = self.create_catalogue()
+        try:
+            self.assertTrue(isinstance(catalogue, Catalogue))
+        except Exception as e:
+            print(f"Error in Catalogue test function: {e}")
 
  
