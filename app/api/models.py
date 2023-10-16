@@ -82,6 +82,18 @@ class Farmer(models.Model):
     country = models.CharField(max_length=50)
     city = models.CharField(max_length=50)
     id_no = models.IntegerField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
 class Mill(models.Model):
-    pass
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=150)
+    email = models.EmailField(unique=True)
+    phonenumber = models.IntegerField()
+    country = models.CharField(max_length=50)
+    city = models.CharField(max_length=50)
+    id_no = models.IntegerField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
