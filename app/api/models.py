@@ -58,3 +58,12 @@ class Catalogue(models.Model):
     certificate = models.CharField(max_length=100)
     price = models.IntegerField()
     buyer = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class Status(models.Model):
+    id = models.AutoField(primary_key=True)
+    status = models.CharField(max_length=15)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
