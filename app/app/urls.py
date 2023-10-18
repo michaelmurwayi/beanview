@@ -22,7 +22,9 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'user', views.UserViewSet, basename='user')
 router.register(r'coffee', views.CoffeeViewSet, basename='coffee')
-router.register(r'catalogue', views.CatalogueViewSet, basename='coffee')
+router.register(r'catalogue', views.CatalogueViewSet, basename='catalogue')
+router.register(r'status', views.StatusViewSet, basename='status')
+router.register(r'grade', views.GradeViewSet, basename='grade')
 
 
 

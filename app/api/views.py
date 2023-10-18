@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import User, Roles, Coffee, Catalogue, Status, Grade, Organization, Organization_type
-from .serializers import UserSerializer, CoffeeSerializer, CatalogueSerializer
+from .serializers import UserSerializer, CoffeeSerializer, CatalogueSerializer, StatusSerializer, GradeSerializer
 from rest_framework import viewsets
 
 # Create your views here.
@@ -17,3 +17,12 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
+
+
+class StatusViewSet(viewsets.ModelViewSet):
+    queryset = Status.objects.all()
+    serializer_class = StatusSerializer
+
+class GradeViewSet(viewsets.ModelViewSet):
+    queryset = Grade.objects.all()
+    serializer_class = GradeSerializer

@@ -21,4 +21,10 @@ class CatalogueSerializer(serializers.ModelSerializer):
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Status
-        fields = ['id', 'status']
+        fields = ['id', 'status', 'created_at', 'updated_at']
+
+class GradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Grade
+        fields = ['id', 'grade', 'created_at', 'updated_at']
+
