@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import User
-from .serializers import UserSerializer
+from .models import User, Roles, Coffee, Catalogue, Status, Grade, Organization, Organization_type
+from .serializers import UserSerializer, CoffeeSerializer
 from rest_framework import viewsets
 
 # Create your views here.
@@ -8,3 +8,7 @@ from rest_framework import viewsets
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+class CoffeeViewSet(viewsets.ModelViewSet):
+    queryset = Coffee.objects.all()
+    serializer_class = CoffeeSerializer

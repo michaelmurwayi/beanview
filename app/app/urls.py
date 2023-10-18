@@ -20,10 +20,12 @@ from rest_framework.routers import DefaultRouter
 
 # creating router and registering our viewsets
 router = DefaultRouter()
-router.register(r'', views.UserViewSet, basename='user')
+router.register(r'user', views.UserViewSet, basename='user')
+router.register(r'coffee', views.CoffeeViewSet, basename='coffee')
+
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include(router.urls))
+    path('api/', include(router.urls))
 ]
