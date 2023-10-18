@@ -28,3 +28,13 @@ class GradeSerializer(serializers.ModelSerializer):
         model = Grade
         fields = ['id', 'grade', 'created_at', 'updated_at']
 
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ['id','name',  'email', 'phonenumber', 'country', 'city',  'type', 'created_at', 'updated_at']
+
+
+class OrganizationTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization_type
+        fields = ['id', 'type', 'created_at', 'updated_at']
