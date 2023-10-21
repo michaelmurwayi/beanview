@@ -2,13 +2,6 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from .manage import UserManager
 
-# creating model for system roles
-class Roles(models.Model):
-    name = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
 
 # Creating custom user model 
 class User(AbstractBaseUser, PermissionsMixin):
