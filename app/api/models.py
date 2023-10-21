@@ -20,6 +20,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     country = models.CharField(max_length=50)
     city = models.CharField(max_length=50)
     role = models.ForeignKey(Roles, on_delete=models.PROTECT)
+    password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
