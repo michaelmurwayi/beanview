@@ -4,7 +4,6 @@ from .manage import UserManager
 
 # creating model for system roles
 class Roles(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -13,13 +12,22 @@ class Roles(models.Model):
 
 # Creating custom user model 
 class User(AbstractBaseUser, PermissionsMixin):
+    class Roles(models.TextChoices):
+        """define the user roles"""
+
+        ADMIN = "ADMIN", "Admin"
+        QUALITY = "QUALITY", "Quality"
+        SECRETARY = "SECRETARY", "Secretary"
+        ACCOUNTANT = "ACCOUNTANT", "Accountant"
+        SYSTEM = "SYSTEM", "System"
+        
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
     phonenumber = models.IntegerField()
     country = models.CharField(max_length=50)
     city = models.CharField(max_length=50)
-    role = models.ForeignKey(Roles, on_delete=models.PROTECT)
+    role = models.CharField(max_length=50, choices=Roles.choices)
     password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)

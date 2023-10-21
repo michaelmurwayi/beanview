@@ -1,27 +1,24 @@
 from django.contrib.auth.models import BaseUserManager
 
+
 # Custom user manager class
 class UserManager(BaseUserManager):
-    def create_user(self, id, firstname, lastname, email, number, country, city, id_no, reg_no, created_at, updated_at, password=None):
+    def create_user(self, first_name, last_name, email, phonenumber, country, city, role,  password=None):
         if not email:
             raise ValueError("Please Provide valid email")
-        if not firstname:
-            raise ValueError("Please Provide valid firstname")
-        if not lastname:
-            raise ValueError("Please Provide valid lastname")
+        if not first_name:
+            raise ValueError("Please Provide valid first_name")
+        if not last_name:
+            raise ValueError("Please Provide valid last_name")
         
         user = self.model(
-            id = id,
-            firstname = firstname,
-            lastname = lastname,
+            first_name = first_name,
+            last_name = last_name,
             email = self.normalize_email(email),
-            number = number,
+            phonenumber = phonenumber,
             country = country, 
             city = city,
-            id_no = id_no,
-            reg_no = reg_no,
-            created_at = created_at,
-            updated_at = updated_at
+            role = role,
         )
 
         user.set_password(password)
@@ -29,19 +26,16 @@ class UserManager(BaseUserManager):
         return user
     
 
-    def create_superuser(self, id, firstname, lastname, email, number, country, city, id_no, reg_no, created_at, updated_at, password):
+    def create_superuser(self, first_name, last_name, email, phonenumber, country, city, role, password):
         user = self.create_user(
-            id = id,
-            firstname = firstname,
-            lastname = lastname,
+            first_name = first_name,
+            last_name = last_name,
             email = self.normalize_email(email),
-            number = number,
+            phonenumber = phonenumber,
             country = country, 
             city = city,
-            id_no = id_no,
-            reg_no = reg_no,
-            created_at = created_at,
-            updated_at = updated_at
+            role= role,
+            
         )
 
         is_admin = True
