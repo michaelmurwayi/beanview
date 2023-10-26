@@ -114,13 +114,14 @@ class Organization_type(models.Model):
     def __str__(self):
         return self.type
 
-class Farmers(models.Model):
+class Farmer(models.Model):
     id = models.AutoField(primary_key=True)
+    ref_no = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=100)
-    town = models.CharField(max_length=50)
-    estate = models.CharField(max_length=100)
+    town = models.CharField(max_length=100)
+    estate_name = models.CharField(max_length=100)
     mark = models.CharField(max_length=100)
-    location = models.CharField(max_length=50)
-    division = models.CharField(max_length=50)
-    district = models.CharField(max_length=50)
+    location = models.CharField(max_length=100)
+    division = models.CharField(max_length=100)
+    district = models.CharField(max_length=100)
