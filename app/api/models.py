@@ -41,8 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 class Farmer(models.Model):
-    id = models.AutoField(primary_key=True)
-    ref_no = models.CharField(max_length=100, unique=True)
+    ref_no = models.CharField(max_length=100, unique=True, primary_key=True)
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=100)
     town = models.CharField(max_length=100)
@@ -60,7 +59,6 @@ class Coffee(models.Model):
         PENDING = "PENDING", "pending"
         SOLD = "SOLD", "sold"
 
-    id = models.AutoField(primary_key=True)
     estate = models.ForeignKey(Farmer.ref_no, on_delete=models.PROTECT)
     outturn = models.CharField(max_length=100)
     grade = models.CharField(max_length=10)
