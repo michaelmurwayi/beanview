@@ -41,6 +41,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
     
 class Coffee(models.Model):
+    class Status(models.TextChoices):
+        # define status of coffee
+        RECIEVED = "RECIEVED", "recieved"
+        CUPPED = "CUPPED", "cupped"
+        PENDING = "PENDING", "pending"
+        SOLD = "SOLD", "sold"
+
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     outturn = models.CharField(max_length=100)
@@ -52,6 +59,7 @@ class Coffee(models.Model):
     variance = models.IntegerField()
     ticket = models.CharField(max_length=50)
     location = models.CharField(max_length=100, null=True)
+    status = models.CharField(max_length=50, choices=Status.choices, default="RECIEVED")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

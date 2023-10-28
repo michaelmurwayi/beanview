@@ -2,6 +2,7 @@ from django.shortcuts import render
 from .models import *
 from .serializers import *
 from rest_framework import viewsets
+from rest_framework.decorators import action
 
 
 
@@ -12,6 +13,10 @@ class UserViewSet(viewsets.ModelViewSet):
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
+
+    @action(detail=False, methods=['GET'], url_path='total_weight')
+    def total_weight(self, request):
+        import ipdb;ipdb.set_trace()
 
 
 class CatalogueViewSet(viewsets.ModelViewSet):
