@@ -41,7 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 class Farmer(models.Model):
-    ref_no = models.CharField(max_length=100, unique=True, primary_key=True)
+    ref_no = models.CharField(max_length=100, unique=True,primary_key=True)
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=100)
     town = models.CharField(max_length=100)
@@ -51,6 +51,10 @@ class Farmer(models.Model):
     division = models.CharField(max_length=100)
     district = models.CharField(max_length=100)
 
+
+    def __str__(self):
+        return str(self.ref_no)
+
 class Coffee(models.Model):
     class Status(models.TextChoices):
         # define status of coffee
@@ -59,16 +63,16 @@ class Coffee(models.Model):
         PENDING = "PENDING", "pending"
         SOLD = "SOLD", "sold"
 
-    estate = models.ForeignKey(Farmer.ref_no, on_delete=models.PROTECT)
+    id = models.AutoField(primary_key=True)
+    farmer = models.ForeignKey(Farmer, on_delete=models.PROTECT, to_field="ref_no")
     outturn = models.CharField(max_length=100)
     grade = models.CharField(max_length=10)
     bags = models.IntegerField(null=True)
     pockets = models.IntegerField()
     net_weight = models.IntegerField()
     tare_weight = models.IntegerField()
-    variance = models.IntegerField()
+    variance = models.IntegerField(null=True)
     ticket = models.CharField(max_length=50)
-    location = models.CharField(max_length=100, null=True)
     status = models.CharField(max_length=50, choices=Status.choices, default="RECIEVED")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
