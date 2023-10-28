@@ -27,6 +27,19 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             return Response({"total_net_weight": total_net_weight})
         except Exception as E:
             raise(f"Error calculating total net weight, {E}")
+    
+    @action(detail=False, methods=['GET'], url_path='total_tare_weight')
+    def total_tare_weight(self, request):
+        weights = []
+        try:
+            records = self.queryset.values()
+            for record in records:
+                if record["status"] != "SOLD":
+                    weights.append(record["tare_weight"])
+                total_tare_weight = sum(weights)
+            return Response({"total_tare_weight": total_tare_weight})
+        except Exception as E:
+            raise(f"Error calculating total tare weight, {E}")
             
 
 class CatalogueViewSet(viewsets.ModelViewSet):
