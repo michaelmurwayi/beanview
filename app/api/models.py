@@ -39,7 +39,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     def __str__(self):
         return self.email
-    
+
+class Farmer(models.Model):
+    id = models.AutoField(primary_key=True)
+    ref_no = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=255)
+    address = models.CharField(max_length=100)
+    town = models.CharField(max_length=100)
+    estate_name = models.CharField(max_length=100)
+    mark = models.CharField(max_length=100)
+    location = models.CharField(max_length=100)
+    division = models.CharField(max_length=100)
+    district = models.CharField(max_length=100)
+
 class Coffee(models.Model):
     class Status(models.TextChoices):
         # define status of coffee
@@ -49,7 +61,7 @@ class Coffee(models.Model):
         SOLD = "SOLD", "sold"
 
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    estate = models.ForeignKey(Farmer.ref_no, on_delete=models.PROTECT)
     outturn = models.CharField(max_length=100)
     grade = models.CharField(max_length=10)
     bags = models.IntegerField(null=True)
@@ -122,14 +134,3 @@ class Organization_type(models.Model):
     def __str__(self):
         return self.type
 
-class Farmer(models.Model):
-    id = models.AutoField(primary_key=True)
-    ref_no = models.CharField(max_length=100, unique=True)
-    name = models.CharField(max_length=255)
-    address = models.CharField(max_length=100)
-    town = models.CharField(max_length=100)
-    estate_name = models.CharField(max_length=100)
-    mark = models.CharField(max_length=100)
-    location = models.CharField(max_length=100)
-    division = models.CharField(max_length=100)
-    district = models.CharField(max_length=100)
