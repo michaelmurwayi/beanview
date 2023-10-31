@@ -1,25 +1,8 @@
-/*!
-
-=========================================================
-* Argon Dashboard React - v1.2.3
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/argon-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-
-// reactstrap components
 import { Card, CardBody, CardTitle, Container, Row, Col } from "reactstrap";
+import { connect }  from "react-redux"
+import React from 'react'
 
-const Header = () => {
+const Header = ({totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade}) => {
   return (
     <>
       <div className="header bg-gradient-info pb-8 pt-5 pt-md-8">
@@ -39,7 +22,7 @@ const Header = () => {
                           Total Net Weight
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                          350,990
+                        {totalNetWeight}
                         </span>
                       </div>
                       <Col className="col-auto">
@@ -63,7 +46,9 @@ const Header = () => {
                         >
                           Total Tare Weight
                         </CardTitle>
-                        <span className="h2 font-weight-bold mb-0">2,356</span>
+                        <span className="h2 font-weight-bold mb-0">
+                        {totalTareWeight}
+                        </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-warning text-white rounded-circle shadow">
@@ -85,7 +70,9 @@ const Header = () => {
                         >
                           Number of Bagsz
                         </CardTitle>
-                        <span className="h2 font-weight-bold mb-0">924</span>
+                        <span className="h2 font-weight-bold mb-0">
+                          {totalBags}
+                        </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-yellow text-white rounded-circle shadow">
@@ -107,7 +94,9 @@ const Header = () => {
                         >
                           Number of Users
                         </CardTitle>
-                        <span className="h2 font-weight-bold mb-0">49,65%</span>
+                        <span className="h2 font-weight-bold mb-0">
+                          {totalUsers}
+                        </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-info text-white rounded-circle shadow">
@@ -126,4 +115,19 @@ const Header = () => {
   );
 };
 
-export default Header;
+
+
+const mapStateToProps = (state) =>{
+  return {
+    totalNetWeight: state.reducer.totalNetWeight,
+    totalTareWeight: state.reducer.totalTareWeight,
+    totalUsers: state.reducer.totalUsers,
+    totalBags: state.reducer.totalBags,
+    grade: state.reducer.grade,
+    performancePerGrade: state.reducer.performancePerGrade,
+
+
+  }
+}
+
+export default connect(mapStateToProps)(Header);

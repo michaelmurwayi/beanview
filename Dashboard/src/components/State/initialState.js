@@ -1,17 +1,15 @@
 
-const State = {
-    totalNetWeight: "",
-    totalTareWeight: "",
-    totalBags: "",
-    totalUsers: "",
-    grades: [],
-    totalWeightPerGrade: [],
+const initialState = {
+    totalNetWeight: "350,990",
+    totalTareWeight: "4546",
+    totalBags: "140",
+    totalUsers: "15",
+    performancePerGrader: [ ],
     totalWeightPerWeek: [],
     totalWeightPerMonth: [],
-    months: [],
-    dailyDeliveries: []
-
+    dailyDeliveries: [],
+        
 }
 
 
-export default State
+export default initialState
