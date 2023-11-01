@@ -1,17 +1,18 @@
 import { Card, CardBody, CardTitle, Container, Row, Col } from "reactstrap";
 import { connect }  from "react-redux"
 import React, { useEffect } from 'react'
-import { fetch_total_net_weight } from "components/State/action";
-import { bindActionCreators } from "redux";
+import { fetch_total_net_weight, fetch_total_tare_weight } from "components/State/action";
+
 
 
 const Header = (props) => {
   
-  const {totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade, fetch_total_net_weight, error} = props
+  const {totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade, fetch_total_net_weight, fetch_total_tare_weight, error} = props
   
   useEffect (()=>{
     fetch_total_net_weight();
-  }, [fetch_total_net_weight]);
+    fetch_total_tare_weight();
+  }, [fetch_total_net_weight, fetch_total_tare_weight]);
   
   return (
     
@@ -32,9 +33,7 @@ const Header = (props) => {
                           Total Net Weight
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                          <small style={{color: "red"}}>
-                            {error ? <p style={{fontSize: "15px"}}>Error: {error.message}</p> : null}
-                          </small> 
+                           
                         {totalNetWeight}
                         </span>
                       </div>
@@ -128,7 +127,7 @@ const Header = (props) => {
   );
 };
 
-const mapDsipatchToProps = { fetch_total_net_weight }
+const mapDsipatchToProps = { fetch_total_net_weight, fetch_total_tare_weight }
 
 
 const mapStateToProps = (state) =>{
