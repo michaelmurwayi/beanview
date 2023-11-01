@@ -1,10 +1,20 @@
 import { Card, CardBody, CardTitle, Container, Row, Col } from "reactstrap";
 import { connect }  from "react-redux"
-import React from 'react'
+import React, { useEffect } from 'react'
+import { fetch_total_net_weight } from "components/State/action";
+import { bindActionCreators } from "redux";
 
-const Header = ({totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade}) => {
+
+const Header = (props) => {
+  
+  const {totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade, fetch_total_net_weight} = props
+  
+  useEffect (()=>{
+    fetch_total_net_weight();
+  }, [fetch_total_net_weight]);
+  
   return (
-    <>
+    
       <div className="header bg-gradient-info pb-8 pt-5 pt-md-8">
         <Container fluid>
           <div className="header-body">
@@ -111,10 +121,11 @@ const Header = ({totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,perfo
           </div>
         </Container>
       </div>
-    </>
+  
   );
 };
 
+const mapDsipatchToProps = { fetch_total_net_weight }
 
 
 const mapStateToProps = (state) =>{
@@ -130,4 +141,7 @@ const mapStateToProps = (state) =>{
   }
 }
 
-export default connect(mapStateToProps)(Header);
+
+
+
+export default connect (mapStateToProps, mapDsipatchToProps)(Header);
