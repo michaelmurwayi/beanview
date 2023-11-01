@@ -1,8 +1,8 @@
 
 const initialState = {
     totalNetWeight: null,
-    totalTareWeight: "4546",
-    totalBags: "140",
+    totalTareWeight: null,
+    totalBags: null,
     totalUsers: "15",
     performancePerGrader: [ ],
     totalWeightPerWeek: [],

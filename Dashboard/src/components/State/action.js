@@ -19,3 +19,12 @@ export const fetch_total_tare_weight = () => async (dispatch) =>{
         dispatch({type:"FETCH TARE WEIGHT ERROR", payload: error})
     }
 }
+
+export const fetch_total_bags = () => async (dispatch) =>{
+    try {
+        const response = await axios.get("http://127.0.0.1:8000/api/coffee/total_number_bags/")
+        dispatch({type: 'FETCH TOTAL BAGS', payload: response.data})
+    }catch (error){
+        dispatch({type:"FETCH TOTAL BAGS ERROR", payload: error})
+    }
+}

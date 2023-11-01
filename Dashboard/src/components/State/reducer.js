@@ -1,7 +1,7 @@
 import initialState from "./initialState";
 
 const reducer = (state = initialState, action) => {
-    const newState = {...state};
+    
     switch(action.type){
         case 'FETCH NET WEIGHT':
             return {
@@ -25,6 +25,20 @@ const reducer = (state = initialState, action) => {
                 error: null,
             }
         case 'FETCH TARE WEIGHT ERROR':
+            return {
+                ...state,
+                totalTareWeight: null,
+                loading: false,
+                error: action.payload,
+            }
+        case 'FETCH TOTAL BAGS':
+            return {
+                ...state,
+                totalBags: action.payload.total_number_bags,
+                loading: false,
+                error: null,
+            }
+        case 'FETCH TOTAL BAGS ERROR':
             return {
                 ...state,
                 totalTareWeight: null,
