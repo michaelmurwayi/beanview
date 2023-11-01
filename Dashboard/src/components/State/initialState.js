@@ -1,6 +1,6 @@
 
 const initialState = {
-    totalNetWeight: "",
+    totalNetWeight: null,
     totalTareWeight: "4546",
     totalBags: "140",
     totalUsers: "15",
@@ -8,6 +8,8 @@ const initialState = {
     totalWeightPerWeek: [],
     totalWeightPerMonth: [],
     dailyDeliveries: [],
+    error: null,
+    loading: false,
         
 }
 

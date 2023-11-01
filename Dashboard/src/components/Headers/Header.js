@@ -7,7 +7,7 @@ import { bindActionCreators } from "redux";
 
 const Header = (props) => {
   
-  const {totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade, fetch_total_net_weight} = props
+  const {totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade, fetch_total_net_weight, error} = props
   
   useEffect (()=>{
     fetch_total_net_weight();
@@ -32,6 +32,9 @@ const Header = (props) => {
                           Total Net Weight
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
+                          <small style={{color: "red"}}>
+                            {error ? <p style={{fontSize: "15px"}}>Error: {error.message}</p> : null}
+                          </small> 
                         {totalNetWeight}
                         </span>
                       </div>
@@ -136,6 +139,7 @@ const mapStateToProps = (state) =>{
     totalBags: state.reducer.totalBags,
     grade: state.reducer.grade,
     performancePerGrade: state.reducer.performancePerGrade,
+    error: state.reducer.error
 
 
   }
