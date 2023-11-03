@@ -28,3 +28,12 @@ export const fetch_total_bags = () => async (dispatch) =>{
         dispatch({type:"FETCH TOTAL BAGS ERROR", payload: error})
     }
 }
+
+export const fetch_total_farmers = () => async (dispatch) =>{
+    try {
+        const response = await axios.get("http://127.0.0.1:8000/api/coffee/total_number_farmers/")
+        dispatch({type: 'FETCH TOTAL FARMERS', payload: response.data})
+    }catch (error){
+        dispatch({type:"FETCH TOTAL FARMERS ERROR", payload: error})
+    }
+}

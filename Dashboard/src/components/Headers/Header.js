@@ -1,20 +1,21 @@
 import { Card, CardBody, CardTitle, Container, Row, Col } from "reactstrap";
 import { connect }  from "react-redux"
 import React, { useEffect } from 'react'
-import { fetch_total_net_weight, fetch_total_tare_weight, fetch_total_bags } from "components/State/action";
+import { fetch_total_net_weight, fetch_total_tare_weight, fetch_total_bags, fetch_total_farmers } from "components/State/action";
 
 
 
 
 const Header = (props) => {
   
-  const {totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade, fetch_total_net_weight, fetch_total_tare_weight, fetch_total_bags, error} = props
+  const {totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade, fetch_total_net_weight, fetch_total_tare_weight, fetch_total_bags, fetch_total_farmers, error} = props
   
   useEffect (()=>{
     fetch_total_net_weight();
     fetch_total_tare_weight();
     fetch_total_bags();
-  }, [fetch_total_net_weight,fetch_total_tare_weight, fetch_total_bags]);
+    fetch_total_farmers();
+  }, [fetch_total_net_weight,fetch_total_tare_weight, fetch_total_bags, fetch_total_farmers]);
   
   return (
     
@@ -129,7 +130,7 @@ const Header = (props) => {
   );
 };
 
-const mapDsipatchToProps = { fetch_total_net_weight, fetch_total_tare_weight, fetch_total_bags }
+const mapDsipatchToProps = { fetch_total_net_weight, fetch_total_tare_weight, fetch_total_bags, fetch_total_farmers }
 
 
 const mapStateToProps = (state) =>{

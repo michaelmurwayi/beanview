@@ -41,7 +41,21 @@ const reducer = (state = initialState, action) => {
         case 'FETCH TOTAL BAGS ERROR':
             return {
                 ...state,
-                totalTareWeight: null,
+                totalBags: null,
+                loading: false,
+                error: action.payload,
+            }
+        case 'FETCH TOTAL FARMERS':
+            return {
+                ...state,
+                totalUsers: action.payload.total_number_farmers,
+                loading: false,
+                error: null,
+            }
+        case 'FETCH TOTAL FARMERS ERROR':
+            return {
+                ...state,
+                totalUsers: null,
                 loading: false,
                 error: action.payload,
             }
