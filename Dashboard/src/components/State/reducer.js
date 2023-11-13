@@ -69,7 +69,7 @@ const reducer = (state = initialState, action) => {
         case 'FETCH GRADE PERFORMANCE ERROR':
             return {
                 ...state,
-                performancePerGrade: null,
+                performancePerGrade: null,  
                 loading: false,
                 error: action.payload,
             }

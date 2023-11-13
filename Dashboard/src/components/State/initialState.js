@@ -4,7 +4,7 @@ const initialState = {
     totalTareWeight: null,
     totalBags: null,
     totalUsers: "15",
-    performancePerGrade: [ ],
+    performancePerGrade: ["dat"],
     totalWeightPerWeek: [],
     totalWeightPerMonth: [],
     dailyDeliveries: [],
