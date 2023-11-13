@@ -8,7 +8,7 @@ import { fetch_total_net_weight, fetch_total_tare_weight, fetch_total_bags, fetc
 
 const Header = (props) => {
   
-  const {totalNetWeight,totalTareWeight,totalUsers,totalBags,grade,performancePerGrade, fetch_total_net_weight, fetch_total_tare_weight, fetch_total_bags, fetch_total_farmers, error} = props
+  const {totalNetWeight,totalTareWeight,totalUsers,totalBags,grade, fetch_total_net_weight, fetch_total_tare_weight, fetch_total_bags, fetch_total_farmers, error} = props
   
   useEffect (()=>{
     fetch_total_net_weight();
@@ -140,7 +140,6 @@ const mapStateToProps = (state) =>{
     totalUsers: state.reducer.totalUsers,
     totalBags: state.reducer.totalBags,
     grade: state.reducer.grade,
-    performancePerGrade: state.reducer.performancePerGrade,
     error: state.reducer.error
 
 

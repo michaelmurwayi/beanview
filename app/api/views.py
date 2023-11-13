@@ -4,6 +4,7 @@ from .serializers import *
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Sum
 
 
 
@@ -57,13 +58,28 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], url_path='total_number_farmers')
     def total_number_farmers(self, request):
         try:
-            records = self.queryset.values("farmer_id")
-            total_number_farmers = records.distinct().count()
+            total_number_farmers = self.queryset.values("farmer_id").distinct().count()
             return Response({"total_number_farmers": total_number_farmers})
         except Exception as E:
             raise(f"Error calculating total number of  farmers, {E}")
             
+    
+    @action(detail=False, methods=['GET'], url_path='performance_per_grade')
+    def perfomance_per_grade(self, request):
+        performance_per_grade = []
+        try:
+            records = self.queryset.values("grade").distinct()
+            for record in records:
+                grade_record = records.filter(grade=record["grade"])
+                total_weight = grade_record.aggregate(total_weight=Sum('net_weight'))['total_weight']
+                data = {"grade": record["grade"],
+                        "net_weight": total_weight }
+                performance_per_grade.append(data)
             
+            return Response({"Performance per grade": performance_per_grade})
+        except Exception as E:
+            raise(f"Error calculating total number of  farmers, {{E}}")
+             
 
 class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()

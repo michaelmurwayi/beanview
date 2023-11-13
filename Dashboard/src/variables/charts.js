@@ -1,3 +1,4 @@
+
 /*!
 
 =========================================================
@@ -410,6 +411,12 @@ let chartExample2 = {
     ],
   },
 };
+
+const mapStateToProps = (state) =>{
+  return {
+    performancePerGrade: state.reducer.performancePerGrade,
+  }
+}
 
 module.exports = {
   chartOptions, // used inside src/views/Index.js
