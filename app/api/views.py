@@ -5,6 +5,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Sum
+import json
 
 
 
@@ -75,12 +76,18 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 data = {"grade": record["grade"],
                         "net_weight": total_weight }
                 performance_per_grade.append(data)
-            
-            return Response({"Performance per grade": performance_per_grade})
+            print(performance_per_grade)
+            return Response({"Performance": performance_per_grade})
+        except Exception as E:
+            print("we were here")
+            raise(f"Error calculating total number of  farmers, {{E}}")
+    @action(detail=False, methods=['GET'], url_path='daily_delivery')
+    def daily_delivery(self, request):
+        try:
+            pass        
         except Exception as E:
             raise(f"Error calculating total number of  farmers, {{E}}")
-             
-
+        
 class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer

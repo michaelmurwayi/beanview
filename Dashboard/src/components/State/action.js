@@ -42,7 +42,6 @@ export const fetch_grade_performance = () => async (dispatch) =>{
     try {
         const response = await axios.get("http://127.0.0.1:8000/api/coffee/performance_per_grade/")
         dispatch({type: 'FETCH GRADE PERFORMANCE', payload: response.data})
-        console.log("action ran", response.data )
     }catch (error){
         dispatch({type:"FETCH GRADE PERFORMANCE ERROR", payload: "error"})
     }
