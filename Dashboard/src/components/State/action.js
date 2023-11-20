@@ -46,3 +46,12 @@ export const fetch_grade_performance = () => async (dispatch) =>{
         dispatch({type:"FETCH GRADE PERFORMANCE ERROR", payload: "error"})
     }
 }
+
+export const fetch_daily_delivery = () => async (dispatch) =>{
+    try {
+        const response = await axios.get("http://127.0.0.1:8000/api/coffee/daily_delivery/")
+        dispatch({type: 'FETCH DAILY DELIVERIES', payload: response.data})
+    }catch (error){
+        dispatch({type:"FETCH DAILY DELIVERIES ERROR", payload: "error"})
+    }
+}

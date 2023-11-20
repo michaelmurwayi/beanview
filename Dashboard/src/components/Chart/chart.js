@@ -17,16 +17,15 @@ const BarChart = (props) => {
     }else{
       performancePerGrade[0].forEach(performance =>{
         // setGradeLabels()
-        setGradeLabels(prevLabels => [...prevLabels, ...performance["grade"]]);
+        console.log(performance["grade"])
+        setGradeLabels(prevLabels => [...prevLabels, performance["grade"]]);
         setGradeData(prevData => [...prevData, performance["net_weight"]])
 
       })
     }
   },[fetch_grade_performance, performancePerGrade]);
   
- 
-  
-  
+
   const data = {
     labels:gradeLabels,
     datasets: [

@@ -5,6 +5,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Sum
+from datetime import datetime, timedelta
 import json
 
 
@@ -76,15 +77,22 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 data = {"grade": record["grade"],
                         "net_weight": total_weight }
                 performance_per_grade.append(data)
-            print(performance_per_grade)
             return Response({"Performance": performance_per_grade})
         except Exception as E:
-            print("we were here")
             raise(f"Error calculating total number of  farmers, {{E}}")
+    
     @action(detail=False, methods=['GET'], url_path='daily_delivery')
     def daily_delivery(self, request):
+        deliveries = []
         try:
-            pass        
+            records = self.queryset.values()
+            for record in records:
+                 # Get the current date and time
+                target_date = record['created_at']
+                if is_less_than_24_hours_ago(target_date):
+                    deliveries.append(record)
+                print(deliveries)
+            return Response({"deliveries": deliveries})        
         except Exception as E:
             raise(f"Error calculating total number of  farmers, {{E}}")
         
@@ -109,3 +117,13 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 class OrganizationTypeViewSet(viewsets.ModelViewSet):
     queryset = Organization_type.objects.all()
     serializer_class = OrganizationTypeSerializer
+
+def is_less_than_24_hours_ago(target_date):
+    # Get the current date and time
+    current_date = datetime.now()
+
+    # Calculate the difference between the current date and the target date
+    time_difference = current_date - target_date
+
+    # Check if the difference is less than 24 hours
+    return time_difference < timedelta(hours=24)

@@ -73,9 +73,24 @@ const reducer = (state = initialState, action) => {
                 loading: false,
                 error: action.payload,
             }
+        case 'FETCH DAILY DELIVERIES':
+            return {
+                ...state,
+                dailyDeliveries: action.payload.deliveries,
+                loading: false,
+                error: null,
+            }
+        case 'FETCH DAILY DELIVERIES ERROR':
+            return {
+                ...state,
+                dailyDeliveries: null,  
+                loading: false,
+                error: action.payload,
+            }
         default:
             return state
     }
+
 }
 
 
