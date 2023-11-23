@@ -91,7 +91,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 target_date = record['created_at']
                 if is_less_than_24_hours_ago(target_date):
                     deliveries.append(record)
-                print(deliveries)
             return Response({"deliveries": deliveries})        
         except Exception as E:
             raise(f"Error calculating total number of  farmers, {{E}}")

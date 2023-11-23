@@ -70,7 +70,7 @@ const Index = (props) => {
 
   useEffect (() =>{
     fetch_daily_delivery()
-  },[fetch_daily_delivery, dailyDeliveries])
+  },[fetch_daily_delivery])
   
   
   return (
