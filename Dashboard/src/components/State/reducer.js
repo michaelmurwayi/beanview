@@ -87,6 +87,20 @@ const reducer = (state = initialState, action) => {
                 loading: false,
                 error: action.payload,
             }
+        case 'FETCH COFFEE RECORDS':
+            return {
+                ...state,
+                coffeeRecords: action.payload,
+                loading: false,
+                error: null,
+            }
+        case 'FETCH COFFEE RECORDS ERROR':
+            return {
+                ...state,
+                coffeeRecords: null,  
+                loading: false,
+                error: action.payload,
+            }
         default:
             return state
     }

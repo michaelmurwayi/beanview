@@ -17,7 +17,7 @@
 */
 import Index from "views/Index.js";
 import Profile from "views/examples/Profile.js";
-import Maps from "views/examples/Maps.js";
+import Maps from "views/examples/DataTable";
 import Register from "views/examples/Register.js";
 import Login from "views/examples/Login.js";
 import Tables from "views/examples/Tables.js";
@@ -32,15 +32,15 @@ var routes = [
     layout: "/admin",
   },
   {
-    path: "/Coffee",
+    path: "/coffee",
     name: "Coffee",
     icon: "ni ni-planet text-blue",
     component: <Icons />,
     layout: "/admin",
   },
   {
-    path: "/maps",
-    name: "Maps",
+    path: "/coffee-records",
+    name: "Coffee Records",
     icon: "ni ni-pin-3 text-orange",
     component: <Maps />,
     layout: "/admin",

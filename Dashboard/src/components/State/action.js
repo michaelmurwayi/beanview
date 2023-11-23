@@ -55,3 +55,12 @@ export const fetch_daily_delivery = () => async (dispatch) =>{
         dispatch({type:"FETCH DAILY DELIVERIES ERROR", payload: "error"})
     }
 }
+
+export const fetch_coffee_records = () => async (dispatch) =>{
+    try {
+        const response = await axios.get("http://127.0.0.1:8000/api/coffee/?format=json")
+        dispatch({type: 'FETCH COFFEE RECORDS', payload: response.data})
+    }catch (error){
+        dispatch({type:"FETCH COFFEE RECORDS ERROR", payload: "error"})
+    }
+}

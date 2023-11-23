@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 class CoffeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coffee
-        fields = ['farmer','outturn','grade','bags','pockets','net_weight','tare_weight','variance', 'ticket', 'created_at', 'updated_at']
+        fields = ['farmer','outturn','grade','bags','pockets','net_weight','tare_weight','variance', 'ticket', 'status', 'created_at', 'updated_at']
 
 class CatalogueSerializer(serializers.ModelSerializer):
     class Meta:
