@@ -9,6 +9,7 @@ const initialState = {
     totalWeightPerWeek: [],
     totalWeightPerMonth: [],
     dailyDeliveries: [],
+    users:[],
     error: null,
     loading: false,
         

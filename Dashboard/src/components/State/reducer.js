@@ -101,6 +101,20 @@ const reducer = (state = initialState, action) => {
                 loading: false,
                 error: action.payload,
             }
+        case 'FETCH USERS RECORDS':
+            return {
+                ...state,
+                users: action.payload,
+                loading: false,
+                error: null,
+            }
+        case 'FETCH USERS RECORDS ERROR':
+            return {
+                ...state,
+                users: null,  
+                loading: false,
+                error: action.payload,
+            }
         default:
             return state
     }

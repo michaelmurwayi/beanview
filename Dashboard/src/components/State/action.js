@@ -64,3 +64,12 @@ export const fetch_coffee_records = () => async (dispatch) =>{
         dispatch({type:"FETCH COFFEE RECORDS ERROR", payload: "error"})
     }
 }
+
+export const fetch_users_records = () => async (dispatch) =>{
+    try {
+        const response = await axios.get("http://127.0.0.1:8000/api/user/?format=json")
+        dispatch({type: 'FETCH USERS RECORDS', payload: response.data})
+    }catch (error){
+        dispatch({type:"FETCH USERS RECORDS ERROR", payload: "error"})
+    }
+}
