@@ -1,5 +1,6 @@
 
 const initialState = {
+    coffeeRecord: {},
     coffeeRecords: [],
     totalNetWeight: null,
     totalTareWeight: null,

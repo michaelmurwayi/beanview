@@ -1,5 +1,6 @@
 {
     "recommendations": [
-        "postman.postman-for-vscode"
+        "postman.postman-for-vscode",
+        "cweijan.vscode-mysql-client2"
     ]
 }

@@ -115,6 +115,24 @@ const reducer = (state = initialState, action) => {
                 loading: false,
                 error: action.payload,
             }
+        case 'POST_COFFEE_DATA_REQUEST':
+            return { 
+                ...state, 
+                loading: true, 
+                error: null 
+            };
+        case 'POST_COFFEE_DATA_SUCCESS':
+            return { 
+                ...state, 
+                loading: false, 
+                coffeeRecord: action.payload, 
+                error: null };
+        case 'POST_DATA_FAILURE':
+            return { 
+                ...state, 
+                loading: false, 
+                coffeeRecord: null, 
+                error: action.payload.error };
         default:
             return state
     }

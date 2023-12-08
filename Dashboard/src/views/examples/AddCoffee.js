@@ -15,108 +15,216 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // react component that copies the given text inside your clipboard
-
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardBody,
+  FormGroup,
+  Form,
+  Input,
+  Container,
+  Row,
+  Col,
+} from "reactstrap";
 import "./coffee.css"
+import { post_coffee_records } from "components/State/action";
+import { connect } from "react-redux";
 
-const AddCoffee = () => {
-  const [copiedText, setCopiedText] = useState();
-  const handleSubmit = (event) => {
+const AddCoffee = (props) => {
+
+  const {error, dispatchCoffeeRecord} = props
+  const [formData, setFormData] = useState({});
+  
+  const handleChange = (event) => {
+
+    const key = event.target.name;
+    const value  = event.target.value;
+
+    setFormData({
+      ...formData,
+      [key]: value 
+    })
     event.preventDefault();
     // Handle form submission logic here
   };
-  return (
-    <>
-      {/* <Header /> */}
-      
-      <div className="container mt-5">
-        <h1>Add Coffee Record</h1>
-      <form className="my-form" onSubmit={handleSubmit}>
-          <div class="form-group">
-            <label class="col-md-12 control-label">Estate</label>  
-            <div class="col-md-12 inputGroupContainer">
-            <div class="input-group">
-            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-            <input  name="estate" placeholder="Estate" class="form-control"  type="text"/>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-md-12 control-label">Outturn</label>  
-            <div class="col-md-12 inputGroupContainer">
-            <div class="input-group">
-            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-            <input  name="outturn" placeholder="Outturn" class="form-control"  type="text"/>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-md-12 control-label">Grade</label>  
-            <div class="col-md-12 inputGroupContainer">
-            <div class="input-group">
-            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-            <input  name="grade" placeholder="Grade" class="form-control"  type="text"/>
-              </div>
-            </div>
-            <div class="form-group">
-            <label class="col-md-12 control-label">Bags</label>  
-            <div class="col-md-12 inputGroupContainer">
-            <div class="input-group">
-            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-            <input  name="bags" placeholder="Bags" class="form-control"  type="text"/>
-              </div>
-            </div>
-          </div>
-          </div>
+  const coffeeRecord = {...formData}
+  const handleSubmit = (event) =>{
+    if (Object.keys(coffeeRecord).length > 0){
+      dispatchCoffeeRecord(coffeeRecord)
 
-          <div class="form-group">
-            <label class="col-md-12 control-label">Estate</label>  
-            <div class="col-md-12 inputGroupContainer">
-            <div class="input-group">
-            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-            <input  name="estate" placeholder="Estate" class="form-control"  type="text"/>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-md-12 control-label">Outturn</label>  
-            <div class="col-md-12 inputGroupContainer">
-            <div class="input-group">
-            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-            <input  name="outturn" placeholder="Outturn" class="form-control"  type="text"/>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-md-12 control-label">Grade</label>  
-            <div class="col-md-12 inputGroupContainer">
-            <div class="input-group">
-            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-            <input  name="grade" placeholder="Grade" class="form-control"  type="text"/>
-              </div>
-            </div>
-            <div class="form-group">
-            <label class="col-md-12 control-label">Bags</label>  
-            <div class="col-md-12 inputGroupContainer">
-            <div class="input-group">
-            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-            <input  name="bags" placeholder="Bags" class="form-control"  type="text"/>
-              </div>
-            </div>
-          </div>
-          </div>
-          <div className="mt-2">
-          <div className="col-md-6">
-            <button className="btn btn-primary">
-              Add Record
-            </button>
-          </div>
-      </div>
-      </form>
-      </div>
+    }else{
+      console.log("we are here")
+      event.preventDefault();
+    }
+    
+  }
+  return (
+    <>  
+      <div>
+
+        <Container className="mt" fluid>
+        <Row>
+          <Col className="order-xl-1" xl="12">
+            <Card className="bg-secondary shadow">
+              <CardHeader className="bg-white border-0">
+                <Row className="align-items-center">
+                  <Col xs="8">
+                  </Col>
+                  <Col className="text-right" xs="4">
+                    <h3 className="mb-0">Add Coffee Record</h3>
+                  </Col>
+                </Row>
+              </CardHeader>
+              <CardBody>
+                <Form >
+                  <h6 className="heading-small text-muted mb-4">
+                    Coffee information
+                  </h6>
+                  <div className="pl-lg-4">
+                    <Row>
+                      <Col lg="6">
+                        <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="input-first-name"
+                          >
+                            Estate
+                          </label>
+                          <input  name="estate" value={formData.estate || ''} onChange={handleChange}  placeholder="Estate" className="form-control"  type="text"/>
+                        </FormGroup>
+                      </Col>
+                      <Col lg="6">
+                        <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="input-last-name"
+                          >
+                            Outturn
+                          </label>
+                          <input  name="outturn" value={formData.outturn || ''} onChange={handleChange}  placeholder="Outturn" className="form-control"  type="text"/>
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col lg="6">
+                        <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="input-email"
+                            >
+                            Grade
+                          </label>
+                          <input  name="grade" value={formData.grade || ''} onChange={handleChange}  placeholder="Grade" className="form-control"  type="text"/>
+                        </FormGroup>
+                      </Col>
+                      <Col lg="4">
+                        <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="input-country"
+                            >
+                            Status
+                          </label>
+                          <input  name="status" value={formData.status || ''} onChange={handleChange}  placeholder="Status" className="form-control"  type="text"/>
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                  </div>
+                  <hr className="my-4" />
+                  {/* Address */}
+                  <h6 className="heading-small text-muted mb-4">
+                    Coffee information
+                  </h6>
+                  <div className="pl-lg-4">
+                    <Row>
+                      <Col md="4">
+                        <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="input-address"
+                          >
+                            Bags
+                          </label>
+                          <input  name="bags" value={formData.bags || ''} onChange={handleChange}  placeholder="Bags" className="form-control"  type="text"/>
+                        </FormGroup>
+                      </Col>
+                      <Col md="4">
+                        <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="input-address"
+                          >
+                            Pockets
+                          </label>
+                          <input  name="pockets" value={formData.pockets || ''} onChange={handleChange}  placeholder="Pockets" className="form-control"  type="text"/>
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    
+                    <Row>
+                      <Col lg="4">
+                        <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="input-city"
+                          >
+                            Net Weight
+                          </label>
+                          <input  name="net_weight" value={formData.net_weight || ''} onChange={handleChange}  placeholder="Net Weight (Kgs) " className="form-control"  type="text"/>
+                        </FormGroup>
+                      </Col>
+                      <Col lg="4">
+                        <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="input-country"
+                            >
+                            Tare Weight
+                          </label>
+                          <input  name="tare_weight" value={formData.tare_weight || ''} onChange={handleChange}  placeholder="Tare Weight (Kgs)" className="form-control"  type="text"/>
+                        </FormGroup>
+                      </Col>
+                      
+                    </Row>
+                  </div>
+                  <hr className="my-4" />
+                  {/* Description */}
+                  <h6 className="heading-small text-muted mb-4">Variance</h6>
+                  <div className="pl-lg-4">
+                    <FormGroup>
+                      <label>Variance</label>
+                      <input  name="variance" value={formData.variance || ''} onChange={handleChange}  placeholder="Variance" className="form-control"  type="text"/>
+                    </FormGroup>
+                  </div>
+
+                  <Button
+                      className="mt-5"
+                      color="primary" 
+                      type="submit"
+                      size="sm"
+                      onClick={handleSubmit}
+                    >
+                      Add Coffee
+                    </Button>
+                </Form>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    </div>
     </>
   );
 };
 
-export default AddCoffee;
+const mapStateToProps = (state) =>({
+  error: state.reducer.error
+})
+
+const mapDsipatchToProps = (dispatch) => ({
+    dispatchCoffeeRecord: (data) => dispatch(post_coffee_records(data))
+})
+export default connect(mapStateToProps,mapDsipatchToProps)(AddCoffee);

@@ -64,7 +64,7 @@ class Coffee(models.Model):
         SOLD = "SOLD", "sold"
 
     id = models.AutoField(primary_key=True)
-    farmer = models.ForeignKey(Farmer, on_delete=models.PROTECT, to_field="ref_no")
+    estate = models.CharField(max_length=255)
     outturn = models.CharField(max_length=100)
     grade = models.CharField(max_length=10)
     bags = models.IntegerField(null=True)

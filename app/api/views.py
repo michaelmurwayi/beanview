@@ -17,7 +17,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
-
+    
     @action(detail=False, methods=['GET'], url_path='total_net_weight')
     def total_net_weight(self, request):
         weights = []
@@ -60,7 +60,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], url_path='total_number_farmers')
     def total_number_farmers(self, request):
         try:
-            total_number_farmers = self.queryset.values("farmer_id").distinct().count()
+            total_number_farmers = self.queryset.values("farmer ").distinct().count()
             return Response({"total_number_farmers": total_number_farmers})
         except Exception as E:
             raise(f"Error calculating total number of  farmers, {E}")

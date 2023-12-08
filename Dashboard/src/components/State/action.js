@@ -65,6 +65,44 @@ export const fetch_coffee_records = () => async (dispatch) =>{
     }
 }
 
+export const post_coffee_records = (coffeeRecord ) => async (dispatch) =>{
+    try {
+        const data =  coffeeRecord
+        // Dispatch an action to indicate the start of the API request
+        // dispatch({ type: 'POST_COFFEE_DATA_REQUEST' });
+        
+        const customHeaders = {
+            'Content-Type': 'application/json', // Adjust the content type based on your API requirements
+             
+            // Include Authorization header if needed
+          };
+
+        const axiosConfig = {
+            method: 'post', // Specify the HTTP method (post, get, etc.)
+            headers: customHeaders, // Set your custom headers
+            url: 'http://127.0.0.1:8000/api/coffee/?format=api', // Replace with your API endpoint
+            data: data, // Include your request data
+          };
+
+        // Make the API request to your Django backend
+        const response = await axios(axiosConfig)
+        console.log("we are here");
+        // Check if the request was successful
+        if (response.ok) {
+          // Dispatch an action with the successful response data
+          const responseData = await response.json();
+          dispatch({ type: 'POST_COFFEE_DATA_SUCCESS', payload: responseData });
+        } else {
+          // If the request was not successful, dispatch an action with an error message
+          const errorData = await response.json();
+          dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: errorData });
+        }
+      } catch (error) {
+        // If an error occurs during the request, dispatch an action with the error
+        dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: { error: 'An error occurred' } });
+      }
+    };
+
 export const fetch_users_records = () => async (dispatch) =>{
     try {
         const response = await axios.get("http://127.0.0.1:8000/api/user/?format=json")
