@@ -1,0 +1,44 @@
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow: hidden; /* Clearfix to contain floated columns */
+
+}
+  
+  .column {
+    width: 50%;
+    float: left;
+    box-sizing: border-box;
+    padding: 20px;
+  }
+  
+  /* Add some styles for better visualization */
+  #column1 {
+    background-color: #f2f2f2;
+  }
+  
+  #column2 {
+    background-color: #e0e0e0;
+  }
+
+    .card {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: scroll;
+    height: 50vh;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+    background-color: #3498db;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+    }
+
+    .card-body {
+    padding: 20px;
+    }

@@ -6,7 +6,7 @@ import { DateRangePicker } from 'react-date-range';
 import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css'; // theme css file
 import { Calendar } from 'react-date-range';
-
+import "./catalogue.css"
 
 const DataTable = (props) => {
   
@@ -96,20 +96,43 @@ const DataTable = (props) => {
     endDate: new Date(),
     key: 'selection',
   }
-
-
+  
   return (
-    <div className='container-fluid'>
-      <DateRangePicker
+    <div className='main'>
+    <div class="container">
+      <div class="column column1">
+        <DateRangePicker
         ranges={[selectionRange]}
         onChange={handleSelect}
-      />
-    <MDBDataTable
+        />       
+      </div>
+      <div class="column column2">
+        <div class="card">
+          <div class="card-header">
+            Lots Available
+          </div>
+          <div class="card-body">
+          <MDBDataTable
+            data={data}
+            striped
+            small
+            searching={false}
+            paging={false}
+            />
+          </div>
+        </div>
+      </div>
+  </div>
+    <div className='col-md-12'>
+      <MDBDataTable
+      hover
       data={data}
       striped
-      searching={false}
+      small
+      searching= {false}
       />
-      </div>
+    </div>
+  </div>
   );
 }
 

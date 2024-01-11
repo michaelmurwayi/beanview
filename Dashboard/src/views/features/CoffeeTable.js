@@ -93,6 +93,7 @@ const DataTable = (props) => {
     <MDBDataTable
       data={data}
       striped
+      small
       searching={false}
       />
       </div>
