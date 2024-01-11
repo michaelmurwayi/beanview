@@ -23,7 +23,7 @@
     background-color: #e0e0e0;
   }
 
-    .card {
+    .lot {
     width: 100%;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -32,13 +32,19 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .card-header {
+    .lot-header {
     background-color: #3498db;
     color: #fff;
     padding: 10px;
     text-align: center;
     }
 
-    .card-body {
+    .lot-body {
     padding: 20px;
+    }
+    .calendar{
+      color: black;
+    }
+    .rdrStaticRange{
+      color: black;
     }

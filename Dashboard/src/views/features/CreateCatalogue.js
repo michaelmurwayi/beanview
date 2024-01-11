@@ -16,27 +16,49 @@ const DataTable = (props) => {
     fetch_coffee_records();
   },[fetch_coffee_records])
 
+  const lotData = {
+    columns: [
+      {
+        label: 'Lot id',
+        field: 'estate',
+        sort: 'asc',
+        width: 250
+      },
+      {
+        label: 'Lot Number',
+        field: 'grade',
+        sort: 'asc',
+        width: 250
+      },
+      {
+        label: 'status',
+        field: 'status',
+        sort: 'asc',
+        width: 250
+      }
+    ]
+  }  
 
   
   const data = {
     columns: [
       {
-        label: 'Estate',
+        label: 'Lot id',
         field: 'estate',
         sort: 'asc',
-        width: 150
+        width: 250
       },
       {
-        label: 'Grade',
+        label: 'Lot Number',
         field: 'grade',
         sort: 'asc',
-        width: 270
+        width: 250
       },
       {
-        label: 'Net_weight',
-        field: 'net_weight',
+        label: 'status',
+        field: 'status',
         sort: 'asc',
-        width: 200
+        width: 250
       },
       {
         label: 'Bags',
@@ -104,16 +126,17 @@ const DataTable = (props) => {
         <DateRangePicker
         ranges={[selectionRange]}
         onChange={handleSelect}
+        className='calendar'
         />       
       </div>
-      <div class="column column2">
-        <div class="card">
-          <div class="card-header">
+      <div className="column column2">
+        <div className="lot">
+          <div className="lot-header">
             Lots Available
           </div>
-          <div class="card-body">
+          <div className="lot-body">
           <MDBDataTable
-            data={data}
+            data={lotData}
             striped
             small
             searching={false}
