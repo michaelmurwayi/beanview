@@ -1,11 +1,12 @@
 import Index from "views/Index.js";
-import Profile from "views/examples/Profile.js";
-import Maps from "views/examples/DataTable";
-import Register from "views/examples/Register.js";
-import Login from "views/examples/Login.js";
-import Tables from "views/examples/Tables.js";
-import AddCoffee from "views/examples/AddCoffee.js";
-import UserRecords from "views/examples/userRecords";
+import Profile from "views/features/Profile.js";
+import Maps from "views/features/CoffeeTable";
+import Register from "views/features/Register.js";
+import Login from "views/features/Login.js";
+import Tables from "views/features/Tables.js";
+import AddCoffee from "views/features/AddCoffee.js";
+import UserRecords from "views/features/userRecords";
+import CreateCatalogue from "views/features/CreateCatalogue"
 
 var routes = [
   {
@@ -29,6 +30,20 @@ var routes = [
     component: <Maps />,
     layout: "/admin",
   },
+  {
+    path: "/catalogue",
+    name: "Catalogue",
+    icon: "ni ni-planet text-blue",
+    component: <CreateCatalogue />,
+    layout: "/admin",
+  },
+  // {
+  //   path: "/catalogue-records",
+  //   name: "Catalogue Records",
+  //   icon: "ni ni-pin-3 text-orange",
+  //   component: <Maps />,
+  //   layout: "/admin",
+  // },
   {
     path: "/add-users",
     name: "Add Users",
