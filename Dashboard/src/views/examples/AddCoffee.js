@@ -51,6 +51,7 @@ const AddCoffee = (props) => {
     // Handle form submission logic here
   };
   const coffeeRecord = {...formData}
+  console.log(coffeeRecord)
   const handleSubmit = (event) =>{
     if (Object.keys(coffeeRecord).length > 0){
       dispatchCoffeeRecord(coffeeRecord)
@@ -126,9 +127,9 @@ const AddCoffee = (props) => {
                             className="form-control-label"
                             htmlFor="input-country"
                             >
-                            Status
+                            Ticket
                           </label>
-                          <input  name="status" value={formData.status || ''} onChange={handleChange}  placeholder="Status" className="form-control"  type="text"/>
+                          <input  name="ticket" value={formData.ticket || ''} onChange={handleChange}  placeholder="ticket" className="form-control"  type="text"/>
                         </FormGroup>
                       </Col>
                     </Row>
@@ -191,12 +192,22 @@ const AddCoffee = (props) => {
                     </Row>
                   </div>
                   <hr className="my-4" />
+
                   {/* Description */}
-                  <h6 className="heading-small text-muted mb-4">Variance</h6>
+                  <h6 className="heading-small text-muted mb-2">Ticket</h6>
                   <div className="pl-lg-4">
                     <FormGroup>
                       <label>Variance</label>
-                      <input  name="variance" value={formData.variance || ''} onChange={handleChange}  placeholder="Variance" className="form-control"  type="text"/>
+                      <input  name="variance" value={formData.variance || ''} onChange={handleChange}  placeholder="variance" className="form-control"  type="text"/>
+                    </FormGroup>
+                  </div>
+                  
+                  {/* Description */}
+                  <h6 className="heading-small text-muted mb-2">Status</h6>
+                  <div className="pl-lg-4">
+                    <FormGroup>
+                      <label>status</label>
+                      <input  name="status" value={formData.status || ''} onChange={handleChange}  placeholder="Status" className="form-control"  type="text"/>
                     </FormGroup>
                   </div>
 

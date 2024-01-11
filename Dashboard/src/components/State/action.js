@@ -72,20 +72,19 @@ export const post_coffee_records = (coffeeRecord ) => async (dispatch) =>{
         // dispatch({ type: 'POST_COFFEE_DATA_REQUEST' });
         
         const customHeaders = {
-            'Content-Type': 'application/json', // Adjust the content type based on your API requirements
-             
-            // Include Authorization header if needed
+            'Content-Type': 'application/json',
           };
 
+        const api_url = 'http://127.0.0.1:8000/api/coffee/';
         const axiosConfig = {
             method: 'post', // Specify the HTTP method (post, get, etc.)
             headers: customHeaders, // Set your custom headers
-            url: 'http://127.0.0.1:8000/api/coffee/?format=api', // Replace with your API endpoint
-            data: data, // Include your request data
+            url: api_url, // Replace with your API endpoint
+            body: JSON.stringify(data), // Include your request data
           };
 
         // Make the API request to your Django backend
-        const response = await axios(axiosConfig)
+        const response = await fetch(api_url, axiosConfig)
         console.log("we are here");
         // Check if the request was successful
         if (response.ok) {

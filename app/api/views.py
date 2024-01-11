@@ -7,17 +7,23 @@ from rest_framework.response import Response
 from django.db.models import Sum
 from datetime import datetime, timedelta
 import json
-
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
     
+    def post(self, request):
+        import ipdb;ipdb.set_trace()
+        return request 
+
     @action(detail=False, methods=['GET'], url_path='total_net_weight')
     def total_net_weight(self, request):
         weights = []
@@ -60,7 +66,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], url_path='total_number_farmers')
     def total_number_farmers(self, request):
         try:
-            total_number_farmers = self.queryset.values("farmer ").distinct().count()
+            total_number_farmers = self.queryset.values("estate").distinct().count()
             return Response({"total_number_farmers": total_number_farmers})
         except Exception as E:
             raise(f"Error calculating total number of  farmers, {E}")
