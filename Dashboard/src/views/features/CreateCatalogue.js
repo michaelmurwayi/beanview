@@ -11,6 +11,11 @@ import "./catalogue.css"
 const DataTable = (props) => {
   const {coffeeRecords, fetch_coffee_records} = props
   const [filteredRecords, setFilteredRecords] = useState([])
+  const [selectedRange, setSelectedRange] = useState({
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection',
+  });
   
   useEffect (()=>{
     fetch_coffee_records();
@@ -199,9 +204,10 @@ const DataTable = (props) => {
     return(newDate)
   }
   
+  
   const handleSelect = (event) =>{
 
-    setFilteredRecords(prevRecords => []);
+    setFilteredRecords([])
     
     const startDate = filterDate(String(event.selection.startDate));
     const endDate = filterDate(String(event.selection.endDate));
@@ -210,11 +216,10 @@ const DataTable = (props) => {
       if(startDate == endDate){
         const newRecords = coffeeRecords.map((record)=>{
           if (record.created_at.split("T")[0] == startDate){
-            const newRecords =   [...filteredRecords, record]
-            setFilteredRecords(newRecords)        
+            setFilteredRecords([...filteredRecords, record])        
           }else{
-            const newRecords =   [...filteredRecords]
-            setFilteredRecords(newRecords)
+            setFilteredRecords([...filteredRecords])
+            
           }
         })
       }else{
