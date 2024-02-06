@@ -11,11 +11,8 @@ import "./catalogue.css"
 const DataTable = (props) => {
   const { coffeeRecords, fetch_coffee_records } = props
   const [filteredRecords, setFilteredRecords] = useState([])
-  const [selectedRange, setSelectedRange] = useState({
-    startDate: new Date(),
-    endDate: new Date(),
-    key: 'selection',
-  });
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
 
   useEffect(() => {
     fetch_coffee_records();
@@ -203,35 +200,33 @@ const DataTable = (props) => {
 
     return (newDate)
   }
-
+  useEffect( () =>{
+    
+      if (startDate == endDate) {
+        const newRecords = coffeeRecords.filter((record) => {
+          return record.created_at.split("T")[0] === startDate;
+        });
+        setFilteredRecords(newRecords)
+        console.log(filteredRecords)
+      }else{
+        const newRecords = coffeeRecords.filter((record) => {
+          return record.created_at.split("T")[0]  >=  startDate && record.created_at.split("T")[0]  <=  endDate;
+        });
+        setFilteredRecords(newRecords)
+      }
+      
+    }
+  )
 
   const handleSelect = (event) => {
-
-    
-    const startDate = filterDate(String(event.selection.startDate));
-    const endDate = filterDate(String(event.selection.endDate));
-    
-    if (coffeeRecords.length) {
-      setFilteredRecords([])
-      if (startDate == endDate) {
-        const newRecords = coffeeRecords.map((record) => {
-          if (record.created_at.split("T")[0] == startDate) {
-            setFilteredRecords([...filteredRecords, record])
-          } else {
-            setFilteredRecords([...filteredRecords])
-
-          }
-        })
-      } else {
-
-      }
-    } else {
-      console.log(filteredData)
-    }
+   
+    if (coffeeRecords.length) {  
+      // Filter for Single day records
+      setStartDate(filterDate(String(event.selection.startDate)));
+      setEndDate(filterDate(String(event.selection.endDate)));
 
   };
-
-
+  }
   const selectionRange = {
     startDate: new Date(),
     endDate: new Date(),
@@ -269,25 +264,28 @@ const DataTable = (props) => {
         </div>
       </div>
       {filteredRecords.length === 0 &&
-
         <div className='col-md-12'>
+           <p><b> Showing All records </b> </p>
           <MDBDataTable
             hover
             data={data}
             striped
             small
             searching={false}
+            paging={false}
           />
         </div>
       }
       {filteredRecords.length > 0 &&
         <div className='col-md-12'>
+          <p><b><i>Showing records from {startDate} to {endDate}</i></b></p>
           <MDBDataTable
             hover
             data={filteredData}
             striped
             small
             searching={false}
+            paging={false}
           />
         </div>
       }
