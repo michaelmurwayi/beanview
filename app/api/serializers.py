@@ -11,30 +11,15 @@ class UserSerializer(serializers.ModelSerializer):
 class CoffeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coffee
-        fields = ['estate','outturn','grade','bags','pockets','net_weight','tare_weight','variance', 'ticket', 'status', 'created_at', 'updated_at']
+        fields = ['id','estate','outturn','grade','bags','pockets','net_weight','tare_weight','variance', 'ticket', 'status', 'created_at', 'updated_at']
 
 class CatalogueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Catalogue
         fields = ['lot','coffee','certificate','price','buyer','created_at','updated_at']
 
-class StatusSerializer(serializers.ModelSerializer):
+class LotsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Status
-        fields = [ 'status', 'created_at', 'updated_at']
+        model = Lots
+        fields = [ 'id', 'number', 'status', 'created_at', 'updated_at']
 
-class GradeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Grade
-        fields = [ 'grade', 'created_at', 'updated_at']
-
-class OrganizationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Organization
-        fields = ['name',  'email', 'phonenumber', 'country', 'city',  'type', 'created_at', 'updated_at']
-
-
-class OrganizationTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Organization_type
-        fields = [ 'type', 'created_at', 'updated_at']

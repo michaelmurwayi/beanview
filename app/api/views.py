@@ -20,9 +20,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
     
-    def post(self, request):
-        import ipdb;ipdb.set_trace()
-        return request 
 
     @action(detail=False, methods=['GET'], url_path='total_net_weight')
     def total_net_weight(self, request):
@@ -106,22 +103,11 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     serializer_class = CatalogueSerializer
 
 
-class StatusViewSet(viewsets.ModelViewSet):
-    queryset = Status.objects.all()
-    serializer_class = StatusSerializer
-
-class GradeViewSet(viewsets.ModelViewSet):
-    queryset = Grade.objects.all()
-    serializer_class = GradeSerializer
+class LotsViewSet(viewsets.ModelViewSet):
+    queryset = Lots.objects.all()
+    serializer_class = LotsSerializer
 
 
-class OrganizationViewSet(viewsets.ModelViewSet):
-    queryset = Organization.objects.all()
-    serializer_class = OrganizationSerializer
-
-class OrganizationTypeViewSet(viewsets.ModelViewSet):
-    queryset = Organization_type.objects.all()
-    serializer_class = OrganizationTypeSerializer
 
 def is_less_than_24_hours_ago(target_date):
     # Get the current date and time

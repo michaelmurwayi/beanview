@@ -93,46 +93,18 @@ class Catalogue(models.Model):
     def __str__(self):
         return self.lot
 
-class Status(models.Model):
+class Lots(models.Model):
+    class LotStatus(models.TextChoices):
+        # define status of coffee
+        OPEN = "OPEN", "open"
+        CUPPED = "CLOSSED", "closed"
+        PENDING = "PENDING", "pending"
+        
     id = models.AutoField(primary_key=True)
-    status = models.CharField(max_length=15)
+    number = models.CharField(max_length=15)
+    status = models.CharField(max_length=50, choices=LotStatus.choices, default="RECIEVED")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.status
-
-class Grade(models.Model):
-    id = models.AutoField(primary_key=True)
-    grade = models.CharField(max_length=2)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.grade
-
-
-class Organization(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=150)
-    email = models.EmailField(unique=True)
-    phonenumber = models.IntegerField()
-    country = models.CharField(max_length=50)
-    city = models.CharField(max_length=50)
-    reg_no = models.IntegerField(null=True)
-    type = models.ForeignKey("organization_type", on_delete=models.PROTECT)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.name
-
-class Organization_type(models.Model):
-    id = models.AutoField(primary_key=True)
-    type = models.CharField(max_length=150)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.type
-
