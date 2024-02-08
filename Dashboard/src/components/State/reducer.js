@@ -127,14 +127,14 @@ const reducer = (state = initialState, action) => {
                 loading: false, 
                 coffeeRecord: action.payload, 
                 error: null };
-        case 'FETCH LOT DATA':
+        case 'FETCH LOTS DATA':
             return {
                 ...state,
-                lots: action.payload.lots,
+                lots: action.payload,
                 loading: false,
                 error: null,
             }
-        case 'FETCH LOT DATA ERROR':
+        case 'FETCH LOTS DATA ERROR':
             return {
                 ...state,
                 lots: null,  

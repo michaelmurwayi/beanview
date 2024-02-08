@@ -17,20 +17,19 @@ const DataTable = (props) => {
   useEffect(() => {
     fetch_coffee_records();
     fetch_lots_records();
-    console.log(lots)
   }, [fetch_coffee_records, fetch_lots_records])
-
+  
   const lotData = {
     columns: [
       {
-        label: 'Lot id',
-        field: 'estate',
+        label: 'ID',
+        field: 'id',
         sort: 'asc',
         width: 250
       },
       {
-        label: 'Lot Number',
-        field: 'grade',
+        label: 'Number',
+        field: 'number',
         sort: 'asc',
         width: 250
       },
@@ -41,7 +40,8 @@ const DataTable = (props) => {
         sort: 'asc',
         width: 250
       }
-    ]
+    ],
+    rows: lots,
   }
 
 

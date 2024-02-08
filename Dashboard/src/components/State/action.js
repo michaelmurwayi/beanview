@@ -113,10 +113,9 @@ export const fetch_users_records = () => async (dispatch) =>{
 export const fetch_lots_records = () => async (dispatch) =>{
     try {
         const response = await axios.get("http://127.0.0.1:8000/api/lots/?format=json")
-        console.log(response)
-        dispatch({type: 'FETCH LOT RECORDS', payload: response.data})
+        dispatch({type: 'FETCH LOTS DATA', payload: response.data})
     }catch (error){
-        dispatch({type:"FETCH LOT RECORDS ERROR", payload: "error"})
+        dispatch({type:"FETCH LOTS DATA ERROR", payload: "error"})
     }
 }
 
