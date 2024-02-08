@@ -11,6 +11,7 @@ const initialState = {
     totalWeightPerMonth: [],
     dailyDeliveries: [],
     users:[],
+    lots: [],
     error: null,
     loading: false,
         

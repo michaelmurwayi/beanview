@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MDBDataTable } from 'mdbreact';
 import { connect } from 'react-redux';
-import { fetch_coffee_records } from 'components/State/action';
+import { fetch_coffee_records, fetch_lots_records } from 'components/State/action';
 import { DateRangePicker } from 'react-date-range';
 import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css'; // theme css file
@@ -9,14 +9,16 @@ import { Calendar } from 'react-date-range';
 import "./catalogue.css"
 
 const DataTable = (props) => {
-  const { coffeeRecords, fetch_coffee_records } = props
+  const { coffeeRecords, fetch_coffee_records, lots, fetch_lots_records } = props
   const [filteredRecords, setFilteredRecords] = useState([])
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
 
   useEffect(() => {
     fetch_coffee_records();
-  }, [fetch_coffee_records])
+    fetch_lots_records();
+    console.log(lots)
+  }, [fetch_coffee_records, fetch_lots_records])
 
   const lotData = {
     columns: [
@@ -45,6 +47,12 @@ const DataTable = (props) => {
 
   const data = {
     columns: [
+      {
+        label: 'ID',
+        field: 'id',
+        sort: 'asc',
+        width: 250
+      },
       {
         label: 'Estate',
         field: 'estate',
@@ -102,7 +110,7 @@ const DataTable = (props) => {
 
     ],
 
-    rows: coffeeRecords
+    rows: coffeeRecords.filter(record => record.status === 'RECIEVED')
 
 
   }
@@ -207,7 +215,6 @@ const DataTable = (props) => {
           return record.created_at.split("T")[0] === startDate;
         });
         setFilteredRecords(newRecords)
-        console.log(filteredRecords)
       }else{
         const newRecords = coffeeRecords.filter((record) => {
           return record.created_at.split("T")[0]  >=  startDate && record.created_at.split("T")[0]  <=  endDate;
@@ -219,14 +226,12 @@ const DataTable = (props) => {
   )
 
   const handleSelect = (event) => {
-   
-    if (coffeeRecords.length) {  
-      // Filter for Single day records
-      setStartDate(filterDate(String(event.selection.startDate)));
-      setEndDate(filterDate(String(event.selection.endDate)));
+    // Filter for Single day records
+    setStartDate(filterDate(String(event.selection.startDate)));
+    setEndDate(filterDate(String(event.selection.endDate)));
 
   };
-  }
+  
   const selectionRange = {
     startDate: new Date(),
     endDate: new Date(),
@@ -293,11 +298,12 @@ const DataTable = (props) => {
   );
 }
 
-const mapDsipatchToProps = { fetch_coffee_records }
+const mapDsipatchToProps = { fetch_coffee_records, fetch_lots_records }
 
 const mapStateToProps = (state) => {
   return {
-    coffeeRecords: state.reducer.coffeeRecords
+    coffeeRecords: state.reducer.coffeeRecords,
+    lots: state.reducer.lots
   }
 }
 

@@ -102,7 +102,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
 
-
+@method_decorator(csrf_exempt, name='dispatch')
 class LotsViewSet(viewsets.ModelViewSet):
     queryset = Lots.objects.all()
     serializer_class = LotsSerializer
