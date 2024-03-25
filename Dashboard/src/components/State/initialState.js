@@ -12,6 +12,7 @@ const initialState = {
     dailyDeliveries: [],
     users:[],
     lots: [],
+    catalogues: [], 
     error: null,
     loading: false,
         

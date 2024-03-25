@@ -238,6 +238,9 @@ const DataTable = (props) => {
     key: 'selection',
   }
 
+  const generateCatalogue = (data) =>{
+    // generate catalogue for filtered data
+  }
 
   return (
     <div className='main'>
@@ -270,6 +273,7 @@ const DataTable = (props) => {
       </div>
       {filteredRecords.length === 0 &&
         <div className='col-md-12'>
+           <button className='btn btn-warning mb-3'>Generate Catalogue</button>
            <p><b> Showing All records </b> </p>
           <MDBDataTable
             hover
@@ -283,6 +287,7 @@ const DataTable = (props) => {
       }
       {filteredRecords.length > 0 &&
         <div className='col-md-12'>
+          <button className='btn btn-warning mb-3'>Generate Catalogue</button>
           <p><b><i>Showing records from {startDate} to {endDate}</i></b></p>
           <MDBDataTable
             hover

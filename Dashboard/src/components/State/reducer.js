@@ -141,6 +141,38 @@ const reducer = (state = initialState, action) => {
                 loading: false,
                 error: action.payload,
             }
+            
+        case 'FETCH CATALOGUE DATA':
+            return {
+                ...state,
+                lots: action.payload,
+                loading: false,
+                error: null,
+            }
+        case 'FETCH CATALOGUE DATA ERROR':
+            return {
+                ...state,
+                lots: null,  
+                loading: false,
+                error: action.payload,
+            }
+        
+        case 'POST CATALOGUE DATA':
+            return {
+                ...state,
+                lots: action.payload,
+                loading: false,
+                error: null,
+            }
+        case 'POST CATALOGUE DATA ERROR':
+            return {
+                ...state,
+                lots: null,  
+                loading: false,
+                error: action.payload,
+            }
+        
+            
         default:
             return state
     }
