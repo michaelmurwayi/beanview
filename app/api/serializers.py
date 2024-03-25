@@ -11,12 +11,12 @@ class UserSerializer(serializers.ModelSerializer):
 class CoffeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coffee
-        fields = ['id','estate','outturn','grade','bags','pockets','net_weight','tare_weight','variance', 'ticket', 'status', 'created_at', 'updated_at']
+        fields = ['id','estate','outturn','grade','bags','pockets','net_weight','tare_weight','variance', 'ticket', 'catalogue', 'status', 'created_at', 'updated_at']
 
 class CatalogueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Catalogue
-        fields = ['lot','coffee','certificate','price','buyer','created_at','updated_at']
+        fields = ['lot','certificate','price','buyer','created_at','updated_at']
 
 class LotsSerializer(serializers.ModelSerializer):
     class Meta:
