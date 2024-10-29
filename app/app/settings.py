@@ -105,12 +105,8 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'tests',
-        'USER': 'root',
-        'PASSWORD': 'C11h28no3',
-        'HOST': 'localhost',
-        'PORT': '3360',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3.1',  # This stores the SQLite database file in your project’s base directory.
     }
 }
 

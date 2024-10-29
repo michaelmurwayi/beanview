@@ -20,7 +20,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
     
-
+    
     @action(detail=False, methods=['GET'], url_path='total_net_weight')
     def total_net_weight(self, request):
         weights = []
@@ -102,10 +102,10 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LotsViewSet(viewsets.ModelViewSet):
-    queryset = Lots.objects.all()
-    serializer_class = LotsSerializer
+# @method_decorator(csrf_exempt, name='dispatch')
+# class LotsViewSet(viewsets.ModelViewSet):
+#     queryset = Lots.objects.all()
+#     serializer_class = LotsSerializer
 
 
 

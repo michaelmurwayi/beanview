@@ -23,7 +23,7 @@ router = DefaultRouter()
 router.register(r'user', views.UserViewSet, basename='user')
 router.register(r'coffee', views.CoffeeViewSet, basename='coffee')
 router.register(r'catalogue', views.CatalogueViewSet, basename='catalogue')
-router.register(r'lots', views.LotsViewSet, basename='lots')
+# router.register(r'lots', views.LotsViewSet, basename='lots')
 
 
 

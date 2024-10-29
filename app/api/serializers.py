@@ -11,15 +11,19 @@ class UserSerializer(serializers.ModelSerializer):
 class CoffeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coffee
-        fields = ['id','estate','outturn','grade','bags','pockets','net_weight','tare_weight','variance', 'ticket', 'catalogue', 'status', 'created_at', 'updated_at']
-
+        fields = ['outturn', 'mark', 'season', 'certificate', 'bags','pockets', 'grade','weight','mill','warehouse', 'status']
+        extra_kwargs = {
+                'catalogue': {'required': False},
+                'reserve': {'required': False},
+                'buyer': {'required': False}
+            }
 class CatalogueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Catalogue
         fields = ['lot','certificate','price','buyer','created_at','updated_at']
 
-class LotsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Lots
-        fields = [ 'id', 'number', 'status', 'created_at', 'updated_at']
+# class LotsSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Lots
+#         fields = [ 'id', 'number', 'status', 'created_at', 'updated_at']
 

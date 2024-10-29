@@ -76,36 +76,39 @@ class Coffee(models.Model):
         PENDING = "PENDING", "pending"
         SOLD = "SOLD", "sold"
 
-    id = models.AutoField(primary_key=True)
-    estate = models.CharField(max_length=255)
     outturn = models.CharField(max_length=100)
-    grade = models.CharField(max_length=10)
-    bags = models.IntegerField(null=True)
-    pockets = models.IntegerField()
-    net_weight = models.IntegerField()
-    tare_weight = models.IntegerField()
-    variance = models.IntegerField(null=True)
-    ticket = models.CharField(max_length=50)
-    catalogue = models.ForeignKey(Catalogue, on_delete=models.SET_NULL, null=True, blank=True, default=None)
-    status = models.CharField(max_length=50, choices=Status.choices, default="RECIEVED")
+    mark = models.CharField(max_length=100)
+    season = models.CharField(max_length=100)
+    certificate = models.CharField(max_length=100)
+    bags = models.IntegerField(null=True, blank=True)  # Make bags nullable
+    pockets = models.IntegerField(null=True, blank=True)  # Make pockets nullable
+    grade = models.CharField(max_length=50)
+    weight = models.DecimalField(max_digits=10, decimal_places=2)
+    mill = models.CharField(max_length=100)
+    warehouse = models.CharField(max_length=100)
+    status = models.CharField(max_length=50)
+    catalogue = models.CharField(max_length=100, null=True, blank=True)
+    reserve = models.IntegerField(null=True, blank=True)
+    buyer = models.CharField(max_length=100, null=True, blank=True)
+    remarks = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.outturn
 
-class Lots(models.Model):
-    class LotStatus(models.TextChoices):
-        # define status of coffee
-        OPEN = "OPEN", "open"
-        CUPPED = "CLOSSED", "closed"
-        PENDING = "PENDING", "pending"
+# class Lots(models.Model):
+#     class LotStatus(models.TextChoices):
+#         # define status of coffee
+#         OPEN = "OPEN", "open"
+#         CUPPED = "CLOSSED", "closed"
+#         PENDING = "PENDING", "pending"
         
-    id = models.AutoField(primary_key=True)
-    number = models.CharField(max_length=15)
-    status = models.CharField(max_length=50, choices=LotStatus.choices, default="RECIEVED")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+#     id = models.AutoField(primary_key=True)
+#     number = models.CharField(max_length=15)
+#     status = models.CharField(max_length=50, choices=LotStatus.choices, default="RECIEVED")
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return self.status
+#     def __str__(self):
+#         return self.status
