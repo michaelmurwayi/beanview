@@ -1,5 +1,6 @@
 
 const initialState = {
+    coffee: null,
     coffeeRecord: {},
     coffeeRecords: [],
     totalNetWeight: null,
@@ -13,7 +14,8 @@ const initialState = {
     users:[],
     lots: [],
     catalogues: [], 
-    error: null,
+    success: false,
+    error: false,
     loading: false,
         
 }

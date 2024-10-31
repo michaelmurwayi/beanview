@@ -9,6 +9,9 @@ from datetime import datetime, timedelta
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from rest_framework import status
+from rest_framework.response import Response
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -20,7 +23,22 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
     
-    
+    def create(self, request, *args, **kwargs):
+        # Combine both form data and file data
+        data = request.data.copy()  # Copy the form data
+        if request._files:
+            files = request._fILES       # Capture the files
+
+        # Create serializer instance with both form and file data
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)  # Validate combined data
+
+        # Save the instance if valid
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     @action(detail=False, methods=['GET'], url_path='total_net_weight')
     def total_net_weight(self, request):
         weights = []
@@ -118,3 +136,8 @@ def is_less_than_24_hours_ago(target_date):
 
     # Check if the difference is less than 24 hours
     return time_difference < timedelta(hours=24)
+
+def read_data_from_pdf_file(file):
+    data = []
+
+    return data

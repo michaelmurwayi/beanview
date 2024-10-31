@@ -64,43 +64,40 @@ export const fetch_coffee_records = () => async (dispatch) =>{
         dispatch({type:"FETCH COFFEE RECORDS ERROR", payload: "error"})
     }
 }
-
-export const post_coffee_records = (coffeeRecord ) => async (dispatch) =>{
+export const post_coffee_records = (coffeeRecord) => async (dispatch) => {
     try {
-        const data =  coffeeRecord
-        // Dispatch an action to indicate the start of the API request
-        // dispatch({ type: 'POST_COFFEE_DATA_REQUEST' });
-        
-        const customHeaders = {
-            'Content-Type': 'application/json',
-          };
-
-        const api_url = 'http://127.0.0.1:8000/api/coffee/';
-        const axiosConfig = {
-            method: 'post', // Specify the HTTP method (post, get, etc.)
-            headers: customHeaders, // Set your custom headers
-            url: api_url, // Replace with your API endpoint
-            body: JSON.stringify(data), // Include your request data
-          };
-
-        // Make the API request to your Django backend
-        const response = await fetch(api_url, axiosConfig)
-        // Check if the request was successful
-        if (response.ok) {
-          // Dispatch an action with the successful response data
-          const responseData = await response.json();
-          dispatch({ type: 'POST_COFFEE_DATA_SUCCESS', payload: responseData });
-        } else {
-          // If the request was not successful, dispatch an action with an error message
-          const errorData = await response.json();
-          dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: errorData });
-        }
-      } catch (error) {
-        // If an error occurs during the request, dispatch an action with the error
-        dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: { error: 'An error occurred' } });
+      // Dispatch an action to indicate the start of the API request
+      // dispatch({ type: 'POST_COFFEE_DATA_REQUEST' });
+  
+      const api_url = 'http://127.0.0.1:8000/api/coffee/';
+      const customHeaders = {
+        'Content-Type': 'application/json',
+      };
+  
+      // Configuration for the fetch request
+      const fetchConfig = {
+        method: 'POST',
+        headers: customHeaders,
+        body: JSON.stringify(coffeeRecord),
+      };
+  
+      // Make the API request to your Django backend
+      const response = await fetch(api_url, fetchConfig);
+  
+      // Check if the request was successful
+      if (response.ok) {
+        const responseData = await response.json();
+        dispatch({ type: 'POST_COFFEE_DATA_SUCCESS', payload: responseData });
+      } else {
+        const errorData = await response.json();
+        dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: errorData });
       }
-    };
-
+    } catch (error) {
+      // If an error occurs during the request, dispatch an action with the error
+      dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: { error: 'An error occurred' } });
+    }
+  };
+  
 export const fetch_users_records = () => async (dispatch) =>{
     try {
         const response = await axios.get("http://127.0.0.1:8000/api/user/?format=json")

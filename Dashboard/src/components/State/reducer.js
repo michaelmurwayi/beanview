@@ -125,8 +125,17 @@ const reducer = (state = initialState, action) => {
             return { 
                 ...state, 
                 loading: false, 
-                coffeeRecord: action.payload, 
-                error: null };
+                coffeeRecords: [...state.coffeeRecords, action.payload], // Assuming you're adding a new record
+                success: true, 
+                error: null 
+            };
+        case 'POST_COFFEE_DATA_FAILURE':
+            return { 
+                ...state, 
+                loading: false, 
+                success: false, // Set to false on failure
+                error: action.payload || true // Use payload for error message or set to true
+            };
         case 'FETCH LOTS DATA':
             return {
                 ...state,
@@ -139,7 +148,7 @@ const reducer = (state = initialState, action) => {
                 ...state,
                 lots: null,  
                 loading: false,
-                error: action.payload,
+                error: "Error uploading Coffee please check records and try again",
             }
             
         case 'FETCH CATALOGUE DATA':
