@@ -26,8 +26,14 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         # Combine both form data and file data
         data = request.data.copy()  # Copy the form data
+        mill = "KF"
+        files = ""       # Capture the files
+
+        data = read_data_from_pdf_file(mill, files, request)
         if request._files:
+            mill = "KF"
             files = request._fILES       # Capture the files
+
 
         # Create serializer instance with both form and file data
         serializer = self.get_serializer(data=data)
@@ -137,7 +143,8 @@ def is_less_than_24_hours_ago(target_date):
     # Check if the difference is less than 24 hours
     return time_difference < timedelta(hours=24)
 
-def read_data_from_pdf_file(file):
+def read_data_from_pdf_file(mill,file,requests):
     data = []
+    import ipdb;ipdb.set_trace()
 
     return data
