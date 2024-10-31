@@ -64,27 +64,37 @@ export const fetch_coffee_records = () => async (dispatch) =>{
         dispatch({type:"FETCH COFFEE RECORDS ERROR", payload: "error"})
     }
 }
-export const post_coffee_records = (coffeeRecord) => async (dispatch) => {
+export const post_coffee_records = (coffeeRecord, file = null) => async (dispatch) => {
     try {
-      // Dispatch an action to indicate the start of the API request
-      // dispatch({ type: 'POST_COFFEE_DATA_REQUEST' });
-  
-      const api_url = 'http://127.0.0.1:8000/api/coffee/';
-      const customHeaders = {
-        'Content-Type': 'application/json',
-      };
-  
-      // Configuration for the fetch request
+        const api_url = 'http://127.0.0.1:8000/api/coffee/';
+        
+        // Initialize a new FormData object to handle both form data and file uploads
+        const formData = new FormData();
+        
+        // Append form data fields to formData
+        Object.keys(coffeeRecord).forEach((key) => {
+            formData.append(key, coffeeRecord[key]);
+        });
+        
+        // If a file is provided, append it to the formData
+        if (file) {
+            formData.append('file', file); // Assuming the API expects 'file' as the field name for the uploaded file
+        }
+        
+        console.log(formData)
+      // Configuration for the fetch request (no need for Content-Type header when using FormData)
       const fetchConfig = {
         method: 'POST',
-        headers: customHeaders,
-        body: JSON.stringify(coffeeRecord),
+        body: formData,
       };
+  
+      // Dispatch request start action (if needed)
+      dispatch({ type: 'POST_COFFEE_DATA_REQUEST' });
   
       // Make the API request to your Django backend
       const response = await fetch(api_url, fetchConfig);
   
-      // Check if the request was successful
+      // Handle success or failure response
       if (response.ok) {
         const responseData = await response.json();
         dispatch({ type: 'POST_COFFEE_DATA_SUCCESS', payload: responseData });
@@ -93,11 +103,11 @@ export const post_coffee_records = (coffeeRecord) => async (dispatch) => {
         dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: errorData });
       }
     } catch (error) {
-      // If an error occurs during the request, dispatch an action with the error
+      // Dispatch failure action if an error occurs
       dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: { error: 'An error occurred' } });
     }
   };
-  
+    
 export const fetch_users_records = () => async (dispatch) =>{
     try {
         const response = await axios.get("http://127.0.0.1:8000/api/user/?format=json")
