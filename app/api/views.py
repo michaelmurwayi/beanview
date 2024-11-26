@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework.response import Response
+from .process_mill_statements import DataCleaner
 
 
 
@@ -24,25 +25,39 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     serializer_class = CoffeeSerializer
     
     def create(self, request, *args, **kwargs):
-        # Combine both form data and file data
-        data = request.data.copy()  # Copy the form data
-        mill = "KF"
-        files = ""       # Capture the files
+        # Combine form data and file data
+        data = request.data.dict()  # Convert request.data to a mutable dictionary
+        files = request.FILES  # Get uploaded files
 
-        data = read_data_from_pdf_file(mill, files, request)
-        if request._files:
-            mill = "KF"
-            files = request._fILES       # Capture the files
+        # Process files if needed (custom function `DataCleaner`)
+        if files:
+            # Assuming DataCleaner processes files and returns a dictionary of cleaned data
+            data_cleaner = DataCleaner(files["file"])
+            # import ipdb;ipdb.set_trace()
+            data = data_cleaner.process()
+            
+            for record in data:
+                print(f"Processing record: {record}")  # To confirm it's iterating through all records
+                # Serialize the combined data
+                serializer = self.get_serializer(data=record)
+                serializer.is_valid(raise_exception=True)
+                
+                # Save the instance if valid
+                self.perform_create(serializer)
+                # Use the saved instance for headers
+                headers = self.get_success_headers(serializer.instance)
+            
 
+        else:
+            # Serialize the combined data
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
 
-        # Create serializer instance with both form and file data
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)  # Validate combined data
-
-        # Save the instance if valid
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
+            # Save the instance if valid
+            self.perform_create(serializer)
+            # Use the saved instance for headers
+            headers = self.get_success_headers(serializer.instance)
+            
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @action(detail=False, methods=['GET'], url_path='total_net_weight')

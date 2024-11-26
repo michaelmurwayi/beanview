@@ -72,25 +72,30 @@ class Coffee(models.Model):
     class Status(models.TextChoices):
         # define status of coffee
         RECIEVED = "RECIEVED", "recieved"
-        CUPPED = "CUPPED", "cupped"
+        CATALOGUES = "CATALOGUED", "catalogued"
         PENDING = "PENDING", "pending"
         SOLD = "SOLD", "sold"
+        WITHDRAWN = "WITHDRAWN", "withdrawn"
 
     outturn = models.CharField(max_length=100)
     mark = models.CharField(max_length=100)
-    season = models.CharField(max_length=100)
-    certificate = models.CharField(max_length=100)
     bags = models.IntegerField(null=True, blank=True)  # Make bags nullable
     pockets = models.IntegerField(null=True, blank=True)  # Make pockets nullable
     grade = models.CharField(max_length=50)
     weight = models.DecimalField(max_digits=10, decimal_places=2)
     mill = models.CharField(max_length=100)
     warehouse = models.CharField(max_length=100)
-    status = models.CharField(max_length=50)
+    certificate = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(max_length=50, choices=Status.choices, default=Status.PENDING)
     catalogue = models.CharField(max_length=100, null=True, blank=True)
+    season = models.CharField(max_length=100)
     reserve = models.IntegerField(null=True, blank=True)
     buyer = models.CharField(max_length=100, null=True, blank=True)
     remarks = models.TextField(null=True, blank=True)
+    file = models.CharField(max_length=50, default="Master_Log.xlsx")
+    created_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="user"
+    ) 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
