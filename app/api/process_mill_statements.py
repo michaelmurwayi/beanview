@@ -53,6 +53,13 @@ class DataCleaner:
 
         # Aggregating the data
         updated_data = []
+    
+        # Format coffee records season
+        parts = self.file_path.name.split("_")[1]
+        # Convert the first part to 20xx and the second part to 20yy
+        start_year = f"20{parts[0]}"
+        end_year = f"20{parts[1]}"
+        
         for (outturn, grade), group in records.items():
             # Aggregating the data
             aggregated_row = {
@@ -64,7 +71,7 @@ class DataCleaner:
                 'weight': sum(row['Net_Weight'] for row in group),  # Sum the 'Net_Weight'
                 'mill': self.file_path.name.split("_")[0],
                 'warehouse': group[0]['Location'],  # Keep the first value for 'Location'
-                'season': self.file_path.name.split("_")[1],
+                'season': f"{start_year}/{end_year}",
                 'status': "RECIEVED",
                 "file": self.file_path.name,
 

@@ -28,14 +28,23 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         # Combine form data and file data
         data = request.data.dict()  # Convert request.data to a mutable dictionary
         files = request.FILES  # Get uploaded files
+         # Check if 'outturn' and 'grade' are present in the data
 
         # Process files if needed (custom function `DataCleaner`)
         if files:
             # Assuming DataCleaner processes files and returns a dictionary of cleaned data
             data_cleaner = DataCleaner(files["file"])
             # import ipdb;ipdb.set_trace()
-            data = data_cleaner.process()
-            
+            cleaned_data = data_cleaner.process()
+             # Filter out records that already exist in the database based on 'outturn' and 'grade'
+            data = [
+                record for record in cleaned_data if not Coffee.objects.filter(outturn=record['outturn'], grade=record['grade']).exists()
+            ]
+            if not data:
+                # If no new records are valid after filtering, return an error response
+                
+                return Response({"detail": "No new records to upload, all records already exist in the database."}, status=status.HTTP_400_BAD_REQUEST)
+
             for record in data:
                 print(f"Processing record: {record}")  # To confirm it's iterating through all records
                 # Serialize the combined data
