@@ -17,12 +17,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const AddCoffee = (props) => {
-  
   const { success, error } = useSelector((state) => ({
     success: state.reducer.success,
     error: state.reducer.error,
   }));
-
+  
   const { dispatchCoffeeRecord } = props;
 
   // Initialize formData with keys for all inputs
@@ -48,12 +47,13 @@ const AddCoffee = (props) => {
   useEffect(() => {
     if (success) {
       toast.success('🎉 Success! Your coffee record has been added successfully! Thank you for your contribution!');
-      // Reset the form data after successful submission
       resetFormData();
     }
     if (error) {
-      const formattedError = error.error;
-      toast.error(`⚠️ Submission failed: ${Array.isArray(formattedError) ? formattedError.join(', ') : formattedError}. Please check your inputs.`);
+      // Check if the error contains a 'detail' field for better error messages
+      console.log(error)
+      const errorMessage = error.detail || error || 'An unexpected error occurred.';
+      toast.error(`⚠️ Submission failed: ${errorMessage}. Please check your inputs.`);
     }
   }, [success, error]);
 
@@ -83,7 +83,7 @@ const AddCoffee = (props) => {
   };
 
   const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
+    const selectedFile = event.target.files[0];  // Get the first file only
     if (selectedFile) {
       setFile(selectedFile);
     }
@@ -100,17 +100,20 @@ const AddCoffee = (props) => {
     // Append form data or file based on upload method
     if (uploadMethod === 'form') {
       for (const key in formData) {
-        dataToSend.append(key, formData[key]);
+        if (formData[key]) {
+          dataToSend.append(key, formData[key]);
+        }
       }
     } else if (uploadMethod === 'file' && file) {
       dataToSend.append('file', file);
+      dataToSend.append('filename', file.name);
     }
 
     // Only dispatch if there's data to send
-    if (dataToSend.has('file') || Object.keys(formData).some(key => formData[key] !== '')) {
+    if (dataToSend.has('file') || Object.keys(formData).some((key) => formData[key] !== '')) {
       dispatchCoffeeRecord(dataToSend);
     } else {
-      console.log("No data to submit");
+      toast.warn("⚠️ No data to submit. Please fill in the required fields.");
     }
   };
 
@@ -150,7 +153,7 @@ const AddCoffee = (props) => {
                       <span className="text-success">Upload a file</span>
                     </label>
                   </FormGroup>
-                  
+
                   {uploadMethod === 'form' && (
                     <>
                       <h6 className="heading-small text-muted mb-4">Estate information</h6>
@@ -258,7 +261,7 @@ const AddCoffee = (props) => {
                   {uploadMethod === 'file' && (
                     <FormGroup className="text-success">
                       <label htmlFor="file-upload">Upload File</label>
-                      <input type="file" id="file-upload" onChange={handleFileChange} className="form-control" />
+                      <input type="file" id="file" name="file" onChange={handleFileChange} className="form-control" />
                     </FormGroup>
                   )}
 
@@ -270,32 +273,15 @@ const AddCoffee = (props) => {
                   >
                     {uploadMethod === 'form' ? 'Add Coffee' : 'Upload File'}
                   </Button>
-                  {error && (
-                    <div className="error-message">
-                      <ul>
-                        {Array.isArray(error) ? (
-                          error.map((err, index) => (
-                            <li key={index}>{err}</li>
-                          ))
-                        ) : typeof error === 'string' ? (
-                          <li>{error}</li>
-                        ) : (
-                          // If the error is an object, convert it to an array of strings
-                          Object.entries(error).map(([key, value], index) => (
-                            <li key={index}>
-                              {key}: {typeof value === 'string' ? value : JSON.stringify(value)}
-                            </li>
-                          ))
-                        )}
-                      </ul>
-                    </div>
-                  )}
                 </Form>
               </CardBody>
             </Card>
           </Col>
         </Row>
       </Container>
+
+      {/* Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 };

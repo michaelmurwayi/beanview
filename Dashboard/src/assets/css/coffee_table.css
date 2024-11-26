@@ -1,0 +1,17 @@
+/* Custom table hover effect */
+.custom-hover-table tbody tr:hover {
+    background-color: #f1f1f1 !important; /* Change background color on hover */
+    cursor: pointer;
+  }
+  
+  /* Additional styling for the Date Range Picker */
+  .date-range-picker {
+    margin-bottom: 20px;
+  }
+  
+  .custom-hover-table {
+    margin-top: 20px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+  }
+  

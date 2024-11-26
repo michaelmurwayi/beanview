@@ -64,49 +64,57 @@ export const fetch_coffee_records = () => async (dispatch) =>{
         dispatch({type:"FETCH COFFEE RECORDS ERROR", payload: "error"})
     }
 }
-export const post_coffee_records = (coffeeRecord, file = null) => async (dispatch) => {
+export const post_coffee_records = (coffeeRecord) => async (dispatch) => {
     try {
         const api_url = 'http://127.0.0.1:8000/api/coffee/';
         
-        // Initialize a new FormData object to handle both form data and file uploads
+        // Initialize FormData
         const formData = new FormData();
-        
-        // Append form data fields to formData
-        Object.keys(coffeeRecord).forEach((key) => {
-            formData.append(key, coffeeRecord[key]);
-        });
-        
-        // If a file is provided, append it to the formData
-        if (file) {
-            formData.append('file', file); // Assuming the API expects 'file' as the field name for the uploaded file
+
+        // Check if coffeeRecord is a FormData instance
+        if (coffeeRecord instanceof FormData) {
+            for (const [key, value] of coffeeRecord.entries()) {
+                formData.append(key, value);
+            }
+        } else {
+            // Add each key-value pair to FormData
+            Object.keys(coffeeRecord).forEach((key) => {
+                // If the value is an array or file, handle it accordingly
+                if (key === 'file' && coffeeRecord[key]) {
+                    formData.append(key, coffeeRecord[key][0]); // Assuming file is an array
+                } else {
+                    formData.append(key, coffeeRecord[key]);
+                }
+            });
         }
         
-        console.log(formData)
-      // Configuration for the fetch request (no need for Content-Type header when using FormData)
-      const fetchConfig = {
-        method: 'POST',
-        body: formData,
-      };
-  
-      // Dispatch request start action (if needed)
-      dispatch({ type: 'POST_COFFEE_DATA_REQUEST' });
-  
-      // Make the API request to your Django backend
-      const response = await fetch(api_url, fetchConfig);
-  
-      // Handle success or failure response
-      if (response.ok) {
-        const responseData = await response.json();
-        dispatch({ type: 'POST_COFFEE_DATA_SUCCESS', payload: responseData });
-      } else {
-        const errorData = await response.json();
-        dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: errorData });
-      }
+        // Fetch configuration
+        const fetchConfig = {
+            method: 'POST',
+            body: formData,
+        };
+
+        // Dispatch request action
+        dispatch({ type: 'POST_COFFEE_DATA_REQUEST' });
+
+        // Perform API request
+        const response = await fetch(api_url, fetchConfig);
+        
+        // Check for successful response
+        if (response.ok) {
+            const responseData = await response.json();
+            dispatch({ type: 'POST_COFFEE_DATA_SUCCESS', payload: responseData });
+        } else {
+            // Handle non-OK responses
+            const errorData = await response.json();
+            const errorMessage = errorData.detail || 'Check upload file for errors.';
+            dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: errorMessage });
+        }
     } catch (error) {
-      // Dispatch failure action if an error occurs
-      dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: { error: 'An error occurred' } });
+        // Catch unexpected errors and dispatch failure action
+        dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: { error: error.message } });
     }
-  };
+};
     
 export const fetch_users_records = () => async (dispatch) =>{
     try {

@@ -1,6 +1,5 @@
 
 const initialState = {
-    coffee: null,
     coffeeRecord: {},
     coffeeRecords: [],
     totalNetWeight: null,
