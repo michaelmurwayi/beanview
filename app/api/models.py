@@ -73,9 +73,9 @@ class Coffee(models.Model):
         # define status of coffee
         RECIEVED = "RECIEVED", "recieved"
         CATALOGUES = "CATALOGUED", "catalogued"
-        PENDING = "PENDING", "pending"
         SOLD = "SOLD", "sold"
         WITHDRAWN = "WITHDRAWN", "withdrawn"
+        PENDING = "PENDING", "pending"
 
     outturn = models.CharField(max_length=100)
     mark = models.CharField(max_length=100)

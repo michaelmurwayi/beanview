@@ -1,6 +1,6 @@
 /* Custom table hover effect */
 .custom-hover-table tbody tr:hover {
-    background-color: #f1f1f1 !important; /* Change background color on hover */
+    background-color: #100f0f !important; /* Change background color on hover */
     cursor: pointer;
   }
   
@@ -14,4 +14,35 @@
     font-size: 14px;
     border: 1px solid #ddd;
   }
+
+  /* Change the default date color */
+.rdrDateDisplayWrapper {
+  color: #000000 !important; /* Set a color you prefer */
+}
+
+.rdrCalendarWrapper .rdrMonthAndYear {
+  color: #000000 !important; /* Ensure the month and year text is visible */
+}
+
+.rdrDayNumber {
+  color: #000000 !important; /* Change the color of the day numbers */
+}
+
+.rdrDaySelected {
+  background-color: #4caf50 !important; /* Change the background color of the selected day */
+  color: white !important; /* Change the text color of selected day */
+}
+
+.rdrDayInPreview {
+  color: #000000 !important; /* Set a color for days in the preview */
+}
+
+/* Customize hover effect for days */
+.rdrDayHover {
+  background-color: #ddd !important;
+}
+
+.rdrStaticRangeLabel{ 
+  color: black;
+}
   
