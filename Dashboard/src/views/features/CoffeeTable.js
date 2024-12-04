@@ -7,10 +7,17 @@ import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css'; // theme css file
 import 'assets/css/coffee_table.css';
 import { MDBIcon } from 'mdbreact';
+import Modal from 'components/UpdateForm/Form';
 
 const DataTable = (props) => {
   const { coffeeRecords, fetch_coffee_records } = props;
-  
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
+  const toggleModal = () => {
+    setModalOpen(!isModalOpen);
+  };
+
   // Set default date range to show all available records
   const [dateRange, setDateRange] = useState({
     startDate: new Date('2024-01-01'), // Default start date (far in the past)
@@ -27,6 +34,11 @@ const DataTable = (props) => {
   const handleDateChange = (ranges) => {
     setDateRange(ranges.selection);
   };
+  const handleUpdate = (record) => {
+    setSelectedRecord(record);
+    setModalOpen(true); // Open the modal
+    
+  };
 
   // Filter data based on selected date range (if applicable)
   const filteredRecords = coffeeRecords.filter((record) => {
@@ -36,6 +48,12 @@ const DataTable = (props) => {
 
   const data = {
     columns: [
+      {
+        label: 'id',
+        field: 'id',
+        sort: 'asc',
+        width: 150,
+      },
       {
         label: 'Mark',
         field: 'mark',
@@ -102,11 +120,49 @@ const DataTable = (props) => {
         sort: 'asc',
         width: 100,
       },
+      {
+        label: 'Actions',
+        field: 'actions',
+        sort: 'disabled', // Disable sorting for action buttons
+        width: 200,
+      },
     ],
 
-    rows: filteredRecords, // Use filtered records
-  };
-
+    rows: filteredRecords.map(record => ({
+      ...record,
+    actions: (
+      <>
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={() => handleUpdate(record)}
+        >
+        <i class="fas fa-pen-fancy"></i>
+        </button>
+        <button
+          className="btn btn-danger btn-sm"
+          onClick={() => handleDelete(record.id)}
+          style={{ marginLeft: '5px' }}
+        >
+          <i class="fas fa-delete-left"></i>
+        </button>
+      </>
+    ),
+    })),
+    
+    };
+   
+    const handleModalSave = (updatedRecord) => {
+      console.log('Updated Record:', updatedRecord);
+      // Handle the updated record here (e.g., dispatching an action to update the store)
+      setModalOpen(false); // Close the modal after saving
+    };
+    const handleDelete = (id) => {
+      if (window.confirm('Are you sure you want to delete this record?')) {
+        alert(`Delete action triggered for record ID: ${id}`);
+        // Add your delete logic here
+      }
+    };
+  
   return (
     <div className="container-fluid">
       {/* Date Range Picker */}
@@ -135,6 +191,10 @@ const DataTable = (props) => {
         barReverse={false}
         className="COFFEE RECORDS" // Add your custom CSS for hover effect
       />
+       {/* Modal Form */}
+       <Modal isOpen={isModalOpen} toggleModal={toggleModal} record={selectedRecord} onSave={handleModalSave}>
+        
+      </Modal>
     </div>
   );
 };
