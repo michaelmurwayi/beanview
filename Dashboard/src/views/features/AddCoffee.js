@@ -15,6 +15,7 @@ import { post_coffee_records } from "components/State/action";
 import { connect, useSelector } from "react-redux";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import * as XLSX from "xlsx";
 
 const AddCoffee = (props) => {
   const { success, error } = useSelector((state) => ({
@@ -41,6 +42,8 @@ const AddCoffee = (props) => {
 
   // State for the file and upload method
   const [file, setFile] = useState(null);
+  const [sheetNames, setSheetNames] = useState([])
+  const [selectedSheet, setSelectedSheet] = useState('all'); // State for selected sheet or 'all'
   const [uploadMethod, setUploadMethod] = useState('form'); // New state to track upload method
 
   // Watch for success or error changes
@@ -82,10 +85,21 @@ const AddCoffee = (props) => {
     }));
   };
 
+  
+
   const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];  // Get the first file only
+    
+    const selectedFile = event.target.files[0]; // Get the first file only
+    setFile(selectedFile)
     if (selectedFile) {
-      setFile(selectedFile);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        setSheetNames(workbook.SheetNames.slice(0, -3)); // Get all sheet names
+        
+      };
+      reader.readAsArrayBuffer(selectedFile); // Read the file as an ArrayBuffer
     }
   };
 
@@ -96,19 +110,28 @@ const AddCoffee = (props) => {
   const handleSubmit = (event) => {
     event.preventDefault(); // Prevent default form submission
     const dataToSend = new FormData();
-
+    console.log(sheetNames)
+    // Append form data or file based on upload method
     // Append form data or file based on upload method
     if (uploadMethod === 'form') {
-      for (const key in formData) {
-        if (formData[key]) {
-          dataToSend.append(key, formData[key]);
+      Object.entries(formData).forEach(([key, value]) => {
+        // Only append if the value is not empty or undefined
+        if (value) {
+          dataToSend.append(key, value);
         }
-      }
+      });
+      console.log(sheetNames)
     } else if (uploadMethod === 'file' && file) {
       dataToSend.append('file', file);
       dataToSend.append('filename', file.name);
+      if (selectedSheet == "all"){
+          dataToSend.append("sheetnames", sheetNames)
+      }else{
+        dataToSend.append("sheetnames", selectedSheet)
+      }
     }
-
+    console.log(dataToSend.has('file'))
+  
     // Only dispatch if there's data to send
     if (dataToSend.has('file') || Object.keys(formData).some((key) => formData[key] !== '')) {
       dispatchCoffeeRecord(dataToSend);
@@ -257,22 +280,58 @@ const AddCoffee = (props) => {
                       </div>
                     </>
                   )}
-
                   {uploadMethod === 'file' && (
                     <FormGroup className="text-success">
-                      <label htmlFor="file-upload">Upload File</label>
                       <input type="file" id="file" name="file" onChange={handleFileChange} className="form-control" />
                     </FormGroup>
+                    
                   )}
-
-                  <Button
-                    className="mt-5"
-                    color="primary"
-                    type="submit"
-                    size="sm"
-                  >
-                    {uploadMethod === 'form' ? 'Add Coffee' : 'Upload File'}
-                  </Button>
+                  {/* Display sheet names */}
+                  {sheetNames.length > 0 && (
+                     <form onSubmit={handleSubmit}>
+                     {/* File input, disabled for immutability */}
+                     
+                     {/* Dropdown to select between sheet names or include all */}
+                     {sheetNames.length > 0 && (
+                       <div className="form-group">
+                         <label htmlFor="sheet">Select Sheet</label>
+                         <select
+                           id="sheet"
+                           name="sheet"
+                           className="form-control"
+                           value={selectedSheet}
+                           onChange={(e) => setSelectedSheet(e.target.value)}
+                         >
+                          <option value="all">Include All Sheets</option>
+                           {sheetNames.map((name, index) => (
+                             <option key={index} value={name}>
+                               {name}
+                             </option>
+                           ))}
+                         </select>
+                       </div>
+                     )}
+             
+                     {/* Submit button */}
+                    {/* <button type="submit" className="btn-xs btn-primary">
+                        Submit
+                      </button> */}
+                    </form>
+                    )}
+                    <Button
+                      className="mt-5"
+                      color="primary"
+                      type="submit"
+                      size="sm"
+                    >
+                      {sheetNames.length > 0
+                        ? 'Submit File'  // If sheetNames are available, show 'Submit File'
+                        : uploadMethod === 'form'
+                        ? 'Add Coffee'   // If form is selected, show 'Add Coffee'
+                        : 'Check File'   // Otherwise, show 'Check File'
+                      }
+                    </Button>
+                    
                 </Form>
               </CardBody>
             </Card>

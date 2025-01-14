@@ -8,11 +8,14 @@ import 'react-date-range/dist/theme/default.css'; // theme css file
 import 'assets/css/coffee_table.css';
 import { MDBIcon } from 'mdbreact';
 import Modal from 'components/UpdateForm/Form';
+import { delete_coffee_record } from 'components/State/action';
 
 const DataTable = (props) => {
+  const [alert, setAlert] = useState({ type: '', message: '' });
   const { coffeeRecords, fetch_coffee_records } = props;
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const {delete_coffee_record} = props
 
   const toggleModal = () => {
     setModalOpen(!isModalOpen);
@@ -38,6 +41,18 @@ const DataTable = (props) => {
     setSelectedRecord(record);
     setModalOpen(true); // Open the modal
     
+  };
+  
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      try{
+        delete_coffee_record(id)
+        setAlert({ type: 'success', message: 'Record deleted success' });
+      }catch {
+        setAlert({ type: 'Error', message: 'Unable to delete record please contact system admin' });
+      }
+      // Add your delete logic here
+    }
   };
 
   // Filter data based on selected date range (if applicable)
@@ -131,40 +146,35 @@ const DataTable = (props) => {
     rows: filteredRecords.map(record => ({
       ...record,
     actions: (
-      <>
-        <button
-          className="btn btn-primary btn-sm"
-          onClick={() => handleUpdate(record)}
-        >
-        <i class="fas fa-pen-fancy"></i>
-        </button>
-        <button
-          className="btn btn-danger btn-sm"
-          onClick={() => handleDelete(record.id)}
-          style={{ marginLeft: '5px' }}
-        >
-          <i class="fas fa-delete-left"></i>
-        </button>
-      </>
+      <div className='d-flex'>
+       <button
+        className=" btn-sm btn-info custom-button"
+        onClick={() => handleUpdate(record)}
+      >
+        <i className="fas fa-pen-fancy"></i> Edit
+      </button>
+      <button
+        className=" btn-sm btn-danger custom-button"
+        onClick={() => handleDelete(record.id)}
+        style={{ marginLeft: '5px' }}
+      >
+        <i className="fas fa-trash-alt"></i> Delete
+      </button>
+
+      </div>
     ),
     })),
     
     };
    
-    const handleModalSave = (updatedRecord) => {
-      console.log('Updated Record:', updatedRecord);
-      // Handle the updated record here (e.g., dispatching an action to update the store)
-      setModalOpen(false); // Close the modal after saving
-    };
-    const handleDelete = (id) => {
-      if (window.confirm('Are you sure you want to delete this record?')) {
-        alert(`Delete action triggered for record ID: ${id}`);
-        // Add your delete logic here
-      }
-    };
-  
   return (
     <div className="container-fluid">
+          {/* Alert Messages */}
+      {alert.message && (
+        <div className={`alert ${alert.type === 'success' ? 'alert-success' : 'alert-error'}`}>
+          {alert.message}
+        </div>
+      )}
       {/* Date Range Picker */}
       <div className="date-range-picker">
         <DateRangePicker
@@ -185,24 +195,25 @@ const DataTable = (props) => {
         searching
         paging
         paginationLabel={[
-          <MDBIcon icon="chevron-left" key="prev" />,
-          <MDBIcon icon="chevron-right" key="next" />
+          <MDBIcon icon="chevron-left" key="<" />,
+          <MDBIcon icon="chevron-right" key=">" />
         ]}
         barReverse={false}
         className="COFFEE RECORDS" // Add your custom CSS for hover effect
       />
        {/* Modal Form */}
-       <Modal isOpen={isModalOpen} toggleModal={toggleModal} record={selectedRecord} onSave={handleModalSave}>
+       <Modal isOpen={isModalOpen} toggleModal={toggleModal} record={selectedRecord} >
         
       </Modal>
     </div>
   );
 };
 
-const mapDispatchToProps = { fetch_coffee_records };
+const mapDispatchToProps = { fetch_coffee_records, delete_coffee_record };
 
 const mapStateToProps = (state) => ({
   coffeeRecords: state.reducer.coffeeRecords,
+  selectedRecord: state.reducer.coffeeCoffee,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(DataTable);

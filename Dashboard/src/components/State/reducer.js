@@ -136,6 +136,47 @@ const reducer = (state = initialState, action) => {
                 success: false, // Set to false on failure
                 error: action.payload || true // Use payload for error message or set to true
             };
+        case 'UPDATE_COFFEE_DATA_REQUEST':
+            return {
+                ...state,
+                isLoading: true,
+                error: null,
+            };
+        case 'UPDATE_COFFEE_DATA_SUCCESS':
+            return {
+                ...state,
+                isLoading: false,
+                coffeeRecords: state.coffeeRecords.map((record) =>
+                    record.id === action.payload.id ? action.payload : record
+                ),
+            };
+        case 'UPDATE_COFFEE_DATA_FAILURE':
+            return {
+                ...state,
+                isLoading: false,
+                error: action.payload,
+            };
+          // Handle delete actions
+          case 'DELETE_COFFEE_RECORD_REQUEST':
+            return {
+                ...state,
+                isLoading: true,
+                error: null,
+            };
+        case 'DELETE_COFFEE_RECORD_SUCCESS':
+            return {
+                ...state,
+                isLoading: false,
+                coffeeRecords: state.coffeeRecords.filter(
+                    (record) => record.id !== action.payload.id
+                ),
+            };
+        case 'DELETE_COFFEE_RECORD_FAILURE':
+            return {
+                ...state,
+                isLoading: false,
+                error: action.payload,
+            };
         case 'FETCH LOTS DATA':
             return {
                 ...state,

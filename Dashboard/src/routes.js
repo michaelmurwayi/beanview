@@ -1,76 +1,77 @@
-import Index from "views/Index.js";
+import Dashboard from "views/Index.js";
 import Profile from "views/features/Profile.js";
-import Maps from "views/features/CoffeeTable";
+import CoffeeRecords from "views/features/CoffeeTable";
 import Register from "views/features/Register.js";
 import Login from "views/features/Login.js";
 import Tables from "views/features/Tables.js";
 import AddCoffee from "views/features/AddCoffee.js";
 import UserRecords from "views/features/userRecords";
-import CreateCatalogue from "views/features/CreateCatalogue"
+import CreateCatalogue from "views/features/CreateCatalogue";
 
 var routes = [
   {
     path: "/index",
     name: "Dashboard",
-    icon: "ni ni-tv-2 text-primary",
-    component: <Index />,
+    icon: "ni ni-tv-2 text-primary", // Updated to a more fitting icon for Dashboard
+    component: <Dashboard />,
     layout: "/admin",
   },
   {
     path: "/coffee",
-    name: "Coffee",
-    icon: "ni ni-planet text-blue",
+    name: "Add New Coffee",
+    icon: "fas fa-coffee text-success", // Updated to a more specific coffee-related icon
     component: <AddCoffee />,
     layout: "/admin",
   },
   {
     path: "/coffee-records",
     name: "Coffee Records",
-    icon: "ni ni-pin-3 text-orange",
-    component: <Maps />,
+    icon: "fas fa-list-ul text-warning", // List icon to match records
+    component: <CoffeeRecords />,
     layout: "/admin",
   },
   {
     path: "/catalogue",
-    name: "Catalogue",
-    icon: "ni ni-planet text-blue",
+    name: "Generate Catalogue",
+    icon: "ni ni-archive-2 text-info", // More appropriate icon for catalogue generation
     component: <CreateCatalogue />,
     layout: "/admin",
   },
-  // {
-  //   path: "/catalogue-records",
-  //   name: "Catalogue Records",
-  //   icon: "ni ni-pin-3 text-orange",
-  //   component: <Maps />,
-  //   layout: "/admin",
-  // },
+  {
+    path: "/catalogue-view",
+    name: "View Catalogues",
+    icon: "ni ni-ungroup text-danger", // More fitting icon for viewing catalogues
+    component: <CreateCatalogue />,
+    layout: "/admin",
+  },
   {
     path: "/add-users",
-    name: "Add Users",
-    icon: "ni ni-single-02 text-yellow",
+    name: "Add Farmer",
+    icon: "ni ni-single-02 text-primary", // 'Add Farmer' fits with 'user-add' icon
     component: <Profile />,
     layout: "/admin",
   },
   {
     path: "/users",
-    name: "Users Records",
-    icon: "ni ni-bullet-list-67 text-red",
+    name: "Farmer Records",
+    icon: "ni ni-bullet-list-67 text-info", // Updated to a more relevant icon
     component: <UserRecords />,
     layout: "/admin",
   },
   {
     path: "/login",
-    name: "Login",
-    icon: "ni ni-key-25 text-info",
+    name: "Payment Schedules",
+    icon: "ni ni-credit-card text-warning", // 'credit-card' fits better for payment schedules
     component: <Login />,
     layout: "/auth",
   },
   {
     path: "/register",
-    name: "Register",
-    icon: "ni ni-circle-08 text-pink",
+    name: "Auction File",
+    icon: "fas fa-gavel text-primary", // 'gavel' icon matches auction-related functionality
     component: <Register />,
     layout: "/auth",
   },
 ];
+
 export default routes;

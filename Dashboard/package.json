@@ -65,7 +65,8 @@
     "react-scripts": "^5.0.1",
     "reactstrap": "8.10.0",
     "redux": "^4.2.1",
-    "sass": "1.62.1"
+    "sass": "1.62.1",
+    "xlsx": "^0.18.5"
   },
   "optionalDependencies": {
     "eslint-plugin-flowtype": "8.0.3",

@@ -12,10 +12,18 @@ const initialState = {
     dailyDeliveries: [],
     users:[],
     lots: [],
-    catalogues: [], 
+    catalogue: {
+        day: "",
+        date: "",
+        bags: "",
+        lots: "",
+        millers: "",
+        coffeeRecords: []
+    }, 
     success: false,
     error: false,
     loading: false,
+
         
 }
 

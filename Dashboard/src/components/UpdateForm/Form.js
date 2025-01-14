@@ -1,55 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import './form.css'; // Optional: for custom styles
+import { connect } from 'react-redux'; // Add this to connect to Redux
+import { update_coffee_record } from 'components/State/action';
 
-const Modal = ({ isOpen, toggleModal, record, onSave }) => {
-  // State to store the form data, initialized with the record data
-  const [formData, setFormData] = useState({
-    id: '',
-    mark: '',
-    outturn: '',
-    grade: '',
-    bags: '',
-    pockets: '',
-    weight: '',
-    season: '',
-    certificate: '',
-    mill: '',
-    status: ''
-  });
+const Modal = ({ isOpen, toggleModal, record, update_coffee_record }) => {
+    const [alert, setAlert] = useState({ type: '', message: '' });
+    // State to store the form data, initialized with the record data
+    const [formData, setFormData] = useState({
+        id: '',
+        mark: '',
+        outturn: '',
+        grade: '',
+        bags: '',
+        pockets: '',
+        weight: '',
+        season: '',
+        certificate: '',
+        mill: '',
+        status: ''
+    });
 
-  // Update the form when the record changes
-  useEffect(() => {
-    if (record) {
-      setFormData({
-        id: record.id || '',
-        mark: record.mark || '',
-        outturn: record.outturn || '',
-        grade: record.grade || '',
-        bags: record.bags || '',
-        pockets: record.pockets || '',
-        weight: record.weight || '',
-        season: record.season || '',
-        certificate: record.certificate || '',
-        mill: record.mill || '',
-        status: record.status || ''
-      });
-    }
-  }, [record]);
+    // Update the form when the record changes
+    useEffect(() => {
+        if (record) {
+        setFormData({
+            id: record.id || '',
+            mark: record.mark || '',
+            outturn: record.outturn || '',
+            grade: record.grade || '',
+            bags: record.bags || '',
+            pockets: record.pockets || '',
+            weight: record.weight || '',
+            season: record.season || '',
+            certificate: record.certificate || '',
+            mill: record.mill || '',
+            status: record.status || ''
+        });
+        }
+    }, [record]);
 
-  // Handle input change
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
+    // Handle input change
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevState) => ({
+        ...prevState,
+        [name]: value
+        }));
+    };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(formData); // Send the form data to the parent
-    toggleModal(); // Close the modal
+    // Handle form submission
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+        // Dispatch the update action here
+        await update_coffee_record(formData); // Assuming this returns a promise
+        setAlert({ type: 'success', message: 'Record updated successfully!' });
+        } catch (error) {
+        setAlert({ type: 'error', message: 'Failed to update the record. Please try again.' });
+        }
+
+        // Optionally close the modal after a delay
+        setTimeout(() => {
+        toggleModal();
+        setAlert({ type: '', message: '' }); // Clear the alert
+        }, 2000);
   };
 
   if (!isOpen) {
@@ -60,8 +75,14 @@ const Modal = ({ isOpen, toggleModal, record, onSave }) => {
     <div className="modal-overlay">
       <div className="modal-content">
         <h2 >Edit Record</h2>
+                {/* Alert Messages */}
+        {alert.message && (
+          <div className={`alert ${alert.type === 'success' ? 'alert-success' : 'alert-error'}`}>
+            {alert.message}
+          </div>
+        )}
         <div className="modal-body">
-          <form onSubmit={handleSubmit}>
+          <form  onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="mark">Mark</label>
               <input
@@ -193,4 +214,6 @@ const Modal = ({ isOpen, toggleModal, record, onSave }) => {
   );
 };
 
-export default Modal;
+const mapDispatchToProps = { update_coffee_record }; 
+
+export default connect(null, mapDispatchToProps)(Modal);
