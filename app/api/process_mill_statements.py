@@ -3,7 +3,7 @@
 import pandas as pd
 
 class DataCleaner:
-    def __init__(self, file_path):
+    def __init__(self, file_path, sheet_names):
         """
         Initializes the DataCleaner instance with the file path.
         
@@ -12,6 +12,7 @@ class DataCleaner:
         """
         self.file_path = file_path
         self.df = pd.read_excel(file_path)
+        print(sheet_names)
         print("file recieved")
     
     def clean_outturns(self):

@@ -28,14 +28,15 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         # Combine form data and file data
         data = request.data.dict()  # Convert request.data to a mutable dictionary
         files = request.FILES  # Get uploaded files
-         # Check if 'outturn' and 'grade' are present in the data
-
+        sheets = data["sheetnames"].split(",")
+        # Check if 'outturn' and 'grade' are present in the data
+        
         # Process files if needed (custom function `DataCleaner`)
-        if files:
+        if files and sheets:
             # Assuming DataCleaner processes files and returns a dictionary of cleaned data
-            data_cleaner = DataCleaner(files["file"])
-            # import ipdb;ipdb.set_trace()
+            data_cleaner = DataCleaner(files["file"], sheets)
             cleaned_data = data_cleaner.process()
+            import ipdb;ipdb.set_trace()
              # Filter out records that already exist in the database based on 'outturn' and 'grade'
             data = [
                 record for record in cleaned_data if not Coffee.objects.filter(outturn=record['outturn'], grade=record['grade']).exists()
@@ -68,6 +69,23 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             headers = self.get_success_headers(serializer.instance)
             
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def update(self, request, *args, **kwargs):
+        """Handle the PUT method for updating a Coffee record."""
+        # Retrieve the object to be updated
+        instance = self.get_object()
+        # Deserialize and validate the incoming data
+        serializer = self.get_serializer(instance, data=request.data, partial=True)  # Use `partial=True` for PATCH
+        serializer.is_valid(raise_exception=True)
+
+        # Save the updated instance
+        self.perform_update(serializer)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def perform_update(self, serializer):
+        """Customize save logic during the update."""
+        serializer.save()
 
     @action(detail=False, methods=['GET'], url_path='total_net_weight')
     def total_net_weight(self, request):
