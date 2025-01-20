@@ -36,27 +36,44 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             # Assuming DataCleaner processes files and returns a dictionary of cleaned data
             data_cleaner = DataCleaner(files["file"], sheets)
             cleaned_data = data_cleaner.process()
-            import ipdb;ipdb.set_trace()
-             # Filter out records that already exist in the database based on 'outturn' and 'grade'
+
+            
+            # Get all existing outturn and grade combinations in a set for faster lookup
+            existing_records = set(
+                Coffee.objects.values_list('outturn', 'grade')
+            )
+
+            # Filter new records efficiently
             data = [
-                record for record in cleaned_data if not Coffee.objects.filter(outturn=record['outturn'], grade=record['grade']).exists()
+                record for sheet, records in cleaned_data.items()
+                for record in records
+                if isinstance(record, dict) and (record.get('OUTTURN'), record.get('GRADE')) not in existing_records
             ]
+            print(data)
             if not data:
                 # If no new records are valid after filtering, return an error response
                 
                 return Response({"detail": "No new records to upload, all records already exist in the database."}, status=status.HTTP_400_BAD_REQUEST)
 
             for record in data:
-                print(f"Processing record: {record}")  # To confirm it's iterating through all records
-                # Serialize the combined data
-                serializer = self.get_serializer(data=record)
-                serializer.is_valid(raise_exception=True)
+                try:
+                    print(f"Processing record: {record}")  # To confirm it's iterating through all records
+                    
+                    # Serialize the combined data
+                    serializer = self.get_serializer(data=record)
+                    
+                    if serializer.is_valid(raise_exception=False):
+                        # Save the instance if valid
+                        self.perform_create(serializer)
+                        # Use the saved instance for headers
+                        headers = self.get_success_headers(serializer.instance)
+                    else:
+                        print(f"Validation error for record: {record}")
+                        print(f"Errors: {serializer.errors}")
                 
-                # Save the instance if valid
-                self.perform_create(serializer)
-                # Use the saved instance for headers
-                headers = self.get_success_headers(serializer.instance)
-            
+                except Exception as e:
+                    print(f"Error processing record: {record}")
+                    print(f"Exception: {str(e)}")
 
         else:
             # Serialize the combined data
@@ -67,7 +84,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             self.perform_create(serializer)
             # Use the saved instance for headers
             headers = self.get_success_headers(serializer.instance)
-            
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
     def update(self, request, *args, **kwargs):

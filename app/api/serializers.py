@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 class CoffeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coffee
-        fields = ['id','outturn', 'mark', 'season', 'certificate', 'bags','pockets', 'grade','weight','mill','warehouse', 'status', 'created_at']
+        fields = ['outturn', 'grade', 'mark', 'bags', 'pockets', 'weight', 'mill', 'warehouse', 'season', 'status', 'file']
         extra_kwargs = {
                 'catalogue': {'required': False},
                 'reserve': {'required': False},
