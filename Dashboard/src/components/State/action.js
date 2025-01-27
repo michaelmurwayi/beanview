@@ -200,12 +200,20 @@ export const delete_coffee_record = (id) => async (dispatch) => {
 
 
  
-export const fetch_users_records = () => async (dispatch) =>{
+export const fetch_farmers_records = () => async (dispatch) =>{
     try {
         const response = await axios.get("http://127.0.0.1:8000/api/user/?format=json")
-        dispatch({type: 'FETCH USERS RECORDS', payload: response.data})
+        dispatch({type: 'FETCH FARMERS RECORDS', payload: response.data})
     }catch (error){
-        dispatch({type:"FETCH USERS RECORDS ERROR", payload: "error"})
+        dispatch({type:"FETCH FARMER RECORDS ERROR", payload: "error"})
+    }
+}
+export const post_farmers_records = () => async(dispatch)=>{
+    const api = "http://127.0.0.1:8000/api/user/"
+    try{
+        console.log("contact made")
+    }catch (error){
+        console.log("error")
     }
 }
 

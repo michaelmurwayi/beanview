@@ -101,19 +101,33 @@ const reducer = (state = initialState, action) => {
                 loading: false,
                 error: action.payload,
             }
-        case 'FETCH USERS RECORDS':
+        case 'FETCH FARMERS RECORDS':
             return {
                 ...state,
                 users: action.payload,
                 loading: false,
                 error: null,
             }
-        case 'FETCH USERS RECORDS ERROR':
+        case 'FETCH FARMERS RECORDS ERROR':
             return {
                 ...state,
                 users: null,  
                 loading: false,
                 error: action.payload,
+            }
+        case 'POST FARMERS RECORDS REQUEST':
+            return {
+                ...state,
+                loading: false,
+                error: action.payload
+            }
+        case 'POST FARMERS RECORDS SUCCESS':
+            return{
+                ...state,
+                loading: true,
+                farmers: [...state.farmers, action.payload],
+                success: true,
+                error: null,
             }
         case 'POST_COFFEE_DATA_REQUEST':
             return { 

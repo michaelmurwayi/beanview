@@ -1,5 +1,5 @@
 import Dashboard from "views/Index.js";
-import Profile from "views/features/Profile.js";
+import AddUser from "views/features/AddUser.js";
 import CoffeeRecords from "views/features/CoffeeTable";
 import Register from "views/features/Register.js";
 import Login from "views/features/Login.js";
@@ -48,7 +48,7 @@ var routes = [
     path: "/add-users",
     name: "Add Farmer",
     icon: "ni ni-single-02 text-primary", // 'Add Farmer' fits with 'user-add' icon
-    component: <Profile />,
+    component: <AddUser />,
     layout: "/admin",
   },
   {

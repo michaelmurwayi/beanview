@@ -11,7 +11,8 @@ import initialState from 'components/State/initialState';
 
 const DataTable = (props) => {
   const { coffeeRecords, fetch_coffee_records } = props;
-  const [state, setState] = useState(initialState)
+  const [state, setState] = useState(initialState);
+  const [showPopup, setShowPopup] = useState(false);
   
   // Set default date range
   const [dateRange, setDateRange] = useState({
@@ -22,7 +23,6 @@ const DataTable = (props) => {
 
   const [loading, setLoading] = useState(true); // Loading state for data fetch
   const [filteredCatalogue, setFilteredCatalogue] = useState([]); // Store filtered records
-  const [modalOpen, setModalOpen] = useState(false); // Modal open state
 
   // Fetch coffee records on component mount
   useEffect(() => {
@@ -58,32 +58,72 @@ const DataTable = (props) => {
     rows: filteredRecords, // Using filtered records
   };
 
-    // Handle catalogue generation logic
-    const handleGenerateCatalogue = () => {
-      // Filter records where the weight is greater than 120 KG
-      const filteredRecords = coffeeRecords.filter(record => parseFloat(record.weight) > 120);
-      state.catalogue.coffeeRecords = coffeeRecords.filter(record => parseFloat(record.weight) > 120);
-      if (filteredRecords.length > 0) {
-        // Replace this with actual catalogue generation logic
-        alert(`Catalogue generated with ${filteredRecords} records.`);
-        console.log(state.catalogue.coffeeRecords); // Log or handle the filtered records as needed
-      } else {
-        alert("No records found with weight greater than 120 KG.");
-      }
-    };
+  // Handle catalogue generation logic
+  const handleGenerateCatalogue = () => {
+    // Filter records where weight > 120 and status is not 'PENDING'
+    const filtered = coffeeRecords.filter(
+      (record) => parseFloat(record.weight) > 120 && record.status.toUpperCase() !== 'PENDING'
+    );
+
+    if (filtered.length > 0) {
+      setFilteredCatalogue(filtered);
+      setShowPopup(true);
+    } else {
+      alert("No records found with weight greater than 120 KG.");
+    }
+  };
+
+  // Inline styles for the popup
+  const popupStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    popup: {
+      backgroundColor: '#fff',
+      padding: '20px',
+      borderRadius: '10px',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+      maxWidth: '800px',
+      width: '90%',
+      textAlign: 'center',
+    },
+    closeButton: {
+      position: 'absolute',
+      top: '10px',
+      right: '20px',
+      background: 'red',
+      color: 'white',
+      border: 'none',
+      padding: '5px 10px',
+      cursor: 'pointer',
+      fontSize: '16px',
+    },
+    table: {
+      width: '100%',
+      borderCollapse: 'collapse',
+      marginTop: '20px',
+    },
+    th: {
+      border: '1px solid black',
+      padding: '10px',
+    },
+    td: {
+      border: '1px solid black',
+      padding: '10px',
+      textAlign: 'center',
+    },
+  };
 
   return (
     <div className="container-fluid">
-      {/* Date Range Picker */}
-      <div className="date-range-picker mb-3">
-        <DateRangePicker
-          ranges={[dateRange]}
-          onChange={handleDateChange}
-          months={2}
-          direction="horizontal"
-        />
-      </div>
-
       {/* Loading Spinner */}
       {loading ? (
         <div className="text-center">
@@ -111,12 +151,41 @@ const DataTable = (props) => {
 
           {/* Generate Catalogue Button */}
           <div className="text-right mt-4">
-            <button
-              className="btn btn-info"
-              onClick={handleGenerateCatalogue}
-            >
+            <button className="btn btn-info" onClick={handleGenerateCatalogue}>
               <i className="fas fa-download"></i> Generate Catalogue
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Popup Modal for Filtered Records */}
+      {showPopup && (
+        <div style={popupStyles.overlay}>
+          <div style={popupStyles.popup}>
+            <h3>Coffee Records</h3>
+            <button onClick={() => setShowPopup(false)} style={popupStyles.closeButton}>X</button>
+            {filteredCatalogue.length > 0 ? (
+              <table style={popupStyles.table}>
+                <thead>
+                  <tr style={{ background: '#f2f2f2' }}>
+                    {Object.keys(filteredCatalogue[0]).map((key) => (
+                      <th key={key} style={popupStyles.th}>{key}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCatalogue.map((record, index) => (
+                    <tr key={index}>
+                      {Object.values(record).map((value, idx) => (
+                        <td key={idx} style={popupStyles.td}>{value}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>No data available.</p>
+            )}
           </div>
         </div>
       )}

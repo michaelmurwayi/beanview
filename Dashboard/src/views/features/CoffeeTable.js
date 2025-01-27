@@ -58,9 +58,10 @@ const DataTable = (props) => {
   // Filter data based on selected date range (if applicable)
   const filteredRecords = coffeeRecords.filter((record) => {
     const recordDate = new Date(record.created_at); // Assuming 'created_at' is a date string
+    
     return recordDate >= dateRange.startDate && recordDate <= dateRange.endDate;
   });
-
+  
   const data = {
     columns: [
       {

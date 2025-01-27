@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { MDBDataTable } from 'mdbreact';
 import { connect } from 'react-redux';
-import { fetch_users_records } from 'components/State/action';
+import { fetch_farmers_records } from 'components/State/action';
 
 const UserRecords = (props) => {
   
@@ -15,22 +15,34 @@ const UserRecords = (props) => {
   const data = {
     columns: [
       {
-        label: 'First_name',
-        field: 'first_name',
+        label: 'CBK Number',
+        field: 'cbk_number',
         sort: 'asc',
         width: 150
       },
       {
-        label: 'Last_name',
-        field: 'last_name',
+        label: 'Farmer_name',
+        field: 'farmer_name',
         sort: 'asc',
         width: 270
       },
       {
-        label: 'Email',
-        field: 'email',
+        label: 'National ID',
+        field: 'national_id',
         sort: 'asc',
         width: 200
+      },
+      {
+        label: 'Mark',
+        field: 'mark',
+        sort: 'asc',
+        width: 100
+      },
+      {
+        label: 'Address',
+        field: 'address',
+        sort: 'asc',
+        width: 150
       },
       {
         label: 'Phonenumber',
@@ -39,29 +51,48 @@ const UserRecords = (props) => {
         width: 100
       },
       {
-        label: 'Country',
-        field: 'country',
-        sort: 'asc',
-        width: 150
-      },
-      {
-        label: 'City',
-        field: 'city',
+        label: 'Email',
+        field: 'email',
         sort: 'asc',
         width: 100
       },
       {
-        label: 'Role',
-        field: 'role',
-        sort: 'asc',
-        width: 100
-      },
-      {
-        label: 'Created At',
-        field: 'created_at',
+        label: 'County',
+        field: 'county',
         sort: 'asc',
         width: 150
-      }
+      },
+      {
+        label: 'Town',
+        field: 'town',
+        sort: 'asc',
+        width: 150
+      },
+      ,
+      {
+        label: 'Bank',
+        field: 'bank',
+        sort: 'asc',
+        width: 150
+      },
+      {
+        label: 'Branch',
+        field: 'branch',
+        sort: 'asc',
+        width: 150
+      },
+      {
+        label: 'Account',
+        field: 'account',
+        sort: 'asc',
+        width: 150
+      },
+      {
+        label: 'Currency',
+        field: 'currency',
+        sort: 'asc',
+        width: 150
+      },
     ],
     rows: users
   };
@@ -78,7 +109,7 @@ const UserRecords = (props) => {
   );
 }
 
-const mapDsipatchToProps = { fetch_users_records }
+const mapDsipatchToProps = { fetch_farmers_records }
 
 const mapStateToProps = (state) =>{
   return {
