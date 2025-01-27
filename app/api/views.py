@@ -20,6 +20,11 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
 @method_decorator(csrf_exempt, name='dispatch')
+class FarmersViewSet(viewsets.ModelViewSet):
+    queryset = Farmer.objects.all()
+    serializer_class = FarmerSerializer
+
+@method_decorator(csrf_exempt, name='dispatch')
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer

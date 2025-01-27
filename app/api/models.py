@@ -41,16 +41,19 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 class Farmer(models.Model):
-    ref_no = models.CharField(max_length=100, unique=True,primary_key=True)
-    name = models.CharField(max_length=255)
-    address = models.CharField(max_length=100)
-    town = models.CharField(max_length=100)
-    estate_name = models.CharField(max_length=100)
+    cbk_number = models.CharField(max_length=100, unique=True,primary_key=True)
+    farmer_name = models.CharField(max_length=255)
+    national_id = models.CharField(max_length=10)
     mark = models.CharField(max_length=100)
-    location = models.CharField(max_length=100)
-    division = models.CharField(max_length=100)
-    district = models.CharField(max_length=100)
-
+    address = models.CharField(max_length=100)
+    phonenumber = models.CharField(max_length=10)
+    email = models.CharField(max_length=100)
+    county = models.CharField(max_length=100)
+    town = models.CharField(max_length=100)
+    bank = models.CharField(max_length=100)
+    branch = models.CharField(max_length=100)
+    account = models.CharField(max_length=20)
+    currency = models.CharField(max_length=3)
 
     def __str__(self):
         return str(self.ref_no)

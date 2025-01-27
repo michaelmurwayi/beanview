@@ -21,6 +21,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 # creating router and registering our viewsets
 router = DefaultRouter()
 router.register(r'user', views.UserViewSet, basename='user')
+router.register(r'farmers', views.FarmersViewSet, basename='farmers')
 router.register(r'coffee', views.CoffeeViewSet, basename='coffee')
 router.register(r'catalogue', views.CatalogueViewSet, basename='catalogue')
 # router.register(r'lots', views.LotsViewSet, basename='lots')
