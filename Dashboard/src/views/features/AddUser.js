@@ -12,42 +12,42 @@ import {
   Col,
 } from "reactstrap";
 import UserHeader from "components/Headers/UserHeader.js";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { post_farmers_records } from "components/State/action";
-import { connect } from "react-redux";
+import { connect } from 'react-redux';
 
 const AddUser = (props) => {
   const { dispatchFarmersRecords } = props;
   const [file, setFile] = useState(null);
-  const [sheetNames, setSheetNames] = useState([]);
-  const [selectedSheet, setSelectedSheet] = useState("all"); // 'all' or specific sheet name
-  const [uploadMethod, setUploadMethod] = useState("form"); // Track upload method (form or file)
+  const [sheetNames, setSheetNames] = useState([])
+  const [selectedSheet, setSelectedSheet] = useState('all'); // State for selected sheet or 'all'
+  const [uploadMethod, setUploadMethod] = useState('form'); // New state to track upload method
   const [formData, setFormData] = useState({
-    farmerName: "",
-    mark: "",
-    cbkNumber: "",
-    nationalId: "",
-    phoneNumber: "",
-    email: "",
-    county: "",
-    town: "",
-    address: "",
-    bank: "",
-    branch: "",
-    account: "",
-    currency: "",
-    idDocument: null,
-    bankStatement: null,
+    farmerName: '',
+    mark: '',
+    cbkNumber: '',
+    nationalId: '',
+    phoneNumber: '',
+    email: '',
+    county: '',
+    town: '',
+    address: '',
+    bank: '',
+    branch: '',
+    account: '',
+    currency: '',
+    idDocument: null,  // File input for ID
+    bankStatement: null,  // File input for bank statement
   });
 
-  // Handle text and file input changes
+  // Handle form field changes
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-    if (type === "file") {
+    if (type === 'file') {
       setFormData((prevState) => ({
         ...prevState,
-        [name]: files[0],
+        [name]: files[0],  // Save the uploaded file
       }));
     } else {
       setFormData((prevState) => ({
@@ -59,34 +59,39 @@ const AddUser = (props) => {
 
   // Handle form submission
   const handleSubmit = (event) => {
-    event.preventDefault();
-
-    const dataToSend = new FormData();
-    if (uploadMethod === "form") {
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) {
-          dataToSend.append(key, value);
+      event.preventDefault(); // Prevent default form submission
+      const dataToSend = new FormData();
+      // Append form data or file based on upload method
+      // Append form data or file based on upload method
+      if (uploadMethod === 'form') {
+        Object.entries(formData).forEach(([key, value]) => {
+          // Only append if the value is not empty or undefined
+          if (value) {
+            dataToSend.append(key, value);
+          }
+        });
+        console.log(Object.entries(formData))
+      } else if (uploadMethod === 'file' && file) {
+        dataToSend.append('file', file);
+        dataToSend.append('filename', file.name);
+        if (selectedSheet == "all"){
+            dataToSend.append("sheetnames", sheetNames)
+        }else{
+          dataToSend.append("sheetnames", selectedSheet)
         }
-      });
-    } else if (uploadMethod === "file" && file) {
-      dataToSend.append("file", file);
-      dataToSend.append("filename", file.name);
-      dataToSend.append("sheetnames", selectedSheet === "all" ? sheetNames : selectedSheet);
-    }
-
-    // Check for empty data before dispatching
-    if (dataToSend.has("file") || Object.values(formData).some((value) => value !== "")) {
-      dispatchFarmersRecords(dataToSend);
-      toast.success("✅ Data submitted successfully!");
-    } else {
-      toast.warn("⚠️ No data to submit. Please fill in the required fields.");
-    }
-  };
-
+      }
+      console.log(dataToSend.has('file'))
+    
+      // Only dispatch if there's data to send
+      if (dataToSend.has('file') || Object.keys(formData).some((key) => formData[key] !== '')) {
+        dispatchFarmersRecords(dataToSend);
+      } else {
+        toast.warn("⚠️ No data to submit. Please fill in the required fields.");
+      }
+    };
   return (
     <>
       <UserHeader />
-      <ToastContainer />
       <Container className="mt--7" fluid>
         <Row>
           <Col className="order-xl-1" xl="12">
@@ -110,7 +115,9 @@ const AddUser = (props) => {
                     <Row>
                       <Col lg="6">
                         <FormGroup>
-                          <label htmlFor="farmerName">Farmer Name</label>
+                          <label className="form-control-label" htmlFor="farmerName">
+                            Farmer Name
+                          </label>
                           <Input
                             id="farmerName"
                             name="farmerName"
@@ -123,7 +130,9 @@ const AddUser = (props) => {
                       </Col>
                       <Col lg="6">
                         <FormGroup>
-                          <label htmlFor="mark">Mark</label>
+                          <label className="form-control-label" htmlFor="mark">
+                            Mark
+                          </label>
                           <Input
                             id="mark"
                             name="mark"
@@ -134,11 +143,11 @@ const AddUser = (props) => {
                           />
                         </FormGroup>
                       </Col>
-                    </Row>
-                    <Row>
                       <Col lg="6">
                         <FormGroup>
-                          <label htmlFor="cbkNumber">CBK Number</label>
+                          <label className="form-control-label" htmlFor="cbkNumber">
+                            CBK Number
+                          </label>
                           <Input
                             id="cbkNumber"
                             name="cbkNumber"
@@ -151,7 +160,9 @@ const AddUser = (props) => {
                       </Col>
                       <Col lg="6">
                         <FormGroup>
-                          <label htmlFor="nationalId">National ID</label>
+                          <label className="form-control-label" htmlFor="nationalId">
+                            National ID
+                          </label>
                           <Input
                             id="nationalId"
                             name="nationalId"
@@ -171,7 +182,9 @@ const AddUser = (props) => {
                     <Row>
                       <Col lg="6">
                         <FormGroup>
-                          <label htmlFor="phoneNumber">Phone Number</label>
+                          <label className="form-control-label" htmlFor="phoneNumber">
+                            Phone Number
+                          </label>
                           <Input
                             id="phoneNumber"
                             name="phoneNumber"
@@ -184,7 +197,9 @@ const AddUser = (props) => {
                       </Col>
                       <Col lg="6">
                         <FormGroup>
-                          <label htmlFor="email">Email Address</label>
+                          <label className="form-control-label" htmlFor="email">
+                            Email Address
+                          </label>
                           <Input
                             id="email"
                             name="email"
@@ -196,43 +211,110 @@ const AddUser = (props) => {
                         </FormGroup>
                       </Col>
                     </Row>
+                    <Row>
+                      <Col lg="6">
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="county">
+                            County
+                          </label>
+                          <Input
+                            id="county"
+                            name="county"
+                            placeholder="County"
+                            type="text"
+                            value={formData.county}
+                            onChange={handleChange}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col lg="6">
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="town">
+                            Town
+                          </label>
+                          <Input
+                            id="town"
+                            name="town"
+                            placeholder="Town"
+                            type="text"
+                            value={formData.town}
+                            onChange={handleChange}
+                          />
+                        </FormGroup>
+                      </Col>
+                    </Row>
                   </div>
 
                   <hr className="my-4" />
-                  <h6 className="heading-small text-muted mb-4">File Upload</h6>
+                  <h6 className="heading-small text-muted mb-4">Payment Information</h6>
                   <div className="pl-lg-4">
-                    <FormGroup>
-                      <label htmlFor="idDocument">ID Document</label>
-                      <Input id="idDocument" name="idDocument" type="file" onChange={handleChange} />
-                    </FormGroup>
-                    <FormGroup>
-                      <label htmlFor="bankStatement">Bank Statement</label>
-                      <Input id="bankStatement" name="bankStatement" type="file" onChange={handleChange} />
-                    </FormGroup>
+                    <Row>
+                      <Col lg="6">
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="bank">
+                            Bank
+                          </label>
+                          <Input
+                            id="bank"
+                            name="bank"
+                            placeholder="Bank Name"
+                            type="text"
+                            value={formData.bank}
+                            onChange={handleChange}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col lg="6">
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="branch">
+                            Branch
+                          </label>
+                          <Input
+                            id="branch"
+                            name="branch"
+                            placeholder="Branch"
+                            type="text"
+                            value={formData.branch}
+                            onChange={handleChange}
+                          />
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col lg="10">
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="account">
+                            Account Number
+                          </label>
+                          <Input
+                            id="account"
+                            name="account"
+                            placeholder="Account Number"
+                            type="text"
+                            value={formData.account}
+                            onChange={handleChange}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col lg="2">
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="currency">
+                            Currency
+                          </label>
+                          <Input
+                            id="currency"
+                            name="currency"
+                            placeholder="Currency"
+                            type="text"
+                            value={formData.currency}
+                            onChange={handleChange}
+                          />
+                        </FormGroup>
+                      </Col>
+                    </Row>
                   </div>
 
-                  <hr className="my-4" />
-                  <h6 className="heading-small text-muted mb-4">Submission Options</h6>
-                  <FormGroup>
-                    <Input
-                      type="select"
-                      value={uploadMethod}
-                      onChange={(e) => setUploadMethod(e.target.value)}
-                    >
-                      <option value="form">Submit via Form</option>
-                      <option value="file">Upload Excel File</option>
-                    </Input>
-                  </FormGroup>
-
-                  {uploadMethod === "file" && (
-                    <FormGroup>
-                      <Input type="file" onChange={(e) => setFile(e.target.files[0])} />
-                    </FormGroup>
-                  )}
-
-                  <Button color="primary" type="submit">
-                    Submit
-                  </Button>
+                 
                 </Form>
               </CardBody>
             </Card>
@@ -247,4 +329,4 @@ const mapDispatchToProps = (dispatch) => ({
   dispatchFarmersRecords: (data) => dispatch(post_farmers_records(data)),
 });
 
-export default connect(null, mapDispatchToProps)(AddUser);
+export default connect(null,mapDispatchToProps) (AddUser);
