@@ -24,6 +24,20 @@ class FarmersViewSet(viewsets.ModelViewSet):
     queryset = Farmer.objects.all()
     serializer_class = FarmerSerializer
 
+    def create(self, request):
+        data = request.data.dict()
+        # Serialize the combined data
+        import ipdb;ipdb.set_trace()
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        # Save the instance if valid
+        self.perform_create(serializer)
+        # Use the saved instance for headers
+        headers = self.get_success_headers(serializer.instance)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        
+
 @method_decorator(csrf_exempt, name='dispatch')
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()

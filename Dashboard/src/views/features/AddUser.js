@@ -24,11 +24,11 @@ const AddUser = (props) => {
   const [selectedSheet, setSelectedSheet] = useState('all'); // State for selected sheet or 'all'
   const [uploadMethod, setUploadMethod] = useState('form'); // New state to track upload method
   const [formData, setFormData] = useState({
-    farmerName: '',
+    farmer_name: '',
     mark: '',
-    cbkNumber: '',
-    nationalId: '',
-    phoneNumber: '',
+    cbk_number: '',
+    national_id: '',
+    phonenumber: '',
     email: '',
     county: '',
     town: '',
@@ -36,9 +36,7 @@ const AddUser = (props) => {
     bank: '',
     branch: '',
     account: '',
-    currency: '',
-    idDocument: null,  // File input for ID
-    bankStatement: null,  // File input for bank statement
+    currency: ''
   });
 
   // Handle form field changes
@@ -65,12 +63,16 @@ const AddUser = (props) => {
       // Append form data or file based on upload method
       if (uploadMethod === 'form') {
         Object.entries(formData).forEach(([key, value]) => {
-          // Only append if the value is not empty or undefined
-          if (value) {
+          console.log(`Key: ${key}, Value:`, value);
+        
+          // Avoid falsy values like 0 or empty strings being skipped
+          if (value !== undefined && value !== null && value !== '') {
+            console.log("Appending:", key, value);
             dataToSend.append(key, value);
           }
         });
-        console.log(Object.entries(formData))
+        
+        
       } else if (uploadMethod === 'file' && file) {
         dataToSend.append('file', file);
         dataToSend.append('filename', file.name);
@@ -80,8 +82,6 @@ const AddUser = (props) => {
           dataToSend.append("sheetnames", selectedSheet)
         }
       }
-      console.log(dataToSend.has('file'))
-    
       // Only dispatch if there's data to send
       if (dataToSend.has('file') || Object.keys(formData).some((key) => formData[key] !== '')) {
         dispatchFarmersRecords(dataToSend);
@@ -119,11 +119,11 @@ const AddUser = (props) => {
                             Farmer Name
                           </label>
                           <Input
-                            id="farmerName"
-                            name="farmerName"
+                            id="farmer_name"
+                            name="farmer_name"
                             placeholder="Farmer name"
                             type="text"
-                            value={formData.farmerName}
+                            value={formData.farmer_name}
                             onChange={handleChange}
                           />
                         </FormGroup>
@@ -149,8 +149,8 @@ const AddUser = (props) => {
                             CBK Number
                           </label>
                           <Input
-                            id="cbkNumber"
-                            name="cbkNumber"
+                            id="cbk_number"
+                            name="cbk_number"
                             placeholder="YY.****"
                             type="text"
                             value={formData.cbkNumber}
@@ -164,8 +164,8 @@ const AddUser = (props) => {
                             National ID
                           </label>
                           <Input
-                            id="nationalId"
-                            name="nationalId"
+                            id="national_id"
+                            name="national_id"
                             placeholder="National ID"
                             type="text"
                             value={formData.nationalId}
@@ -186,8 +186,8 @@ const AddUser = (props) => {
                             Phone Number
                           </label>
                           <Input
-                            id="phoneNumber"
-                            name="phoneNumber"
+                            id="phonenumber"
+                            name="phonenumber"
                             placeholder="Enter phone number"
                             type="text"
                             value={formData.phoneNumber}
@@ -206,6 +206,21 @@ const AddUser = (props) => {
                             placeholder="jesse@example.com"
                             type="email"
                             value={formData.email}
+                            onChange={handleChange}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col lg="6">
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="address">
+                            Address
+                          </label>
+                          <Input
+                            id="address"
+                            name="address"
+                            placeholder="--- Kiambu"
+                            type="text"
+                            value={formData.address}
                             onChange={handleChange}
                           />
                         </FormGroup>

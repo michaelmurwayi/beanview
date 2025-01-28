@@ -5,11 +5,11 @@ import { fetch_farmers_records } from 'components/State/action';
 
 const UserRecords = (props) => {
   
-  const { users, fetch_users_records } = props
+  const { users, fetch_farmers_records } = props
 
   useEffect (()=>{
-    fetch_users_records();
-  },[fetch_users_records])
+    fetch_farmers_records();
+  },[fetch_farmers_records])
 
   console.log(users)  
   const data = {

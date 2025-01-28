@@ -64,26 +64,26 @@ export const fetch_coffee_records = () => async (dispatch) =>{
         dispatch({type:"FETCH COFFEE RECORDS ERROR", payload: "error"})
     }
 }
-export const post_coffee_records = (coffeeRecord) => async (dispatch) => {
+export const post_coffee_records = (farmersRecord) => async (dispatch) => {
     try {
         const api_url = 'http://127.0.0.1:8000/api/coffee/';
         
         // Initialize FormData
         const formData = new FormData();
 
-        // Check if coffeeRecord is a FormData instance
-        if (coffeeRecord instanceof FormData) {
-            for (const [key, value] of coffeeRecord.entries()) {
+        // Check if farmersRecord is a FormData instance
+        if (farmersRecord instanceof FormData) {
+            for (const [key, value] of farmersRecord.entries()) {
                 formData.append(key, value);
             }
         } else {
             // Add each key-value pair to FormData
-            Object.keys(coffeeRecord).forEach((key) => {
+            Object.keys(farmersRecord).forEach((key) => {
                 // If the value is an array or file, handle it accordingly
-                if (key === 'file' && coffeeRecord[key]) {
-                    formData.append(key, coffeeRecord[key][0]); // Assuming file is an array
+                if (key === 'file' && farmersRecord[key]) {
+                    formData.append(key, farmersRecord[key][0]); // Assuming file is an array
                 } else {
-                    formData.append(key, coffeeRecord[key]);
+                    formData.append(key, farmersRecord[key]);
                 }
             });
         }
@@ -202,18 +202,63 @@ export const delete_coffee_record = (id) => async (dispatch) => {
  
 export const fetch_farmers_records = () => async (dispatch) =>{
     try {
-        const response = await axios.get("http://127.0.0.1:8000/api/user/?format=json")
+        const response = await axios.get("http://127.0.0.1:8000/api/farmers/?format=json")
         dispatch({type: 'FETCH FARMERS RECORDS', payload: response.data})
     }catch (error){
         dispatch({type:"FETCH FARMER RECORDS ERROR", payload: "error"})
     }
 }
-export const post_farmers_records = () => async(dispatch)=>{
-    const api = "http://127.0.0.1:8000/api/user/"
-    try{
-        console.log("contact made")
-    }catch (error){
-        console.log("error")
+export const post_farmers_records = (farmersRecord) => async(dispatch)=>{
+    const api_url = "http://127.0.0.1:8000/api/farmers/"
+    try {
+        
+        // Initialize FormData
+        const formData = new FormData();
+        // Check if coffeeRecord is a FormData instance
+        console.log(farmersRecord instanceof FormData)
+        if (farmersRecord instanceof FormData) {
+            for (const [key, value] of farmersRecord.entries()) {
+                console.log(key, value)
+                formData.append(key, value);
+            }
+        console.log(Object.entries(formData))
+        } else {
+            // Add each key-value pair to FormData
+            Object.keys(farmersRecord).forEach((key) => {
+                // If the value is an array or file, handle it accordingly
+                if (key === 'file' && farmersRecord[key]) {
+                    formData.append(key, farmersRecord[key][0]); // Assuming file is an array
+                } else {
+                    formData.append(key, farmersRecord[key]);
+                }
+            });
+        }
+        
+        // Fetch configuration
+        const fetchConfig = {
+            method: 'POST',
+            body: formData,
+        };
+
+        // Dispatch request action
+        dispatch({ type: 'POST_FARMER_RECORD_REQUEST' });
+        console.log(fetchConfig)
+        // Perform API request
+        const response = await fetch(api_url, fetchConfig);
+        
+        // Check for successful response
+        if (response.ok) {
+            const responseData = await response.json();
+            dispatch({ type: 'POST_COFFEE_DATA_SUCCESS', payload: responseData });
+        } else {
+            // Handle non-OK responses
+            const errorData = await response.json();
+            const errorMessage = errorData.detail || 'Check upload file for errors.';
+            dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: errorMessage });
+        }
+    } catch (error) {
+        // Catch unexpected errors and dispatch failure action
+        dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: { error: error.message } });
     }
 }
 
