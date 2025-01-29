@@ -12,7 +12,8 @@ from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework.response import Response
 from .process_mill_statements import DataCleaner
-
+from .coffee.read_file import read_xls_file
+from .coffee.clean_masterlog_df import clean_outturns
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -27,7 +28,7 @@ class FarmersViewSet(viewsets.ModelViewSet):
     def create(self, request):
         data = request.data.dict()
         # Serialize the combined data
-        import ipdb;ipdb.set_trace()
+        
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
@@ -45,17 +46,18 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         # Combine form data and file data
+        # Combine form data and file data
         data = request.data.dict()  # Convert request.data to a mutable dictionary
         files = request.FILES  # Get uploaded files
         sheets = data["sheetnames"].split(",")
+        # Check if 'outturn' and 'grade' are present in the data
         # Check if 'outturn' and 'grade' are present in the data
         
         # Process files if needed (custom function `DataCleaner`)
         if files and sheets:
             # Assuming DataCleaner processes files and returns a dictionary of cleaned data
-            data_cleaner = DataCleaner(files["file"], sheets)
-            cleaned_data = data_cleaner.process()
-
+            data_df, file_name = read_xls_file(data, sheets)
+            cleaned_data = clean_outturns(data_df, sheets)
             
             # Get all existing outturn and grade combinations in a set for faster lookup
             existing_records = set(
