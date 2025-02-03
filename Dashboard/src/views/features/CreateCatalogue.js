@@ -49,11 +49,9 @@ const DataTable = (props) => {
       { label: 'Bags', field: 'bags', sort: 'asc', width: 100 },
       { label: 'Pockets', field: 'pockets', sort: 'asc', width: 100 },
       { label: 'Weight', field: 'weight', sort: 'asc', width: 200 },
-      { label: 'Season', field: 'season', sort: 'asc', width: 100 },
       { label: 'Certificate', field: 'certificate', sort: 'asc', width: 150 },
       { label: 'Mill', field: 'mill', sort: 'asc', width: 100 },
-      { label: 'Status', field: 'status', sort: 'asc', width: 100 },
-      { label: 'Created_at', field: 'created_at', sort: 'asc', width: 100 },
+      
     ],
     rows: filteredRecords, // Using filtered records
   };
@@ -62,15 +60,20 @@ const DataTable = (props) => {
   const handleGenerateCatalogue = () => {
     // Filter records where weight > 120 and status is not 'PENDING'
     const filtered = coffeeRecords.filter(
-      (record) => parseFloat(record.weight) > 120 && record.status.toUpperCase() !== 'PENDING'
+      (record) => parseFloat(record.weight) > 120 && record.status.toUpperCase() === 'PENDING'
     );
 
     if (filtered.length > 0) {
       setFilteredCatalogue(filtered);
+      console.log(filtered);
       setShowPopup(true);
     } else {
       alert("No records found with weight greater than 120 KG.");
     }
+  };
+
+  const handleDeleteRecord = (index) => {
+    setFilteredCatalogue((prevCatalogue) => prevCatalogue.filter((_, i) => i !== index));
   };
 
   // Inline styles for the popup
@@ -85,42 +88,58 @@ const DataTable = (props) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
+      zIndex: '1000',
     },
     popup: {
       backgroundColor: '#fff',
       padding: '20px',
       borderRadius: '10px',
       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-      maxWidth: '800px',
+      maxWidth: '60vw', // Reduce popup width
+      maxHeight: '100vh', // Set max height
       width: '90%',
-      textAlign: 'center',
+      overflow: 'auto', // Prevent overall overflow
+      position: 'relative',
     },
     closeButton: {
       position: 'absolute',
       top: '10px',
       right: '20px',
       background: 'red',
+      width: '30px',
       color: 'white',
       border: 'none',
       padding: '5px 10px',
       cursor: 'pointer',
-      fontSize: '16px',
+      fontSize: '10px',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', 
+      borderRadius: '15px',
+    },
+    tableContainer: {
+      maxHeight: '50vh', // Set max height for scroll
+      overflowY: 'auto', // Enable vertical scrolling
+      border: '1px solid #ddd',
+      padding: '10px',
     },
     table: {
       width: '100%',
       borderCollapse: 'collapse',
-      marginTop: '20px',
     },
     th: {
-      border: '1px solid black',
+      border: '0px solid black',
       padding: '10px',
+      backgroundColor: '#f2f2f2',
+      position: '',
+      top: '0', // Keep headers sticky
+      zIndex: '10',
     },
     td: {
       border: '1px solid black',
-      padding: '10px',
+      padding: '2px',
       textAlign: 'center',
     },
   };
+  
 
   return (
     <div className="container-fluid">
@@ -162,27 +181,38 @@ const DataTable = (props) => {
       {showPopup && (
         <div style={popupStyles.overlay}>
           <div style={popupStyles.popup}>
-            <h3>Coffee Records</h3>
+            <h3>Coffee Records to Catalogue</h3>
             <button onClick={() => setShowPopup(false)} style={popupStyles.closeButton}>X</button>
             {filteredCatalogue.length > 0 ? (
               <table style={popupStyles.table}>
-                <thead>
-                  <tr style={{ background: '#f2f2f2' }}>
-                    {Object.keys(filteredCatalogue[0]).map((key) => (
-                      <th key={key} style={popupStyles.th}>{key}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCatalogue.map((record, index) => (
-                    <tr key={index}>
-                      {Object.values(record).map((value, idx) => (
-                        <td key={idx} style={popupStyles.td}>{value}</td>
-                      ))}
-                    </tr>
+              <thead>
+                <tr style={{ background: '#f2f2f2' }}>
+                  {Object.keys(filteredCatalogue[0]).filter(key => !['created_at', 'status', 'season', 'updated_at', 'file'].includes(key)).map((key) => (
+                    <th key={key} style={popupStyles.th}>{key}</th>
                   ))}
-                </tbody>
-              </table>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCatalogue.map((record, index) => (
+                  <tr key={index}>
+                    {Object.entries(record)
+                      .filter(([key]) => !['created_at', 'status', 'season', 'updated_at', 'file'].includes(key))
+                      .map(([_, value], idx) => (
+                        <td key={idx} style={popupStyles.td}>{value}</td>
+                    ))}
+                    <td style={popupStyles.td}>
+                      
+                        <MDBIcon 
+                          icon="trash-alt" 
+                          style={{ color: 'red', cursor: 'pointer', fontSize: '18px' }} 
+                          onClick={() => handleDeleteRecord(index)} 
+                        />
+                      
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             ) : (
               <p>No data available.</p>
             )}

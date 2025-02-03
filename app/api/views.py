@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from .process_mill_statements import DataCleaner
 from .coffee.read_file import read_xls_file
 from .coffee.clean_masterlog_df import clean_outturns
-
+from .coffee.check_pockets import check_for_pockets
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -45,67 +45,83 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     serializer_class = CoffeeSerializer
     
     def create(self, request, *args, **kwargs):
-        # Combine form data and file data
-        # Combine form data and file data
-        data = request.data.dict()  # Convert request.data to a mutable dictionary
+        data = request.data.dict()
         files = request.FILES  # Get uploaded files
         sheets = data["sheetnames"].split(",")
-        # Check if 'outturn' and 'grade' are present in the data
-        # Check if 'outturn' and 'grade' are present in the data
-        
-        # Process files if needed (custom function `DataCleaner`)
+
         if files and sheets:
-            # Assuming DataCleaner processes files and returns a dictionary of cleaned data
+            # Process the files
             data_df, file_name = read_xls_file(data, sheets)
-            cleaned_data = clean_outturns(data_df, sheets)
+            cleaned_outturn_data = clean_outturns(data_df, sheets)
+            cleaned_data = check_for_pockets(cleaned_outturn_data, sheets)
+
+            # Get all existing outturn and grade combinations
+            existing_records = set(Coffee.objects.values_list('outturn', 'grade'))
+
+            # Filter new records
+            new_records = []
+            failed_records = []
             
-            # Get all existing outturn and grade combinations in a set for faster lookup
-            existing_records = set(
-                Coffee.objects.values_list('outturn', 'grade')
-            )
+            for record in cleaned_data:
+                if isinstance(record, dict) and (str(record.get('outturn', '')), str(record.get('grade', ''))) not in existing_records:
+                    print(f"Record {record} not in existing records")
+                    new_records.append(record)
 
-            # Filter new records efficiently
-            data = [
-                record for sheet, records in cleaned_data.items()
-                for record in records
-                if isinstance(record, dict) and (record.get('OUTTURN'), record.get('GRADE')) not in existing_records
-            ]
-            print(data)
-            if not data:
-                # If no new records are valid after filtering, return an error response
-                
-                return Response({"detail": "No new records to upload, all records already exist in the database."}, status=status.HTTP_400_BAD_REQUEST)
+            if not new_records:
+                return Response({
+                    "success": False,
+                    "message": "No new records to upload, all records already exist in the database.",
+                    "errors": []
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-            for record in data:
+            headers = None  
+            created_records = []
+
+            for record in new_records:
                 try:
-                    print(f"Processing record: {record}")  # To confirm it's iterating through all records
-                    
-                    # Serialize the combined data
+                    print(f"Processing record: {record}")
+
                     serializer = self.get_serializer(data=record)
                     
                     if serializer.is_valid(raise_exception=False):
-                        # Save the instance if valid
                         self.perform_create(serializer)
-                        # Use the saved instance for headers
+                        created_records.append(serializer.data)  # Store successfully created record
                         headers = self.get_success_headers(serializer.instance)
                     else:
                         print(f"Validation error for record: {record}")
                         print(f"Errors: {serializer.errors}")
-                
+                        failed_records.append({
+                            "record": record,
+                            "errors": serializer.errors
+                        })
+
                 except Exception as e:
                     print(f"Error processing record: {record}")
                     print(f"Exception: {str(e)}")
+                    failed_records.append({
+                        "record": record,
+                        "errors": {"error": str(e)}
+                    })
 
         else:
-            # Serialize the combined data
             serializer = self.get_serializer(data=data)
-            serializer.is_valid(raise_exception=True)
+            if serializer.is_valid(raise_exception=True):
+                self.perform_create(serializer)
+                created_records = [serializer.data]
+                headers = self.get_success_headers(serializer.instance)
+            else:
+                failed_records.append({
+                    "record": data,
+                    "errors": serializer.errors
+                })
+        
+        return Response({
+            "success": True if created_records else False,
+            "message": "Some records were processed successfully." if created_records else "No records were created.",
+            "created_records": created_records,
+            "failed_records": failed_records
+        }, status=status.HTTP_201_CREATED if created_records else status.HTTP_400_BAD_REQUEST, headers=headers or {})
 
-            # Save the instance if valid
-            self.perform_create(serializer)
-            # Use the saved instance for headers
-            headers = self.get_success_headers(serializer.instance)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
     def update(self, request, *args, **kwargs):
         """Handle the PUT method for updating a Coffee record."""
