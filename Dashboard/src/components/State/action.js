@@ -57,6 +57,7 @@ export const fetch_daily_delivery = () => async (dispatch) =>{
 }
 
 export const fetch_coffee_records = () => async (dispatch) =>{
+    console.log("fetching coffee records")
     try {
         const response = await axios.get("http://127.0.0.1:8000/api/coffee/?format=json")
         dispatch({type: 'FETCH COFFEE RECORDS', payload: response.data})
@@ -272,6 +273,7 @@ export const fetch_lots_records = () => async (dispatch) =>{
 }
 
 export const post_catalogue_records = (catalogueRecord) => async(dispatch)=>{
+    console.log("we are here")
     const api_url = "http://127.0.0.1:8080/api/catalogue/"
     try {
         

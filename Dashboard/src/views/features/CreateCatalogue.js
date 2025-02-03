@@ -67,7 +67,6 @@ const DataTable = (props) => {
 
     if (filtered.length > 0) {
       setFilteredCatalogue(filtered);
-      console.log(filtered);
       setShowPopup(true);
     } else {
       alert("No records found with weight greater than 120 KG.");
@@ -81,7 +80,12 @@ const DataTable = (props) => {
   // Handle submission of sale number and filtered records
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("catalogue generated successfully");
+    const dataToSend = new FormData();
+    dataToSend.append('sale_number', saleNumber); 
+    dataToSend.append('records', JSON.stringify(filteredCatalogue));  
+    
+    props.post_catalogue_records(dataToSend);
+    setShowPopup(false);  
 
   };
 
@@ -261,7 +265,12 @@ const DataTable = (props) => {
   );
 };
 
-const mapDispatchToProps = { fetch_coffee_records, post_catalogue_records };
+const mapDispatchToProps = (dispatch) => {
+  return {
+    fetch_coffee_records: () => dispatch(fetch_coffee_records()),
+    post_catalogue_records: (data) => dispatch(post_catalogue_records(data)),
+  };
+}
 
 const mapStateToProps = (state) => {
   return {
