@@ -8,10 +8,12 @@ import 'react-date-range/dist/theme/default.css';
 import 'assets/css/coffee_table.css';
 import { MDBIcon } from 'mdbreact';
 import initialState from 'components/State/initialState';
+import { post_catalogue_records } from 'components/State/action';
 
 const DataTable = (props) => {
   const { coffeeRecords, fetch_coffee_records } = props;
   const [state, setState] = useState(initialState);
+  const [saleNumber, setSaleNumber] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   
   // Set default date range
@@ -75,6 +77,14 @@ const DataTable = (props) => {
   const handleDeleteRecord = (index) => {
     setFilteredCatalogue((prevCatalogue) => prevCatalogue.filter((_, i) => i !== index));
   };
+
+  // Handle submission of sale number and filtered records
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    alert("catalogue generated successfully");
+
+  };
+
 
   // Inline styles for the popup
   const popupStyles = {
@@ -181,10 +191,38 @@ const DataTable = (props) => {
       {showPopup && (
         <div style={popupStyles.overlay}>
           <div style={popupStyles.popup}>
-            <h3>Coffee Records to Catalogue</h3>
+          <div className="flex flex-col space-y-4">
+              {/* Row 1 */}
+               {/* Row 2 - Form */}
+              <div className="flex flex-col border-t pt-4">
+                <form onSubmit={handleSubmit} className="flex flex-col space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h3>Coffee Records to Catalogue</h3>
+                    <button
+                      type='submit'
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+                    >
+                      Generate Files
+                    </button>
+                  </div>
+                  <label className="text-gray-700 !font-bold text-xs">
+                    Enter Sale Number:
+                  </label>
+                  <input
+                    type="text"
+                    value={saleNumber}
+                    onChange={(e) => setSaleNumber(e.target.value)}
+                    className="border p-2 rounded-md"
+                    placeholder="sale number"
+                    required
+                    col-6
+                  />
+                </form>
+              </div>
+            </div>
             <button onClick={() => setShowPopup(false)} style={popupStyles.closeButton}>X</button>
             {filteredCatalogue.length > 0 ? (
-              <table style={popupStyles.table}>
+              <table style={popupStyles.table} className='mt-3'>
               <thead>
                 <tr style={{ background: '#f2f2f2' }}>
                   {Object.keys(filteredCatalogue[0]).filter(key => !['created_at', 'status', 'season', 'updated_at', 'file'].includes(key)).map((key) => (
@@ -223,7 +261,7 @@ const DataTable = (props) => {
   );
 };
 
-const mapDispatchToProps = { fetch_coffee_records };
+const mapDispatchToProps = { fetch_coffee_records, post_catalogue_records };
 
 const mapStateToProps = (state) => {
   return {
