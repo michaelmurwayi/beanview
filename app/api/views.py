@@ -15,6 +15,7 @@ from .process_mill_statements import DataCleaner
 from .coffee.read_file import read_xls_file
 from .coffee.clean_masterlog_df import clean_outturns
 from .coffee.check_pockets import check_for_pockets
+import os
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -220,6 +221,22 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
+
+    def create(self, request):
+        data = request.data.dict()
+        sale_number = data.get("sale_number")
+        auction_file = f"auction file {sale_number}"
+        dss_file = f"dss file {sale_number}"
+        
+        auction_file_object = File.objects.create(file_name=auction_file)
+        print("Auction file object created")
+        dss_file_object = File.objects.create(file_name=dss_file)
+        print("DSS file object created")
+        
+        folder = os.makedirs(f"media/{sale_number}")
+
+        import ipdb;ipdb.set_trace()
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 # @method_decorator(csrf_exempt, name='dispatch')
 # class LotsViewSet(viewsets.ModelViewSet):

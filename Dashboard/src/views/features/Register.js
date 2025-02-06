@@ -25,7 +25,6 @@ import {
   FormGroup,
   Form,
   Input,
-  InputGroupAddon,
   InputGroupText,
   InputGroup,
   Row,
@@ -85,21 +84,21 @@ const Register = () => {
             <Form role="form">
               <FormGroup>
                 <InputGroup className="input-group-alternative mb-3">
-                  <InputGroupAddon addonType="prepend">
+                  <InputGroupText addonType="prepend">
                     <InputGroupText>
                       <i className="ni ni-hat-3" />
                     </InputGroupText>
-                  </InputGroupAddon>
+                  </InputGroupText>
                   <Input placeholder="Name" type="text" />
                 </InputGroup>
               </FormGroup>
               <FormGroup>
                 <InputGroup className="input-group-alternative mb-3">
-                  <InputGroupAddon addonType="prepend">
+                  <InputGroupText addonType="prepend">
                     <InputGroupText>
                       <i className="ni ni-email-83" />
                     </InputGroupText>
-                  </InputGroupAddon>
+                  </InputGroupText>
                   <Input
                     placeholder="Email"
                     type="email"
@@ -109,11 +108,11 @@ const Register = () => {
               </FormGroup>
               <FormGroup>
                 <InputGroup className="input-group-alternative">
-                  <InputGroupAddon addonType="prepend">
+                  <InputGroupText addonType="prepend">
                     <InputGroupText>
                       <i className="ni ni-lock-circle-open" />
                     </InputGroupText>
-                  </InputGroupAddon>
+                  </InputGroupText>
                   <Input
                     placeholder="Password"
                     type="password"

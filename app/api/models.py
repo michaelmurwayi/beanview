@@ -96,6 +96,7 @@ class Coffee(models.Model):
     buyer = models.CharField(max_length=100, null=True, blank=True)
     remarks = models.TextField(null=True, blank=True)
     file = models.CharField(max_length=50, default="Master_Log.xlsx")
+    sale_number = models.CharField(max_length=52, null=True, blank=True)
     created_by = models.ForeignKey(
         User, null=True, blank=True, on_delete=models.SET_NULL, related_name="user"
     ) 
@@ -104,6 +105,11 @@ class Coffee(models.Model):
 
     def __str__(self):
         return self.outturn
+
+class File(models.Model):
+    file_name = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 # class Lots(models.Model):
 #     class LotStatus(models.TextChoices):

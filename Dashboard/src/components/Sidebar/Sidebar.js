@@ -15,7 +15,6 @@ import {
   Col,
   Input,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Form,
   UncontrolledDropdown,
@@ -100,11 +99,11 @@ const Sidebar = (props) => {
                 type="search"
                 className="form-control-rounded"
               />
-              <InputGroupAddon addonType="prepend">
+              <InputGroupText addonType="prepend">
                 <InputGroupText>
                   <i className="fas fa-search" />
                 </InputGroupText>
-              </InputGroupAddon>
+              </InputGroupText>
             </InputGroup>
           </Form>
 

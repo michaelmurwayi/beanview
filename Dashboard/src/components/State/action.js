@@ -273,20 +273,16 @@ export const fetch_lots_records = () => async (dispatch) =>{
 }
 
 export const post_catalogue_records = (catalogueRecord) => async(dispatch)=>{
-    console.log("we are here")
-    const api_url = "http://127.0.0.1:8080/api/catalogue/"
+    const api_url = "http://127.0.0.1:8000/api/catalogue/"
     try {
         
         // Initialize FormData
         const formData = new FormData();
         // Check if coffeeRecord is a FormData instance
-        console.log(catalogueRecord instanceof FormData)
         if (catalogueRecord instanceof FormData) {
             for (const [key, value] of catalogueRecord.entries()) {
-                console.log(key, value)
                 formData.append(key, value);
             }
-        console.log(Object.entries(formData))
         } else {
             // Add each key-value pair to FormData
             Object.keys(catalogueRecord).forEach((key) => {
