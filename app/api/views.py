@@ -223,7 +223,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     serializer_class = CatalogueSerializer
 
     def create(self, request):
-        data = request.data.dict()
+        data = request.data.dict().get("records")
         sale_number = data.get("sale_number")
         auction_file = f"auction file {sale_number}"
         dss_file = f"dss file {sale_number}"
@@ -233,10 +233,16 @@ class CatalogueViewSet(viewsets.ModelViewSet):
         dss_file_object = File.objects.create(file_name=dss_file)
         print("DSS file object created")
         
-        folder = os.makedirs(f"media/{sale_number}")
-
+        folder = os.makedirs(f"media/{sale_number}", exist_ok=True)
+        # Get all outturns in data and update sale number in the database
         import ipdb;ipdb.set_trace()
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        outturns = data.get("outturns")
+        for outturn in outturns:
+            coffee = Coffee.objects.get(outturn=outturn)
+            coffee.sale_number = sale_number
+            coffee.save()
+        
+        return Response( status=status.HTTP_201_CREATED)
 
 # @method_decorator(csrf_exempt, name='dispatch')
 # class LotsViewSet(viewsets.ModelViewSet):
