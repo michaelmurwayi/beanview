@@ -236,12 +236,12 @@ class CatalogueViewSet(viewsets.ModelViewSet):
         folder = os.makedirs(f"media/{sale_number}", exist_ok=True)
         # Get all outturns in data and update sale number in the database
         import ipdb;ipdb.set_trace()
-        outturns = data.get("outturns")
-        for outturn in outturns:
-            coffee = Coffee.objects.get(outturn=outturn)
-            coffee.sale_number = sale_number
-            coffee.save()
-        
+        for record in data:
+            outturn = record.get("outturn")
+            grade = record.get("grade")
+            coffee = Coffee.objects.filter(outturn=outturn, grade=grade).update(sale_number=sale_number)
+            print(f"Updated coffee record {coffee}")
+            coffee.save()    
         return Response( status=status.HTTP_201_CREATED)
 
 # @method_decorator(csrf_exempt, name='dispatch')
