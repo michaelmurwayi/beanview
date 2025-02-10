@@ -1,7 +1,7 @@
 import Dashboard from "views/Index.js";
 import AddUser from "views/features/AddUser.js";
 import CoffeeRecords from "views/features/CoffeeTable";
-import Register from "views/features/Register.js";
+import Files from "views/features/files.js";
 import Login from "views/features/Login.js";
 import Tables from "views/features/Tables.js";
 import AddCoffee from "views/features/AddCoffee.js";
@@ -66,11 +66,11 @@ var routes = [
     layout: "/auth",
   },
   {
-    path: "/register",
-    name: "Auction File",
+    path: "/files",
+    name: "Files",
     icon: "fas fa-gavel text-primary", // 'gavel' icon matches auction-related functionality
-    component: <Register />,
-    layout: "/auth",
+    component: <Files />,
+    layout: "/admin",
   },
 ];
 
