@@ -16,6 +16,7 @@ from .coffee.read_file import read_xls_file
 from .coffee.clean_masterlog_df import clean_outturns
 from .coffee.check_pockets import check_for_pockets
 import os
+import json 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -222,27 +223,56 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
 
+
     def create(self, request):
-        data = request.data.dict().get("records")
-        sale_number = data.get("sale_number")
-        auction_file = f"auction file {sale_number}"
-        dss_file = f"dss file {sale_number}"
-        
-        auction_file_object = File.objects.create(file_name=auction_file)
-        print("Auction file object created")
-        dss_file_object = File.objects.create(file_name=dss_file)
-        print("DSS file object created")
-        
-        folder = os.makedirs(f"media/{sale_number}", exist_ok=True)
-        # Get all outturns in data and update sale number in the database
-        import ipdb;ipdb.set_trace()
-        for record in data:
-            outturn = record.get("outturn")
-            grade = record.get("grade")
-            coffee = Coffee.objects.filter(outturn=outturn, grade=grade).update(sale_number=sale_number)
-            print(f"Updated coffee record {coffee}")
-            coffee.save()    
-        return Response( status=status.HTTP_201_CREATED)
+        try:
+            data = request.data.dict()
+
+            # Validate sale_number
+            sale_number = data.get("sale_number")
+            if not sale_number:
+                return Response({"error": "Sale number is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate records
+            records_json = data.get("records")
+            if not records_json:
+                return Response({"error": "Records data is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                records = json.loads(records_json)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid records JSON format"}, status=status.HTTP_400_BAD_REQUEST)
+
+            updated_count = 0
+
+            for record in records:
+                outturn = record.get("outturn")
+                grade = record.get("grade")
+
+                if not outturn or not grade:
+                    return Response(
+                        {"error": f"Missing 'outturn' or 'grade' in record: {record}"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                coffee = Coffee.objects.filter(outturn=outturn, grade=grade)
+                update_result = coffee.update(sale_number=sale_number, status="CATALOGUED")
+                
+                if update_result > 0:
+                    updated_count += update_result
+                    print(f"Updated coffee record: {record}")
+
+            if updated_count == 0:
+                return Response({"message": "No records were updated."}, status=status.HTTP_200_OK)
+
+            return Response(
+                {"message": f"Successfully updated {updated_count} coffee records."},
+                status=status.HTTP_201_CREATED
+            )
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 # @method_decorator(csrf_exempt, name='dispatch')
 # class LotsViewSet(viewsets.ModelViewSet):

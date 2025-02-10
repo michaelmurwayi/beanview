@@ -15,7 +15,7 @@ class FarmerSerializer(serializers.ModelSerializer):
 class CoffeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coffee
-        fields = ['outturn', 'grade', 'mark', 'bags', 'pockets', 'weight', 'mill', 'warehouse', 'season', 'status', 'file', 'created_at', 'updated_at']
+        fields = ['outturn', 'grade', 'mark', 'bags', 'pockets', 'weight', 'mill', 'warehouse', 'season', 'status', 'file', 'sale_number', 'created_at', 'updated_at']
         extra_kwargs = {
                 'catalogue': {'required': False},
                 'reserve': {'required': False},
