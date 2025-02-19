@@ -46,3 +46,52 @@
   color: black;
 }
   
+.action-card {
+  width: 280px;
+  padding: 20px;
+  border-radius: 12px;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+  cursor: pointer;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-body {
+  text-align: center;
+}
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-container {
+  background: white;
+  padding: 20px;
+  width: 350px;
+  border-radius: 8px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.popup-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.popup-buttons button {
+  padding: 8px 16px;
+  border-radius: 5px;
+}

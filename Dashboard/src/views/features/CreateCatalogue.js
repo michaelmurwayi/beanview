@@ -15,7 +15,14 @@ const DataTable = (props) => {
   const [state, setState] = useState(initialState);
   const [saleNumber, setSaleNumber] = useState("");
   const [showPopup, setShowPopup] = useState(false);
-  
+  const [filters, setFilters] = useState({
+    weight: "",
+    grade: "",
+    coffeeClass: "",
+  });
+
+  const togglePopup = () => setShowPopup(!showPopup);
+
   // Set default date range
   const [dateRange, setDateRange] = useState({
     startDate: new Date('2024-01-01'), // Default start date
@@ -34,6 +41,10 @@ const DataTable = (props) => {
   // Handle date range change
   const handleDateChange = (ranges) => {
     setDateRange(ranges.selection);
+  };
+
+  const handleChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
   // Filter records based on selected date range
@@ -60,35 +71,18 @@ const DataTable = (props) => {
 
   // Handle catalogue generation logic
   const handleGenerateCatalogue = () => {
-    // Filter records where weight > 120 and status is not 'PENDING'
-    const filtered = coffeeRecords.filter(
-      (record) => parseFloat(record.weight) > 120 && record.status.toUpperCase() === 'PENDING'
-    );
-
-    if (filtered.length > 0) {
-      setFilteredCatalogue(filtered);
-      setShowPopup(true);
-    } else {
-      alert("No records found with weight greater than 120 KG.");
-    }
+    alert("Catalogue generation feature coming soon!");
   };
 
   const handleDeleteRecord = (index) => {
     setFilteredCatalogue((prevCatalogue) => prevCatalogue.filter((_, i) => i !== index));
   };
 
-  // Handle submission of sale number and filtered records
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const dataToSend = new FormData();
-    dataToSend.append('sale_number', saleNumber); 
-    dataToSend.append('records', JSON.stringify(filteredCatalogue));  
-    
-    props.post_catalogue_records(dataToSend);
-    setShowPopup(false);  
 
+  const handleUploadCatalogue = () => {
+    alert("Upload catalogue feature coming soon!");
   };
-
+  
 
   // Inline styles for the popup
   const popupStyles = {
@@ -153,111 +147,72 @@ const DataTable = (props) => {
       textAlign: 'center',
     },
   };
-  
+  const handleSubmit = () => {
+    handleGenerateCatalogue(filters);
+    togglePopup();
+  };
 
   return (
-    <div className="container-fluid">
-      {/* Loading Spinner */}
-      {loading ? (
-        <div className="text-center">
-          <MDBIcon icon="spinner" spin size="3x" />
-          <p>Loading records...</p>
-        </div>
-      ) : (
-        <div>
-          {/* Data Table */}
-          <MDBDataTable
-            data={data}
-            bordered
-            small
-            responsive
-            hover
-            searching
-            paging
-            paginationLabel={[
-              <MDBIcon icon="chevron-left" key="prev" />,
-              <MDBIcon icon="chevron-right" key="next" />,
-            ]}
-            barReverse={false}
-            className="coffee-records" // Custom class for table styling
-          />
-
-          {/* Generate Catalogue Button */}
-          <div className="text-right mt-4">
-            <button className="btn btn-info" onClick={handleGenerateCatalogue}>
-              <i className="fas fa-download"></i> Generate Catalogue
-            </button>
+    <div className="d-flex justify-content-center align-items-center vh-100">
+      <div className="row">
+        {/* Generate Catalogue Card */}
+        <div className="col-md-6 d-flex justify-content-center">
+          <div className="card action-card"  onClick={togglePopup}>
+            <div className="card-body text-center">
+              <MDBIcon icon="file-download" size="3x" className="mb-3 text-primary" />
+              <h5 className="card-title">Generate Catalogue</h5>
+              <p className="card-text">Create a coffee records catalogue for export.</p>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Popup Modal for Filtered Records */}
-      {showPopup && (
-        <div style={popupStyles.overlay}>
-          <div style={popupStyles.popup}>
-          <div className="flex flex-col space-y-4">
-              {/* Row 1 */}
-               {/* Row 2 - Form */}
-              <div className="flex flex-col border-t pt-4">
-                <form onSubmit={handleSubmit} className="flex flex-col space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h3>Coffee Records to Catalogue</h3>
-                    <button
-                      type='submit'
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-                    >
-                      Generate Files
-                    </button>
-                  </div>
-                  <label className="text-gray-700 !font-bold text-xs">
-                    Enter Sale Number:
-                  </label>
-                  <input
-                    type="text"
-                    value={saleNumber}
-                    onChange={(e) => setSaleNumber(e.target.value)}
-                    className="border p-2 rounded-md"
-                    placeholder="sale number"
-                    required
-                    col-6
-                  />
-                </form>
-              </div>
+        {/* Upload Catalogue Card */}
+        <div className="col-md-6 d-flex justify-content-center">
+          <div className="card action-card" onClick={handleUploadCatalogue}>
+            <div className="card-body text-center">
+              <MDBIcon icon="upload" size="3x" className="mb-3 text-success" />
+              <h5 className="card-title">Upload Final Catalogue</h5>
+              <p className="card-text">Upload and finalize the coffee catalogue.</p>
             </div>
-            <button onClick={() => setShowPopup(false)} style={popupStyles.closeButton}>X</button>
-            {filteredCatalogue.length > 0 ? (
-              <table style={popupStyles.table} className='mt-3'>
-              <thead>
-                <tr style={{ background: '#f2f2f2' }}>
-                  {Object.keys(filteredCatalogue[0]).filter(key => !['created_at', 'status', 'season', 'updated_at', 'file'].includes(key)).map((key) => (
-                    <th key={key} style={popupStyles.th}>{key}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCatalogue.map((record, index) => (
-                  <tr key={index}>
-                    {Object.entries(record)
-                      .filter(([key]) => !['created_at', 'status', 'season', 'updated_at', 'file'].includes(key))
-                      .map(([_, value], idx) => (
-                        <td key={idx} style={popupStyles.td}>{value}</td>
-                    ))}
-                    <td style={popupStyles.td}>
-                      
-                        <MDBIcon 
-                          icon="trash-alt" 
-                          style={{ color: 'red', cursor: 'pointer', fontSize: '18px' }} 
-                          onClick={() => handleDeleteRecord(index)} 
-                        />
-                      
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            ) : (
-              <p>No data available.</p>
-            )}
+          </div>
+        </div>
+      </div>
+       {/* Popup Modal */}
+      {showPopup && (
+        <div className="popup-overlay">
+          <div className="popup-container">
+            <h4>Select Catalogue Filters</h4>
+
+            {/* Dropdowns */}
+            <label>Weight:</label>
+            <select name="weight" value={filters.weight} onChange={handleChange} className="form-control">
+              <option value="">Select Weight</option>
+              <option value="light">Light</option>
+              <option value="medium">Medium</option>
+              <option value="heavy">Heavy</option>
+            </select>
+
+            <label>Grade:</label>
+            <select name="grade" value={filters.grade} onChange={handleChange} className="form-control">
+              <option value="">Select Grade</option>
+              <option value="AA">AA</option>
+              <option value="AB">AB</option>
+              <option value="PB">PB</option>
+            </select>
+
+            <label>Class:</label>
+            <select name="coffeeClass" value={filters.coffeeClass} onChange={handleChange} className="form-control">
+              <option value="">Select Class</option>
+              <option value="Premium">Premium</option>
+              <option value="Standard">Standard</option>
+              <option value="Commercial">Commercial</option>
+            </select>
+
+            {/* Buttons */}
+            <div className="popup-buttons">
+              <button className="btn btn-primary" onClick={handleSubmit}>Confirm</button>
+              <button className="btn btn-secondary" onClick={togglePopup}>Cancel</button>
+            </div>
           </div>
         </div>
       )}
