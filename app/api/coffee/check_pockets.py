@@ -30,7 +30,7 @@ def check_for_pockets(df, sheets):
                 'grade': grade,
                 'mark': group[0]['MARK'],
                 'bags': group[0]['BAGS'],
-                'pockets': group[1]['Weight'] if len(group) > 1 else 0,
+                'pockets': group[0]["POCKETS"],
                 'weight': sum(row['Weight'] for row in group),
                 'mill': group[0]['MILL'],
                 'warehouse': group[0]['W/H'],

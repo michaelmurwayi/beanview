@@ -49,25 +49,27 @@ const DataTable = (props) => {
 
   // Filter records based on selected date range
   const filteredRecords = coffeeRecords.filter((record) => {
-    const recordDate = new Date(record.created_at);
-    return recordDate >= dateRange.startDate && recordDate <= dateRange.endDate;
+    return (
+      (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
+      (filters.grade === "" || record.grade === filters.grade) &&
+      (filters.coffeeClass === "" || record.coffeeClass === filters.coffeeClass)
+    );
   });
-
   // Data for the table
-  const data = {
-    columns: [
-      { label: 'Mark', field: 'mark', sort: 'asc', width: 150 },
-      { label: 'Outturn', field: 'outturn', sort: 'asc', width: 150 },
-      { label: 'Grade', field: 'grade', sort: 'asc', width: 270 },
-      { label: 'Bags', field: 'bags', sort: 'asc', width: 100 },
-      { label: 'Pockets', field: 'pockets', sort: 'asc', width: 100 },
-      { label: 'Weight', field: 'weight', sort: 'asc', width: 200 },
-      { label: 'Certificate', field: 'certificate', sort: 'asc', width: 150 },
-      { label: 'Mill', field: 'mill', sort: 'asc', width: 100 },
+  // const data = {
+  //   columns: [
+  //     { label: 'Mark', field: 'mark', sort: 'asc', width: 150 },
+  //     { label: 'Outturn', field: 'outturn', sort: 'asc', width: 150 },
+  //     { label: 'Grade', field: 'grade', sort: 'asc', width: 270 },
+  //     { label: 'Bags', field: 'bags', sort: 'asc', width: 100 },
+  //     { label: 'Pockets', field: 'pockets', sort: 'asc', width: 100 },
+  //     { label: 'Weight', field: 'weight', sort: 'asc', width: 200 },
+  //     { label: 'Certificate', field: 'certificate', sort: 'asc', width: 150 },
+  //     { label: 'Mill', field: 'mill', sort: 'asc', width: 100 },
       
-    ],
-    rows: filteredRecords, // Using filtered records
-  };
+  //   ],
+  //   rows: filteredRecords, // Using filtered records
+  // };
 
   // Handle catalogue generation logic
   const handleGenerateCatalogue = () => {
@@ -178,44 +180,83 @@ const DataTable = (props) => {
         </div>
       </div>
        {/* Popup Modal */}
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-container">
-            <h4>Select Catalogue Filters</h4>
+       {showPopup && (
+  <div className="popup-overlay">
+    <div className="popup-container">
+      <h4>Select Catalogue Filters</h4>
 
-            {/* Dropdowns */}
-            <label>Weight:</label>
-            <select name="weight" value={filters.weight} onChange={handleChange} className="form-control">
-              <option value="">Select Weight</option>
-              <option value="light">Light</option>
-              <option value="medium">Medium</option>
-              <option value="heavy">Heavy</option>
-            </select>
+      <div className="popup-content">
+        {/* Left Column - Filters */}
+        <div className="filter-section">
+          <label>Weight:</label>
+          <input
+            type="number"
+            name="weight"
+            value={filters.weight}
+            onChange={handleChange}
+            className="form-control"
+            min="0"
+            step="0.1"
+            placeholder="Enter weight"
+          />
 
-            <label>Grade:</label>
-            <select name="grade" value={filters.grade} onChange={handleChange} className="form-control">
-              <option value="">Select Grade</option>
-              <option value="AA">AA</option>
-              <option value="AB">AB</option>
-              <option value="PB">PB</option>
-            </select>
+          <label>Grade:</label>
+          <select name="grade" value={filters.grade} onChange={handleChange} className="form-control">
+            <option value="">Select Grade</option>
+            <option value="ALL">ALL</option>
+            <option value="AA">AA</option>
+            <option value="AB">AB</option>
+            <option value="PB">PB</option>
+          </select>
 
-            <label>Class:</label>
-            <select name="coffeeClass" value={filters.coffeeClass} onChange={handleChange} className="form-control">
-              <option value="">Select Class</option>
-              <option value="Premium">Premium</option>
-              <option value="Standard">Standard</option>
-              <option value="Commercial">Commercial</option>
-            </select>
+          <label>Class:</label>
+          <select name="coffeeClass" value={filters.coffeeClass} onChange={handleChange} className="form-control">
+            <option value="">Select Class</option>
+            <option value="Premium">Premium</option>
+            <option value="Standard">Standard</option>
+            <option value="Commercial">Commercial</option>
+          </select>
 
-            {/* Buttons */}
-            <div className="popup-buttons">
-              <button className="btn btn-primary" onClick={handleSubmit}>Confirm</button>
-              <button className="btn btn-secondary" onClick={togglePopup}>Cancel</button>
-            </div>
+          {/* Buttons */}
+          <div className="popup-buttons">
+            <button className="btn btn-primary" onClick={handleSubmit}>Confirm</button>
+            <button className="btn btn-secondary" onClick={togglePopup}>Cancel</button>
           </div>
         </div>
-      )}
+
+        {/* Right Column - Filtered Results */}
+        <div className="results-section">
+          <h5>Filtered Coffee Records</h5>
+          {filteredRecords.length > 0 ? (
+            <table className="coffee-table">
+              <thead>
+                <tr>
+                  <th>Mark</th>
+                  <th>Grade</th>
+                  <th>Weight</th>
+                  <th>Class</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRecords.map((record, index) => (
+                  <tr key={index}>
+                    <td>{record.mark}</td>
+                    <td>{record.grade}</td>
+                    <td>{record.weight}</td>
+                    <td>{record.coffeeClass}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No matching records found.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
