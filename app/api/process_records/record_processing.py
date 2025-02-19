@@ -1,9 +1,11 @@
 from rest_framework.response import Response
-from ..models import Coffee
+from ..models import Coffee, Mill, Warehouse, CoffeeStatus, File
 from ..coffee import read_file as read
 from ..coffee import clean_masterlog_df as clean
 from ..coffee import check_pockets as pockets
 from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist
+
 
 
 def process_uploaded_files(view, data, sheets):
@@ -33,14 +35,29 @@ def filter_new_records(cleaned_data, existing_records):
             new_records.append(record)
     return new_records
 
+
+def get_foreign_key_instance(model, field_name, value):
+    if not value:
+        return None
+    try:
+        return model.objects.get(name=value)
+    except ObjectDoesNotExist:
+        print(f"{field_name} '{value}' not found. Creating new instance.")
+        return model.objects.create(name=value)
+
+
 def process_records(view, records):
     created_records, failed_records = [], []
     headers = None
     
-    import ipdb;ipdb.set_trace()
     for record in records:
         try:
             print(f"Processing record: {record}")
+            record["mill"] = get_foreign_key_instance(Mill, "Mill", record.get("mill")).pk
+            record["warehouse"] = get_foreign_key_instance(Warehouse, "Warehouse", record.get("warehouse")).pk
+            record["status"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("status")).pk
+            record["file"] = get_foreign_key_instance(File, "File", record.get("file")).pk
+            
             serializer = view.get_serializer(data=record)
             
             if serializer.is_valid(raise_exception=False):
