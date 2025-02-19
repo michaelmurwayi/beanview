@@ -11,6 +11,7 @@ def check_for_pockets(df, sheets):
     """
     records = {}
     
+
     for sheet in sheets:
         for index, row in df[sheet].iterrows():
             outturn_grade = (row['OUTTURN'], row['GRADE'])

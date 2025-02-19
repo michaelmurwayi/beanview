@@ -49,8 +49,8 @@ const Files = (props) => {
     },
     closeButton: {
       position: 'absolute',
-      top: '10px',
-      right: '20px',
+      top: '5px',
+      right: '5px',
       background: 'red',
       width: '30px',
       color: 'white',
@@ -58,6 +58,7 @@ const Files = (props) => {
       padding: '5px 10px',
       cursor: 'pointer',
       fontSize: '10px',
+      fontWeight: 'bolder',
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', 
       borderRadius: '15px',
     },
@@ -84,6 +85,43 @@ const Files = (props) => {
       padding: '2px',
       textAlign: 'center',
     },
+    uploadButton: {
+      backgroundColor: "#0004ff", // Bright blue background
+      color: "white", // White text
+      border: "none", // No border
+      padding: "12px 20px", // Better padding for a comfortable click area
+      cursor: "pointer", // Pointer cursor for clarity
+      fontSize: "1.8vh", // Slightly bigger font
+      fontWeight: "bold", // Bold text
+      borderRadius: "8px", // More rounded corners
+      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.2)", // Soft shadow for depth
+      transition: "all 0.3s ease", // Smooth transition effect
+    },
+    
+    auctionButton:{
+      backgroundColor: '#ffffff',
+      color: 'black',
+      border: 'none',
+      padding: '12px 20px',
+      cursor: 'pointer',
+      fontSize: '1.8vh',
+      fontWeight: 'bold',
+      borderRadius: '8px',
+      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.2)", // Soft shadow for depth
+      transition: "all 0.3s ease", // Smooth transition effect
+    },
+    dssButton:{
+      backgroundColor: '#009900',
+      color: 'white',
+      border: 'none',
+      padding: '10px',
+      cursor: 'pointer',
+      fontSize: '1.8vh',
+      fontWeight: 'bold',
+      borderRadius: '8px',
+      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.2)", // Soft shadow for depth
+      transition: "all 0.3s ease", // Smooth transition effect
+    }
   };
   const handleFolderSelection = (event, saleNumber) => {
     // Filter records where weight > 120 and status is not 'PENDING'
@@ -140,8 +178,12 @@ const Files = (props) => {
       {showPopup && (
         <div style={popupStyles.overlay}>
           <div style={popupStyles.popup}>
-          
-            <button onClick={() => setShowPopup(false)} style={popupStyles.closeButton}>X</button>
+            <div className="d-flex justify-content-center gap-4">
+              <button className="btn btn-default col-md-4" style={popupStyles.uploadButton}> <i class="fa-solid fa-upload"></i> Upload Catalogue</button>
+              <button className="btn btn-secondary col-md-2" style={popupStyles.auctionButton}><i class="fa-solid fa-download"></i> Auction File</button>
+              <button className="btn btn-success col-md-2" style={popupStyles.dssButton}><i class="fa-solid fa-download"></i> DSS File</button>
+              <button onClick={() => setShowPopup(false)} style={popupStyles.closeButton}>X</button>
+            </div>
             {filteredCatalogue.length > 0 ? (
               <table style={popupStyles.table} className='mt-3'>
               <thead>

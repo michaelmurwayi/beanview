@@ -17,6 +17,7 @@ from .coffee.clean_masterlog_df import clean_outturns
 from .coffee.check_pockets import check_for_pockets
 import os
 import json 
+from .process_records.record_processing import process_uploaded_files, process_single_record
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -46,84 +47,17 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
     
+
+
     def create(self, request, *args, **kwargs):
         data = request.data.dict()
-        files = request.FILES  # Get uploaded files
-        sheets = data["sheetnames"].split(",")
+        files = request.FILES
+        sheets = data.get("sheetnames", "").split(",")
 
         if files and sheets:
-            # Process the files
-            data_df, file_name = read_xls_file(data, sheets)
-            cleaned_outturn_data = clean_outturns(data_df, sheets)
-            cleaned_data = check_for_pockets(cleaned_outturn_data, sheets)
-
-            # Get all existing outturn and grade combinations
-            existing_records = set(Coffee.objects.values_list('outturn', 'grade'))
-
-            # Filter new records
-            new_records = []
-            failed_records = []
-            
-            for record in cleaned_data:
-                if isinstance(record, dict) and (str(record.get('outturn', '')), str(record.get('grade', ''))) not in existing_records:
-                    print(f"Record {record} not in existing records")
-                    new_records.append(record)
-
-            if not new_records:
-                return Response({
-                    "success": False,
-                    "message": "No new records to upload, all records already exist in the database.",
-                    "errors": []
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            headers = None  
-            created_records = []
-
-            for record in new_records:
-                try:
-                    print(f"Processing record: {record}")
-
-                    serializer = self.get_serializer(data=record)
-                    
-                    if serializer.is_valid(raise_exception=False):
-                        self.perform_create(serializer)
-                        created_records.append(serializer.data)  # Store successfully created record
-                        headers = self.get_success_headers(serializer.instance)
-                    else:
-                        print(f"Validation error for record: {record}")
-                        print(f"Errors: {serializer.errors}")
-                        failed_records.append({
-                            "record": record,
-                            "errors": serializer.errors
-                        })
-
-                except Exception as e:
-                    print(f"Error processing record: {record}")
-                    print(f"Exception: {str(e)}")
-                    failed_records.append({
-                        "record": record,
-                        "errors": {"error": str(e)}
-                    })
-
-        else:
-            serializer = self.get_serializer(data=data)
-            if serializer.is_valid(raise_exception=True):
-                self.perform_create(serializer)
-                created_records = [serializer.data]
-                headers = self.get_success_headers(serializer.instance)
-            else:
-                failed_records.append({
-                    "record": data,
-                    "errors": serializer.errors
-                })
+            return process_uploaded_files(self, data, sheets)
         
-        return Response({
-            "success": True if created_records else False,
-            "message": "Some records were processed successfully." if created_records else "No records were created.",
-            "created_records": created_records,
-            "failed_records": failed_records
-        }, status=status.HTTP_201_CREATED if created_records else status.HTTP_400_BAD_REQUEST, headers=headers or {})
-
+        return process_single_record(self, data)
     
     def update(self, request, *args, **kwargs):
         """Handle the PUT method for updating a Coffee record."""

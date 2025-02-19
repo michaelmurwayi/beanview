@@ -2,104 +2,146 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from .manage import UserManager
 
+class County(models.Model):
+    name = models.CharField(max_length=100, unique=True)
 
-# Creating custom user model 
+    def __str__(self):
+        return self.name
+
+class Role(models.Model):
+    """User Roles"""
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Address(models.Model):
+    street_address = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    county = models.ForeignKey(County, on_delete=models.SET_NULL, null=True)
+    country = models.CharField(max_length=50)
+    postal_code = models.CharField(max_length=10, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.street_address}, {self.city}, {self.country}"
+
 class User(AbstractBaseUser, PermissionsMixin):
-    class Roles(models.TextChoices):
-        """define the user roles"""
-
-        ADMIN = "ADMIN", "Admin"
-        QUALITY = "QUALITY", "Quality"
-        SECRETARY = "SECRETARY", "Secretary"
-        ACCOUNTANT = "ACCOUNTANT", "Accountant"
-        SYSTEM = "SYSTEM", "System"
-        
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
-    phonenumber = models.IntegerField()
-    country = models.CharField(max_length=50)
-    city = models.CharField(max_length=50)
-    role = models.CharField(max_length=50, choices=Roles.choices)
+    phonenumber = models.CharField(max_length=15, unique=True)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
     password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
-    is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name','last_name','phonenumber','country','city','role','password']
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'phonenumber']
 
     objects = UserManager()
 
-    def user_name (self) :
-        return self.first_name + " " +  self.last_name
-    
     def __str__(self):
         return self.email
 
+class Bank(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Branch(models.Model):
+    bank = models.ForeignKey(Bank, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    location = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.name} - {self.bank.name}"
+
 class Farmer(models.Model):
-    cbk_number = models.CharField(max_length=100, unique=True,primary_key=True)
+    cbk_number = models.CharField(max_length=100, unique=True, primary_key=True)
     farmer_name = models.CharField(max_length=255)
-    national_id = models.CharField(max_length=10)
+    national_id = models.CharField(max_length=10, unique=True)
     mark = models.CharField(max_length=100)
-    address = models.CharField(max_length=100)
-    phonenumber = models.CharField(max_length=10)
-    email = models.CharField(max_length=100)
-    county = models.CharField(max_length=100)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
+    phonenumber = models.CharField(max_length=15)
+    email = models.EmailField(unique=True)
     town = models.CharField(max_length=100)
-    bank = models.CharField(max_length=100)
-    branch = models.CharField(max_length=100)
+    bank_branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True)
     account = models.CharField(max_length=20)
     currency = models.CharField(max_length=3)
 
     def __str__(self):
-        return str(self.ref_no)
+        return self.farmer_name
+
+class Buyer(models.Model):
+    name = models.CharField(max_length=255)
+    contact_info = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return self.name
 
 class Catalogue(models.Model):
-    id = models.AutoField(primary_key=True)
     lot = models.CharField(max_length=100)
     certificate = models.CharField(max_length=100)
     price = models.IntegerField()
-    buyer = models.CharField(max_length=255)
+    buyer = models.ForeignKey(Buyer, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.lot
 
-class Coffee(models.Model):
+class Warehouse(models.Model):
+    name = models.CharField(max_length=100)
+    location = models.CharField(max_length=255)
 
+    def __str__(self):
+        return self.name
+
+class Mill(models.Model):
+    name = models.CharField(max_length=100)
+    location = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+class CoffeeStatus(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+class Coffee(models.Model):
     class Status(models.TextChoices):
-        # define status of coffee
-        RECIEVED = "RECIEVED", "recieved"
-        CATALOGUES = "CATALOGUED", "catalogued"
-        SOLD = "SOLD", "sold"
-        WITHDRAWN = "WITHDRAWN", "withdrawn"
-        PENDING = "PENDING", "pending"
+        RECIEVED = "RECIEVED", "Received"
+        CATALOGUED = "CATALOGUED", "Catalogued"
+        SOLD = "SOLD", "Sold"
+        WITHDRAWN = "WITHDRAWN", "Withdrawn"
+        PENDING = "PENDING", "Pending"
 
     outturn = models.CharField(max_length=100)
     mark = models.CharField(max_length=100)
-    bags = models.IntegerField(null=True, blank=True)  # Make bags nullable
-    pockets = models.IntegerField(null=True, blank=True)  # Make pockets nullable
+    bags = models.IntegerField(null=True, blank=True)
+    pockets = models.IntegerField(null=True, blank=True)
     grade = models.CharField(max_length=50)
     weight = models.DecimalField(max_digits=10, decimal_places=2)
-    mill = models.CharField(max_length=100)
-    warehouse = models.CharField(max_length=100)
+    mill = models.ForeignKey(Mill, on_delete=models.SET_NULL, null=True)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.SET_NULL, null=True)
     certificate = models.CharField(max_length=100, null=True, blank=True)
-    status = models.CharField(max_length=50, choices=Status.choices, default=Status.PENDING)
-    catalogue = models.CharField(max_length=100, null=True, blank=True)
+    status = models.ForeignKey(CoffeeStatus, on_delete=models.SET_NULL, null=True, blank=True)
+    catalogue = models.ForeignKey(Catalogue, on_delete=models.SET_NULL, null=True, blank=True)
     season = models.CharField(max_length=100)
     reserve = models.IntegerField(null=True, blank=True)
     buyer = models.CharField(max_length=100, null=True, blank=True)
     remarks = models.TextField(null=True, blank=True)
     file = models.CharField(max_length=50, default="Master_Log.xlsx")
     sale_number = models.CharField(max_length=52, null=True, blank=True)
-    created_by = models.ForeignKey(
-        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="user"
-    ) 
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="coffee_created_by") 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -110,19 +152,3 @@ class File(models.Model):
     file_name = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-# class Lots(models.Model):
-#     class LotStatus(models.TextChoices):
-#         # define status of coffee
-#         OPEN = "OPEN", "open"
-#         CUPPED = "CLOSSED", "closed"
-#         PENDING = "PENDING", "pending"
-        
-#     id = models.AutoField(primary_key=True)
-#     number = models.CharField(max_length=15)
-#     status = models.CharField(max_length=50, choices=LotStatus.choices, default="RECIEVED")
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     def __str__(self):
-#         return self.status
