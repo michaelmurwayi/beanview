@@ -20,146 +20,67 @@ const DataTable = (props) => {
     grade: "",
     coffeeClass: "",
   });
+  const [filteredRecords, setFilteredRecords] = useState([]);
 
   const togglePopup = () => setShowPopup(!showPopup);
 
-  // Set default date range
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date('2024-01-01'), // Default start date
-    endDate: new Date(), // Default end date
-    key: 'selection',
-  });
-
-  const [loading, setLoading] = useState(true); // Loading state for data fetch
-  const [filteredCatalogue, setFilteredCatalogue] = useState([]); // Store filtered records
-
-  // Fetch coffee records on component mount
   useEffect(() => {
-    fetch_coffee_records().finally(() => setLoading(false)); // Set loading to false after fetch
+    fetch_coffee_records();
   }, [fetch_coffee_records]);
 
-  // Handle date range change
-  const handleDateChange = (ranges) => {
-    setDateRange(ranges.selection);
-  };
+  useEffect(() => {
+    setFilteredRecords(coffeeRecords.filter((record) => {
+      return (
+        record.status === 1 &&
+        (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
+        (filters.grade === "" || record.grade === filters.grade) &&
+        (filters.coffeeClass === "" || record.coffeeClass === filters.coffeeClass)
+      );
+    }));
+  }, [coffeeRecords, filters]);
 
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  // Filter records based on selected date range
-  const filteredRecords = coffeeRecords.filter((record) => {
-    return (
-      (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
-      (filters.grade === "" || record.grade === filters.grade) &&
-      (filters.coffeeClass === "" || record.coffeeClass === filters.coffeeClass)
-    );
-  });
-  // Data for the table
-  // const data = {
-  //   columns: [
-  //     { label: 'Mark', field: 'mark', sort: 'asc', width: 150 },
-  //     { label: 'Outturn', field: 'outturn', sort: 'asc', width: 150 },
-  //     { label: 'Grade', field: 'grade', sort: 'asc', width: 270 },
-  //     { label: 'Bags', field: 'bags', sort: 'asc', width: 100 },
-  //     { label: 'Pockets', field: 'pockets', sort: 'asc', width: 100 },
-  //     { label: 'Weight', field: 'weight', sort: 'asc', width: 200 },
-  //     { label: 'Certificate', field: 'certificate', sort: 'asc', width: 150 },
-  //     { label: 'Mill', field: 'mill', sort: 'asc', width: 100 },
-      
-  //   ],
-  //   rows: filteredRecords, // Using filtered records
-  // };
-
-  // Handle catalogue generation logic
-  const handleGenerateCatalogue = () => {
-    alert("Catalogue generation feature coming soon!");
-  };
-
   const handleDeleteRecord = (index) => {
-    setFilteredCatalogue((prevCatalogue) => prevCatalogue.filter((_, i) => i !== index));
+    setFilteredRecords((prevRecords) => prevRecords.filter((_, i) => i !== index));
   };
 
-
-  const handleUploadCatalogue = () => {
-    alert("Upload catalogue feature coming soon!");
-  };
-  
-
-  // Inline styles for the popup
-  const popupStyles = {
-    overlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: '1000',
-    },
-    popup: {
-      backgroundColor: '#fff',
-      padding: '20px',
-      borderRadius: '10px',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-      maxWidth: '60vw', // Reduce popup width
-      maxHeight: '100vh', // Set max height
-      width: '90%',
-      overflow: 'auto', // Prevent overall overflow
-      position: 'relative',
-    },
-    closeButton: {
-      position: 'absolute',
-      top: '10px',
-      right: '20px',
-      background: 'red',
-      width: '30px',
-      color: 'white',
-      border: 'none',
-      padding: '5px 10px',
-      cursor: 'pointer',
-      fontSize: '10px',
-      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', 
-      borderRadius: '15px',
-    },
-    tableContainer: {
-      maxHeight: '50vh', // Set max height for scroll
-      overflowY: 'auto', // Enable vertical scrolling
-      border: '1px solid #ddd',
-      padding: '10px',
-    },
-    table: {
-      width: '100%',
-      borderCollapse: 'collapse',
-    },
-    th: {
-      border: '0px solid black',
-      padding: '10px',
-      backgroundColor: '#f2f2f2',
-      position: '',
-      top: '0', // Keep headers sticky
-      zIndex: '10',
-    },
-    td: {
-      border: '1px solid black',
-      padding: '2px',
-      textAlign: 'center',
-    },
-  };
   const handleSubmit = () => {
-    handleGenerateCatalogue(filters);
+    if (!saleNumber.trim()) {
+      alert("Sale number is required.");
+      return;
+    }
     togglePopup();
   };
+
+  const weightSummary = filteredRecords.reduce((acc, record) => {
+    const weight = Number(record.weight) || 0;
+    const bags = Number(record.bags) || 0; // Ensure bags are counted
+
+    acc.total += weight;
+    acc.totalBags += bags;
+
+    if (!acc.grades[record.grade]) {
+        acc.grades[record.grade] = { weight: 0, bags: 0 };
+    }
+
+    acc.grades[record.grade].weight += weight;
+    acc.grades[record.grade].bags += bags;
+
+    return acc;
+  }, { total: 0, totalBags: 0, grades: {} });
+
+  const availableGrades = Array.from(new Set(filteredRecords.map(record => record.grade)));
+  const maxWeight = Math.max(0, ...filteredRecords.map(record => parseFloat(record.weight)));
+
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100">
       <div className="row">
-        {/* Generate Catalogue Card */}
         <div className="col-md-6 d-flex justify-content-center">
-          <div className="card action-card"  onClick={togglePopup}>
+          <div className="card action-card" onClick={togglePopup}>
             <div className="card-body text-center">
               <MDBIcon icon="file-download" size="3x" className="mb-3 text-primary" />
               <h5 className="card-title">Generate Catalogue</h5>
@@ -167,96 +88,117 @@ const DataTable = (props) => {
             </div>
           </div>
         </div>
-
-        {/* Upload Catalogue Card */}
         <div className="col-md-6 d-flex justify-content-center">
-          <div className="card action-card" onClick={handleUploadCatalogue}>
+          <div className="card action-card" onClick={togglePopup}>
             <div className="card-body text-center">
-              <MDBIcon icon="upload" size="3x" className="mb-3 text-success" />
+              <MDBIcon icon="file-download" size="3x" className="mb-3 text-primary" />
               <h5 className="card-title">Upload Final Catalogue</h5>
-              <p className="card-text">Upload and finalize the coffee catalogue.</p>
+              <p className="card-text">Upload final catalogue with auction results.</p>
             </div>
           </div>
         </div>
       </div>
-       {/* Popup Modal */}
-       {showPopup && (
-  <div className="popup-overlay">
-    <div className="popup-container">
-      <h4>Select Catalogue Filters</h4>
 
-      <div className="popup-content">
-        {/* Left Column - Filters */}
-        <div className="filter-section">
-          <label>Weight:</label>
-          <input
-            type="number"
-            name="weight"
-            value={filters.weight}
-            onChange={handleChange}
-            className="form-control"
-            min="0"
-            step="0.1"
-            placeholder="Enter weight"
-          />
+      {showPopup && (
+        <div className="popup-overlay">
+          <div className="popup-container" style={{ width: '70%', height: '90vh', overflow: 'hidden' }}>
+            <div className="popup-content" style={{ display: 'flex', height: '100%' }}>
+              <div className="filter-section" style={{ width: '30%', paddingRight: '20px' }}>
+            
+                <label>Sale Number:</label>
+                <input type="text" name="saleNumber" value={saleNumber} onChange={(e) => setSaleNumber(e.target.value)} className="form-control" placeholder="Enter Sale Number" required />
+                <label>Weight:</label>
+                <input type="number" name="weight" value={filters.weight} onChange={handleChange} className="form-control" min="0" max={maxWeight} step="0.1" placeholder="Enter weight" />
 
-          <label>Grade:</label>
-          <select name="grade" value={filters.grade} onChange={handleChange} className="form-control">
-            <option value="">Select Grade</option>
-            <option value="ALL">ALL</option>
-            <option value="AA">AA</option>
-            <option value="AB">AB</option>
-            <option value="PB">PB</option>
-          </select>
+                <label>Grade:</label>
+                <select name="grade" value={filters.grade} onChange={handleChange} className="form-control">
+                  <option value="">Select Grade</option>
+                  {availableGrades.map((grade) => (
+                    <option key={grade} value={grade}>{grade}</option>
+                  ))}
+                </select>
 
-          <label>Class:</label>
-          <select name="coffeeClass" value={filters.coffeeClass} onChange={handleChange} className="form-control">
-            <option value="">Select Class</option>
-            <option value="Premium">Premium</option>
-            <option value="Standard">Standard</option>
-            <option value="Commercial">Commercial</option>
-          </select>
+                <label>Class:</label>
+                <select name="coffeeClass" value={filters.coffeeClass} onChange={handleChange} className="form-control">
+                  <option value="">Select Class</option>
+                  <option value="Premium">Premium</option>
+                  <option value="Standard">Standard</option>
+                  <option value="Commercial">Commercial</option>
+                </select>
 
-          {/* Buttons */}
-          <div className="popup-buttons">
-            <button className="btn btn-primary" onClick={handleSubmit}>Confirm</button>
-            <button className="btn btn-secondary" onClick={togglePopup}>Cancel</button>
+                <div className="popup-buttons" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                  <button className="btn btn-primary" onClick={handleSubmit}>Confirm</button>
+                  <button className="btn btn-secondary" onClick={togglePopup}>Cancel</button>
+                </div>
+                <div className="summary" style={{ 
+                    textAlign: 'left', 
+                    marginTop: '10px', 
+                    padding: '1px', 
+                    border: '1px solid #ddd', 
+                    borderRadius: '5px', 
+                    backgroundColor: '#f9f9f9', 
+                    overflowY: 'auto',
+                  }}>
+                    <h5 style={{ fontWeight: 'bold', color: '#333' }}>Summary</h5>
+                    <p style={{ fontSize: '16px', marginBottom: '5px', overflow: 'auto' }}>
+                      <span style={{ fontWeight: 'bold', color: '#007bff' }}>Total Weight:</span> {weightSummary.total.toFixed(2)}
+                    </p>
+                    <p style={{ fontSize: '16px', marginBottom: '10px' }}>
+                      <span style={{ fontWeight: 'bold', color: '#007bff' }}>Total Bags:</span> {weightSummary.totalBags}
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', overflowY: 'auto', maxHeight: '100vh' }}>
+                      {Object.entries(weightSummary.grades).map(([grade, data]) => (
+                        <p key={grade} style={{ 
+                          margin: '0', 
+                          padding: '0px', 
+                          backgroundColor: '#fff', 
+                          borderRadius: '3px' 
+                        }}>
+                          <span style={{ fontWeight: 'bold', color: '#333' }}>{grade}:</span> 
+                          <b> {data.bags} bags</b>
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+
+              </div>
+
+              <div className="results-section" style={{ width: '70%', overflowY: 'auto', maxHeight: '100vh' }}>
+                <h5>Filtered Coffee Records</h5>
+                {filteredRecords.length > 0 ? (
+                  <table className="coffee-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th>Mark</th>
+                        <th>Grade</th>
+                        <th>Bags</th>
+                        <th>Pockets</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRecords.map((record, index) => (
+                        <tr key={index}>
+                          <td>{record.mark}</td>
+                          <td>{record.grade}</td>
+                          <td>{record.bags}</td>
+                          <td>{record.pockets}</td>
+                          <td>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteRecord(index)}>Delete</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p>No matching records found.</p>
+                )}
+
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Right Column - Filtered Results */}
-        <div className="results-section">
-          <h5>Filtered Coffee Records</h5>
-          {filteredRecords.length > 0 ? (
-            <table className="coffee-table">
-              <thead>
-                <tr>
-                  <th>Mark</th>
-                  <th>Grade</th>
-                  <th>Weight</th>
-                  <th>Class</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRecords.map((record, index) => (
-                  <tr key={index}>
-                    <td>{record.mark}</td>
-                    <td>{record.grade}</td>
-                    <td>{record.weight}</td>
-                    <td>{record.coffeeClass}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>No matching records found.</p>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
+      )}
     </div>
   );
 };
@@ -266,11 +208,11 @@ const mapDispatchToProps = (dispatch) => {
     fetch_coffee_records: () => dispatch(fetch_coffee_records()),
     post_catalogue_records: (data) => dispatch(post_catalogue_records(data)),
   };
-}
+};
 
 const mapStateToProps = (state) => {
   return {
-    coffeeRecords: state.reducer.coffeeRecords, // Access coffee records from state
+    coffeeRecords: state.reducer.coffeeRecords,
     catalogue: state.reducer.catalogue,
   };
 };
