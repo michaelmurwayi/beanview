@@ -11,9 +11,9 @@ import initialState from 'components/State/initialState';
 import { post_catalogue_records } from 'components/State/action';
 
 const DataTable = (props) => {
-  const { coffeeRecords, fetch_coffee_records } = props;
-  const [state, setState] = useState(initialState);
+  const { coffeeRecords, fetch_coffee_records, mainGrades, miscelleneousGrades } = props;
   const [saleNumber, setSaleNumber] = useState("");
+  const [catalogueType, setCatalogueType] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [filters, setFilters] = useState({
     weight: "",
@@ -30,14 +30,19 @@ const DataTable = (props) => {
 
   useEffect(() => {
     setFilteredRecords(coffeeRecords.filter((record) => {
+      const isMainCatalogue = catalogueType === "main";
+      const isMiscCatalogue = catalogueType === "misc";
+  
       return (
         record.status === 1 &&
         (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
         (filters.grade === "" || record.grade === filters.grade) &&
-        (filters.coffeeClass === "" || record.coffeeClass === filters.coffeeClass)
+        (filters.coffeeClass === "" || record.coffeeClass === filters.coffeeClass) &&
+        (!isMainCatalogue || mainGrades.includes(record.grade)) &&
+        (!isMiscCatalogue || miscelleneousGrades.includes(record.grade))
       );
     }));
-  }, [coffeeRecords, filters]);
+  }, [coffeeRecords, filters, catalogueType, mainGrades, miscelleneousGrades]);
 
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -103,34 +108,53 @@ const DataTable = (props) => {
         <div className="popup-overlay">
           <div className="popup-container" style={{ width: '70%', height: '90vh', overflow: 'hidden' }}>
             <div className="popup-content" style={{ display: 'flex', height: '100%' }}>
-              <div className="filter-section" style={{ width: '30%', paddingRight: '20px' }}>
-            
-                <label>Sale Number:</label>
-                <input type="text" name="saleNumber" value={saleNumber} onChange={(e) => setSaleNumber(e.target.value)} className="form-control" placeholder="Enter Sale Number" required />
-                <label>Weight:</label>
-                <input type="number" name="weight" value={filters.weight} onChange={handleChange} className="form-control" min="0" max={maxWeight} step="0.1" placeholder="Enter weight" />
+              <div className="filter-section row" style={{ width: '30%', paddingRight: '20px' }}>
+              <div className='col-md-6'>
+                  <label>Catalogue Type</label>
+                  <select 
+                    name="saleNumber" 
+                    value={catalogueType} 
+                    onChange={(e) => setCatalogueType(e.target.value)} 
+                    className="form-control" 
+                    required
+                  >
+                    <option value="">Select Catalogue Type</option>
+                    <option value="main">Main Catalogue</option>
+                    <option value="misc">Miscellaneous</option>
+                  </select>
+                </div>
+                <div className='col-md-6'>
+                    <label>Sale Number</label>
+                    <input type="text" name="saleNumber" value={saleNumber} onChange={(e) => setSaleNumber(e.target.value)} className="form-control" placeholder="Enter Sale Number" required />
+                  </div>
+                <div className='col-md-6'>
+                  <label>Weight</label>
+                  <input type="number" name="weight" value={filters.weight} onChange={handleChange} className="form-control" min="0" max={maxWeight} step="0.1" placeholder="Enter weight" />
+                </div>
+                <div className='col-md-6'>
+                  <label>Grade</label>
+                  <select name="grade" value={filters.grade} onChange={handleChange} className="form-control">
+                    <option value="">Select Grade</option>
+                    {availableGrades.map((grade) => (
+                      <option key={grade} value={grade}>{grade}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className='col-md-6'>
+                  <label>Class</label>
+                  <select name="coffeeClass" value={filters.coffeeClass} onChange={handleChange} className="form-control">
+                    <option value="">Select Class</option>
+                    <option value="Premium">Premium</option>
+                    <option value="Standard">Standard</option>
+                    <option value="Commercial">Commercial</option>
+                  </select>
+                </div>
 
-                <label>Grade:</label>
-                <select name="grade" value={filters.grade} onChange={handleChange} className="form-control">
-                  <option value="">Select Grade</option>
-                  {availableGrades.map((grade) => (
-                    <option key={grade} value={grade}>{grade}</option>
-                  ))}
-                </select>
-
-                <label>Class:</label>
-                <select name="coffeeClass" value={filters.coffeeClass} onChange={handleChange} className="form-control">
-                  <option value="">Select Class</option>
-                  <option value="Premium">Premium</option>
-                  <option value="Standard">Standard</option>
-                  <option value="Commercial">Commercial</option>
-                </select>
-
-                <div className="popup-buttons" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <div className="popup-buttons col-md-12" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                   <button className="btn btn-primary" onClick={handleSubmit}>Confirm</button>
                   <button className="btn btn-secondary" onClick={togglePopup}>Cancel</button>
                 </div>
-                <div className="summary" style={{ 
+                <div className="summary col-md-12" style={{ 
                     textAlign: 'left', 
                     marginTop: '10px', 
                     padding: '1px', 
@@ -214,6 +238,8 @@ const mapStateToProps = (state) => {
   return {
     coffeeRecords: state.reducer.coffeeRecords,
     catalogue: state.reducer.catalogue,
+    mainGrades: state.reducer.mainGrades,
+    miscelleneousGrades: state.reducer.miscelleneousGrades
   };
 };
 
