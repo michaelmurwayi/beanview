@@ -9,6 +9,7 @@ import 'assets/css/coffee_table.css';
 import { MDBIcon } from 'mdbreact';
 import initialState from 'components/State/initialState';
 import { post_catalogue_records } from 'components/State/action';
+import { is } from 'date-fns/locale';
 
 const DataTable = (props) => {
   const { coffeeRecords, fetch_coffee_records, mainGrades, miscelleneousGrades } = props;
@@ -33,16 +34,25 @@ const DataTable = (props) => {
       const isMainCatalogue = catalogueType === "main";
       const isMiscCatalogue = catalogueType === "misc";
   
+      const inMainGrades = mainGrades.includes(record.grade);
+      const inMiscGrades = miscelleneousGrades.includes(record.grade);
+      const isPLType = record.coffeeType === "PL";
+  
       return (
         record.status === 1 &&
         (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
         (filters.grade === "" || record.grade === filters.grade) &&
         (filters.coffeeClass === "" || record.coffeeClass === filters.coffeeClass) &&
-        (!isMainCatalogue || mainGrades.includes(record.grade)) &&
-        (!isMiscCatalogue || miscelleneousGrades.includes(record.grade))
+        (
+          (isMainCatalogue && inMainGrades) ||  // If main, only allow main grades
+          (isMiscCatalogue && ((inMiscGrades && !inMainGrades) || (inMiscGrades && inMainGrades && isPLType))) 
+          // If misc, allow: 
+          // - Grades only in miscGrades
+          // - Grades in both lists, but only if coffeeType is PL
+        )
       );
     }));
-  }, [coffeeRecords, filters, catalogueType, mainGrades, miscelleneousGrades]);
+  }, [coffeeRecords, filters, catalogueType, mainGrades, miscelleneousGrades]);  
 
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -140,19 +150,9 @@ const DataTable = (props) => {
                     ))}
                   </select>
                 </div>
-                <div className='col-md-6'>
-                  <label>Class</label>
-                  <select name="coffeeClass" value={filters.coffeeClass} onChange={handleChange} className="form-control">
-                    <option value="">Select Class</option>
-                    <option value="Premium">Premium</option>
-                    <option value="Standard">Standard</option>
-                    <option value="Commercial">Commercial</option>
-                  </select>
-                </div>
-
-                <div className="popup-buttons col-md-12" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button className="btn btn-primary" onClick={handleSubmit}>Confirm</button>
-                  <button className="btn btn-secondary" onClick={togglePopup}>Cancel</button>
+                <div className="popup-buttons col-md-12" style={{ display: 'flex', gap: '0px', marginTop: '0px' }}>
+                  <button className="btn btn-primary col-md-6" onClick={handleSubmit}>Confirm</button>
+                  <button className="btn btn-secondary col-md-6" onClick={togglePopup}>Cancel</button>
                 </div>
                 <div className="summary col-md-12" style={{ 
                     textAlign: 'left', 
