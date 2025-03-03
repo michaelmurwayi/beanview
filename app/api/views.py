@@ -161,9 +161,11 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     def create(self, request):
         try:
             data = request.data.dict()
-
+            
             # Validate sale_number
-            sale_number = data.get("sale_number")
+            sale_number = data.get("saleNumber")
+            catalogue_type = data.get("catalogueType")
+
             if not sale_number:
                 return Response({"error": "Sale number is required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -178,7 +180,6 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 return Response({"error": "Invalid records JSON format"}, status=status.HTTP_400_BAD_REQUEST)
 
             updated_count = 0
-
             for record in records:
                 outturn = record.get("outturn")
                 grade = record.get("grade")
@@ -190,12 +191,12 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                     )
 
                 coffee = Coffee.objects.filter(outturn=outturn, grade=grade)
-                update_result = coffee.update(sale_number=sale_number, status="CATALOGUED")
+                update_result = coffee.update(sale_number=sale_number, status=3, catalogue_type=catalogue_type)
                 
                 if update_result > 0:
                     updated_count += update_result
                     print(f"Updated coffee record: {record}")
-
+                    
             if updated_count == 0:
                 return Response({"message": "No records were updated."}, status=status.HTTP_200_OK)
 

@@ -272,29 +272,29 @@ export const fetch_lots_records = () => async (dispatch) =>{
     }
 }
 
-export const post_catalogue_records = (catalogueRecord) => async(dispatch)=>{
-    const api_url = "http://127.0.0.1:8000/api/catalogue/"
+export const post_catalogue_records = (catalogueRecord) => async (dispatch) => {
+    const api_url = "http://127.0.0.1:8000/api/catalogue/";
+
     try {
-        
-        // Initialize FormData
-        const formData = new FormData();
-        // Check if coffeeRecord is a FormData instance
-        if (catalogueRecord instanceof FormData) {
-            for (const [key, value] of catalogueRecord.entries()) {
-                formData.append(key, value);
-            }
-        } else {
-            // Add each key-value pair to FormData
+        // Use the provided FormData instance or create a new one
+        const formData = catalogueRecord instanceof FormData ? catalogueRecord : new FormData();
+        console.log(JSON.stringify(formData["records"], null, 2));
+
+        if (!(catalogueRecord instanceof FormData)) {
             Object.keys(catalogueRecord).forEach((key) => {
-                // If the value is an array or file, handle it accordingly
                 if (key === 'file' && catalogueRecord[key]) {
-                    formData.append(key, catalogueRecord[key][0]); // Assuming file is an array
+                    // Check if file is an array or single file
+                    if (Array.isArray(catalogueRecord[key])) {
+                        catalogueRecord[key].forEach((file) => formData.append(key, file));
+                    } else {
+                        formData.append(key, JSON.stringify(catalogueRecord[key]));
+                    }
                 } else {
-                    formData.append(key, catalogueRecord[key]);
+                    formData.append(key, JSON.stringify(catalogueRecord[key]));
                 }
             });
         }
-        
+
         // Fetch configuration
         const fetchConfig = {
             method: 'POST',
@@ -303,28 +303,27 @@ export const post_catalogue_records = (catalogueRecord) => async(dispatch)=>{
 
         // Dispatch request action
         dispatch({ type: 'POST_CATALOGUE_RECORD_REQUEST' });
-        console.log(fetchConfig)
+
+        console.log(fetchConfig);
+
         // Perform API request
         const response = await fetch(api_url, fetchConfig);
-        
-        // Check for successful response
+
+        // Try parsing response data safely
+        let responseData;
+        try {
+            responseData = await response.json();
+        } catch (jsonError) {
+            throw new Error("Server returned invalid JSON response.");
+        }
+
         if (response.ok) {
-            const responseData = await response.json();
             dispatch({ type: 'POST_CATALOGUE_DATA_SUCCESS', payload: responseData });
         } else {
-            // Handle non-OK responses
-            const errorData = await response.json();
-            const errorMessage = errorData.detail || 'Check upload file for errors.';
+            const errorMessage = responseData?.detail || "Check upload file for errors.";
             dispatch({ type: 'POST_CATALOGUE_DATA_FAILURE', payload: errorMessage });
         }
     } catch (error) {
-        // Catch unexpected errors and dispatch failure action
         dispatch({ type: 'POST_CATALOGUE_DATA_FAILURE', payload: { error: error.message } });
     }
-}
-
-
-
-
-
-
+};
