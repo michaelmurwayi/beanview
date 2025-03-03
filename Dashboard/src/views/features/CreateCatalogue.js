@@ -36,7 +36,8 @@ const DataTable = (props) => {
   
       const inMainGrades = mainGrades.includes(record.grade);
       const inMiscGrades = miscelleneousGrades.includes(record.grade);
-      const isPLType = record.coffeeType === "PL";
+      const isPLType = record.type === "PL";
+      console.log(isPLType);
   
       return (
         record.status === 1 &&
@@ -65,7 +66,18 @@ const DataTable = (props) => {
   const handleSubmit = () => {
     if (!saleNumber.trim()) {
       alert("Sale number is required.");
-      return;
+    }else{
+      const data = {
+        saleNumber,
+        catalogueType,
+        records: filteredRecords,
+      };
+      console.log(data);
+      props.post_catalogue_records(data);
+      setSaleNumber("");
+      setCatalogueType("");
+      setFilters({ weight: "", grade: "", coffeeClass: "" });
+      setFilteredRecords([]);
     }
     togglePopup();
   };
@@ -116,8 +128,8 @@ const DataTable = (props) => {
 
       {showPopup && (
         <div className="popup-overlay">
-          <div className="popup-container" style={{ width: '70%', height: '90vh', overflow: 'hidden' }}>
-            <div className="popup-content" style={{ display: 'flex', height: '100%' }}>
+          <div className="popup-container" style={{ width: '70%', height: '100vh', overflow: 'hidden' }}>
+            <div className="popup-content" style={{ display: 'flex', height: '90vh' }}>
               <div className="filter-section row" style={{ width: '30%', paddingRight: '20px' }}>
               <div className='col-md-6'>
                   <label>Catalogue Type</label>
@@ -150,9 +162,9 @@ const DataTable = (props) => {
                     ))}
                   </select>
                 </div>
-                <div className="popup-buttons col-md-12" style={{ display: 'flex', gap: '0px', marginTop: '0px' }}>
+                <div className="popup-buttons col-md-12">
                   <button className="btn btn-primary col-md-6" onClick={handleSubmit}>Confirm</button>
-                  <button className="btn btn-secondary col-md-6" onClick={togglePopup}>Cancel</button>
+                  <button className="btn btn-secondary col-md-6 " onClick={togglePopup}>Cancel</button>
                 </div>
                 <div className="summary col-md-12" style={{ 
                     textAlign: 'left', 

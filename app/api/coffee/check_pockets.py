@@ -24,12 +24,14 @@ def check_for_pockets(df, sheets):
         # Format coffee season
         start_year = f""
         end_year = f""
+        
         for (outturn, grade), group in records.items():
             aggregated_row = {
                 'outturn': outturn,
                 'grade': grade,
                 'mark': group[0]['MARK'],
                 'bags': group[0]['BAGS'],
+                'type': group[0]['COFFEE TYPE'],
                 'pockets': group[0]["POCKETS"],
                 'weight': sum(row['Weight'] for row in group),
                 'mill': group[0]['MILL'],
