@@ -28,7 +28,7 @@ const initialState = {
     finalCatalogue: [],
     mainGrades: ['AA','E','PB', 'AB', 'C', 'TT', 'T'],
     miscelleneousGrades: ['SB', 'HE', 'UG3', 'UG2', 'UG1', 'UG', 'T', 'TT', 'C', 'AB', 'PB', 'AA', 'NL', 'NH', 'RL', 'RH', 'ML', 'MH']
-        
+            
 }
 
 

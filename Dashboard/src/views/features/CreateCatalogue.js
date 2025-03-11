@@ -11,7 +11,7 @@ import initialState from 'components/State/initialState';
 import { post_catalogue_records } from 'components/State/action';
 import { is } from 'date-fns/locale';
 
-const DataTable = (props) => {
+const ViewCatalogue = (props) => {
   const { coffeeRecords, fetch_coffee_records, mainGrades, miscelleneousGrades } = props;
   const [saleNumber, setSaleNumber] = useState("");
   const [catalogueType, setCatalogueType] = useState("");
@@ -255,4 +255,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(DataTable);
+export default connect(mapStateToProps, mapDispatchToProps)(ViewCatalogue);

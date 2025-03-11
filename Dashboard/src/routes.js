@@ -1,7 +1,7 @@
 import Dashboard from "views/Index.js";
 import AddUser from "views/features/AddUser.js";
 import CoffeeRecords from "views/features/CoffeeTable";
-import Files from "views/features/files.js";
+import ViewCatalogue from "views/features/ViewCatalogues.js";
 import Login from "views/features/Login.js";
 import Tables from "views/features/Tables.js";
 import AddCoffee from "views/features/AddCoffee.js";
@@ -41,7 +41,7 @@ var routes = [
     path: "/catalogue-view",
     name: "View Catalogues",
     icon: "ni ni-ungroup text-danger", // More fitting icon for viewing catalogues
-    component: <CreateCatalogue />,
+    component: <ViewCatalogue />,
     layout: "/admin",
   },
   {
@@ -65,13 +65,7 @@ var routes = [
     component: <Login />,
     layout: "/auth",
   },
-  {
-    path: "/files",
-    name: "Files",
-    icon: "fas fa-gavel text-primary", // 'gavel' icon matches auction-related functionality
-    component: <Files />,
-    layout: "/admin",
-  },
+
 ];
 
 export default routes;
