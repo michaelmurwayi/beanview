@@ -1,6 +1,6 @@
 import Dashboard from "views/Index.js";
 import AddUser from "views/features/AddUser.js";
-import CoffeeRecords from "views/features/CoffeeTable";
+import DataTable from "views/features/CoffeeTable";
 import ViewCatalogue from "views/features/ViewCatalogues.js";
 import Login from "views/features/Login.js";
 import Tables from "views/features/Tables.js";
@@ -27,7 +27,7 @@ var routes = [
     path: "/coffee-records",
     name: "Coffee Records",
     icon: "fas fa-list-ul text-warning", // List icon to match records
-    component: <CoffeeRecords />,
+    component: <DataTable />,
     layout: "/admin",
   },
   {

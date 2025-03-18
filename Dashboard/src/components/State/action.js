@@ -119,7 +119,7 @@ export const post_coffee_records = (farmersRecord) => async (dispatch) => {
 
 export const update_coffee_record = (coffeeRecord) => async (dispatch) => {
     try {
-        const api_url = `http://127.0.0.1:8000/api/coffee/${coffeeRecord.id}/`; // Assuming the record has an `id` field
+        const api_url = `http://127.0.0.1:8000/api/coffee/${coffeeRecord}/`; // Assuming the record has an `id` field
         
         // Initialize FormData
         const formData = new FormData();

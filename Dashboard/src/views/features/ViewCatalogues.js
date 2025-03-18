@@ -10,11 +10,20 @@ const Files = ({ coffeeRecords, fetch_coffee_records }) => {
     const [selectedCatalogueType, setSelectedCatalogueType] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [filteredByType, setFilteredByType] = useState([]);
+    const [editModal, setEditModal] = useState(false);
+    const [editRecord, setEditRecord] = useState(null);
 
     useEffect(() => {
-        fetch_coffee_records();
+        const getCoffeeRecords = async () => {
+            try {
+                await fetch_coffee_records();
+            } catch (error) {
+                console.error("Error fetching coffee records:", error);
+            }
+        };
+        getCoffeeRecords();
     }, []);
-
+    
     const uniqueSaleNumbers = useMemo(() => {
         return [...new Set(coffeeRecords.map(record => record.sale_number).filter(Boolean))];
     }, [coffeeRecords]);
@@ -27,7 +36,7 @@ const Files = ({ coffeeRecords, fetch_coffee_records }) => {
         }
 
         const filtered = coffeeRecords.filter(
-            (record) => record.sale_number?.toString() === saleNumber.toString() && record.status === 3
+            (record) => record.sale_number === saleNumber && record.status === 3
         );
 
         setFilteredCatalogue(filtered);
@@ -43,6 +52,39 @@ const Files = ({ coffeeRecords, fetch_coffee_records }) => {
         setFilteredByType(filtered);
         setSelectedCatalogueType(type);
         setShowModal(true);
+    };
+
+    const handleEdit = (record) => {
+        setEditRecord(record);
+        setEditModal(true);
+    };
+    
+    const handleSaveEdit = () => {
+        let updated = false;
+
+        setFilteredByType((prev) =>
+            prev.map((rec) => {
+                if (rec.outturn === editRecord.outturn && rec.grade === editRecord.grade) {
+                    updated = true;
+                    return editRecord;
+                }
+                return rec;
+            })
+        );
+
+        if (updated) {
+            alert("Coffee record will be updated!");
+        }
+
+    setEditModal(false);
+    };
+
+
+
+    const handleDelete = (id) => {
+        if (window.confirm("Are you sure you want to delete this record?")) {
+            setFilteredByType((prev) => prev.filter((record) => record.id !== id));
+        }
     };
 
     return (
@@ -95,19 +137,47 @@ const Files = ({ coffeeRecords, fetch_coffee_records }) => {
                 </div>
 
                 {/* Modal for Displaying Filtered Catalogue */}
-                <Modal show={showModal} onHide={() => setShowModal(false)}>
+                <Modal show={showModal} onHide={() => setShowModal(false)} dialogClassName="modal-lg">
                     <Modal.Header closeButton>
                         <Modal.Title>Catalogue: {selectedCatalogueType}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         {filteredByType.length > 0 ? (
-                            <ul className="list-group">
-                                {filteredByType.map((record, index) => (
-                                    <li key={index} className="list-group-item">
-                                        {record.catalogue_name || "Unnamed Catalogue"}
-                                    </li>
-                                ))}
-                            </ul>
+                            <div className="table-responsive">
+                                <table className="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Mark</th>
+                                            <th>Outturn</th>
+                                            <th>Grade</th>
+                                            <th>Type</th>
+                                            <th>Bags</th>
+                                            <th>Weight</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredByType.map((record, index) => (
+                                            <tr key={index}>
+                                                <td>{record.mark}</td>
+                                                <td>{record.outturn}</td>
+                                                <td>{record.grade}</td>
+                                                <td>{record.type}</td>
+                                                <td>{record.bags}</td>
+                                                <td>{record.weight}</td>
+                                                <td>
+                                                    <Button variant="warning" size="sm" onClick={() => handleEdit(record)}>
+                                                        Edit
+                                                    </Button>{' '}
+                                                    <Button variant="danger" size="sm" onClick={() => handleDelete(record.id)}>
+                                                        Delete
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         ) : (
                             <p className="text-center text-muted">No records found for this catalogue type.</p>
                         )}
@@ -118,14 +188,41 @@ const Files = ({ coffeeRecords, fetch_coffee_records }) => {
                         </Button>
                     </Modal.Footer>
                 </Modal>
+
+                {/* Edit Record Modal */}
+                <Modal show={editModal} onHide={() => setEditModal(false)}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Edit Record</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {editRecord && (
+                            <>
+                                {["mark", "outturn", "grade", "type", "bags", "weight"].map((field) => (
+                                    <div className="mb-3" key={field}>
+                                        <label>{field.charAt(0).toUpperCase() + field.slice(1)}:</label>
+                                        <input
+                                            type={field === "bags" || field === "weight" ? "number" : "text"}
+                                            className="form-control"
+                                            value={editRecord[field]}
+                                            onChange={(e) => setEditRecord({ ...editRecord, [field]: e.target.value })}
+                                        />
+                                    </div>
+                                ))}
+                            </>
+                        )}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setEditModal(false)}>Cancel</Button>
+                        <Button variant="primary" onClick={handleSaveEdit}>Save Changes</Button>
+                    </Modal.Footer>
+                </Modal>
+
             </div>
         </div>
     );
 };
 
-const mapDispatchToProps = {
-    fetch_coffee_records
-};
+const mapDispatchToProps = { fetch_coffee_records };
 
 const mapStateToProps = (state) => ({
     coffeeRecords: state.reducer.coffeeRecords,
