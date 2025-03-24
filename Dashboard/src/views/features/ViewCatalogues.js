@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { connect } from "react-redux";
-import { fetch_coffee_records, update_coffee_record } from "components/State/action";
+import { fetch_coffee_records, update_catalogue_record } from "components/State/action";
 import { MDBIcon } from 'mdbreact';
 import { Modal, Button } from 'react-bootstrap';
 
 const Files = (props) => {
-    const { coffeeRecords, fetch_coffee_records, updateCoffeeRecords } = props;
+    const { coffeeRecords, fetch_coffee_records, updateRecord } = props;
     const [expandedSale, setExpandedSale] = useState(null);
     const [filteredCatalogue, setFilteredCatalogue] = useState([]);
     const [selectedCatalogueType, setSelectedCatalogueType] = useState(null);
@@ -64,7 +64,7 @@ const Files = (props) => {
         if (!editRecord) return;
     
         alert("Coffee record will be permanently updated. Are you sure you want to proceed?");
-        updateCoffeeRecords(editRecord); // Dispatch action to update the record
+        updateRecord(editRecord); // Dispatch action to update the record
     
         setFilteredByType((prev) =>
             prev.map((rec) => (rec.outturn === editRecord.outturn && rec.grade === editRecord.grade ? editRecord : rec))
@@ -75,12 +75,14 @@ const Files = (props) => {
     };
 
 
+    const handleDelete = (record) => {
+    if (window.confirm("Are you sure you want to delete this record?")) {
+        updateRecord(record); // Dispatch Redux action
 
-    const handleDelete = (id) => {
-        if (window.confirm("Are you sure you want to delete this record?")) {
-            setFilteredByType((prev) => prev.filter((record) => record.id !== id));
-        }
-    };
+        setFilteredByType((prev) => prev.filter((rec) => rec.id !== record.id));
+    }
+};
+
 
     return (
         <div className="d-flex justify-content-center align-items-left vh-100 bg-light">
@@ -164,7 +166,7 @@ const Files = (props) => {
                                                     <Button variant="warning" size="sm" onClick={() => handleEdit(record)}>
                                                         Edit
                                                     </Button>{' '}
-                                                    <Button variant="danger" size="sm" onClick={() => handleDelete(record.id)}>
+                                                    <Button variant="danger" size="sm" onClick={() => handleDelete(record)}>
                                                         Delete
                                                     </Button>
                                                 </td>
@@ -220,7 +222,7 @@ const Files = (props) => {
 const mapDispatchToProps = (dispatch) => {
     return {
       fetch_coffee_records: () => dispatch(fetch_coffee_records()),
-      updateCoffeeRecords: (data) => dispatch(update_coffee_record(data)),
+      updateRecord: (data) => dispatch(update_catalogue_record(data)),
     };
   };
 
