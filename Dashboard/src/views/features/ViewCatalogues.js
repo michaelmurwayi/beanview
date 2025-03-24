@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { connect } from "react-redux";
-import { fetch_coffee_records } from "components/State/action";
+import { fetch_coffee_records, update_coffee_record } from "components/State/action";
 import { MDBIcon } from 'mdbreact';
 import { Modal, Button } from 'react-bootstrap';
 
-const Files = ({ coffeeRecords, fetch_coffee_records }) => {
+const Files = (props) => {
+    const { coffeeRecords, fetch_coffee_records, updateCoffeeRecords } = props;
     const [expandedSale, setExpandedSale] = useState(null);
     const [filteredCatalogue, setFilteredCatalogue] = useState([]);
     const [selectedCatalogueType, setSelectedCatalogueType] = useState(null);
@@ -60,23 +61,17 @@ const Files = ({ coffeeRecords, fetch_coffee_records }) => {
     };
     
     const handleSaveEdit = () => {
-        let updated = false;
-
+        if (!editRecord) return;
+    
+        alert("Coffee record will be permanently updated. Are you sure you want to proceed?");
+        updateCoffeeRecords(editRecord); // Dispatch action to update the record
+    
         setFilteredByType((prev) =>
-            prev.map((rec) => {
-                if (rec.outturn === editRecord.outturn && rec.grade === editRecord.grade) {
-                    updated = true;
-                    return editRecord;
-                }
-                return rec;
-            })
+            prev.map((rec) => (rec.outturn === editRecord.outturn && rec.grade === editRecord.grade ? editRecord : rec))
         );
-
-        if (updated) {
-            alert("Coffee record will be updated!");
-        }
-
-    setEditModal(false);
+    
+    
+        setEditModal(false);
     };
 
 
@@ -222,7 +217,12 @@ const Files = ({ coffeeRecords, fetch_coffee_records }) => {
     );
 };
 
-const mapDispatchToProps = { fetch_coffee_records };
+const mapDispatchToProps = (dispatch) => {
+    return {
+      fetch_coffee_records: () => dispatch(fetch_coffee_records()),
+      updateCoffeeRecords: (data) => dispatch(update_coffee_record(data)),
+    };
+  };
 
 const mapStateToProps = (state) => ({
     coffeeRecords: state.reducer.coffeeRecords,

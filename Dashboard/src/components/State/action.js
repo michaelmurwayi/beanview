@@ -119,15 +119,15 @@ export const post_coffee_records = (farmersRecord) => async (dispatch) => {
 
 export const update_coffee_record = (coffeeRecord) => async (dispatch) => {
     try {
-        const api_url = `http://127.0.0.1:8000/api/coffee/${coffeeRecord}/`; // Assuming the record has an `id` field
+        const api_url = `http://127.0.0.1:8000/api/coffee/${coffeeRecord.id}/`; // Assuming the record has an `id` field
         
         // Initialize FormData
         const formData = new FormData();
-
         // Check if coffeeRecord is a FormData instance
         if (coffeeRecord instanceof FormData) {
             for (const [key, value] of coffeeRecord.entries()) {
                 formData.append(key, value);
+                console.log(JSON.stringify(formData))
             }
         } else {
             // Add each key-value pair to FormData

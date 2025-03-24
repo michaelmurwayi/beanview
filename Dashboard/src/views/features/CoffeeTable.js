@@ -39,7 +39,6 @@ const DataTable = (props) => {
       alert("Please fill out all fields correctly.");
       return;
     }
-    console.log(selectedRecord);
     updateCoffeeRecords(selectedRecord);
     setEditModal(false);
   };
