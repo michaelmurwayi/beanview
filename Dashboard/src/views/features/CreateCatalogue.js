@@ -40,7 +40,7 @@ const ViewCatalogue = (props) => {
       console.log(isPLType);
   
       return (
-        record.status === 1 &&
+        record.status_id === 1 &&
         (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
         (filters.grade === "" || record.grade === filters.grade) &&
         (filters.coffeeClass === "" || record.coffeeClass === filters.coffeeClass) &&

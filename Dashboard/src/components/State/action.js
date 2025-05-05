@@ -348,6 +348,7 @@ export const update_catalogue_record = (coffeeRecord) => async (dispatch) => {
                     formData.append(key, coffeeRecord[key][0]); // Assuming file is an array
                 } else {
                     formData.append(key, coffeeRecord[key]);
+                    
                 }
             });
         }
@@ -376,6 +377,45 @@ export const update_catalogue_record = (coffeeRecord) => async (dispatch) => {
         }
     } catch (error) {
         // Catch unexpected errors and dispatch failure action
+        dispatch({ type: 'UPDATE_COFFEE_DATA_FAILURE', payload: { error: error.message } });
+    }
+};
+
+export const delete_catalogue_record = (coffeeRecord) => async (dispatch) => {
+    console.log("Updating sale_number and status_id...");
+
+    try {
+        const api_url = `http://127.0.0.1:8000/api/coffee/${coffeeRecord.id}/`;
+
+        const updatedData = {
+            sale_number: "",  // Set sale_number to empty string
+            status_id: 1  // Ensure status_id is correctly formatted
+        };
+
+        const fetchConfig = {
+            method: 'PUT',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedData),
+        };
+        console.log(fetchConfig.body)
+        dispatch({ type: 'UPDATE_COFFEE_DATA_REQUEST' });
+
+        console.log("Sending PUT request to:", api_url);
+        console.log("Request body:", updatedData);
+
+        const response = await fetch(api_url, fetchConfig);
+        const responseText = await response.text();
+        console.log("Response text:", responseText);  // Log raw response
+
+        if (response.ok) {
+            const responseData = JSON.parse(responseText);
+            dispatch({ type: 'UPDATE_COFFEE_DATA_SUCCESS', payload: responseData });
+        } else {
+            dispatch({ type: 'UPDATE_COFFEE_DATA_FAILURE', payload: responseText });
+        }
+    } catch (error) {
         dispatch({ type: 'UPDATE_COFFEE_DATA_FAILURE', payload: { error: error.message } });
     }
 };

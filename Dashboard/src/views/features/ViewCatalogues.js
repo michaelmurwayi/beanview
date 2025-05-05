@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { connect } from "react-redux";
-import { fetch_coffee_records, update_catalogue_record } from "components/State/action";
+import { fetch_coffee_records, update_catalogue_record, delete_catalogue_record } from "components/State/action";
 import { MDBIcon } from 'mdbreact';
 import { Modal, Button } from 'react-bootstrap';
 
 const Files = (props) => {
-    const { coffeeRecords, fetch_coffee_records, updateRecord } = props;
+    const { coffeeRecords, fetch_coffee_records, updateRecord, deleteRecord } = props;
     const [expandedSale, setExpandedSale] = useState(null);
     const [filteredCatalogue, setFilteredCatalogue] = useState([]);
     const [selectedCatalogueType, setSelectedCatalogueType] = useState(null);
@@ -37,7 +37,7 @@ const Files = (props) => {
         }
 
         const filtered = coffeeRecords.filter(
-            (record) => record.sale_number === saleNumber && record.status === 3
+            (record) => record.sale_number === saleNumber && record.status_id === 3
         );
 
         setFilteredCatalogue(filtered);
@@ -77,7 +77,7 @@ const Files = (props) => {
 
     const handleDelete = (record) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
-        updateRecord(record); // Dispatch Redux action
+        deleteRecord(record); // Dispatch Redux action
 
         setFilteredByType((prev) => prev.filter((rec) => rec.id !== record.id));
     }
@@ -223,6 +223,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
       fetch_coffee_records: () => dispatch(fetch_coffee_records()),
       updateRecord: (data) => dispatch(update_catalogue_record(data)),
+      deleteRecord: (data) => dispatch(delete_catalogue_record(data)),
     };
   };
 
