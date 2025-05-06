@@ -421,7 +421,7 @@ export const delete_catalogue_record = (coffeeRecord) => async (dispatch) => {
 };
 
 export const submit_sale_summary = (summaryData) => async (dispatch) => {
-    const api_url = `http://127.0.0.1:8000/api/coffee/sales_summary/`;
+    const api_url = `http://127.0.0.1:8000/api/coffee/generate_summary_file/`;
     try {
       const response = await axios.post(api_url, summaryData);
       dispatch({ type: "SUBMIT_SALE_SUMMARY_SUCCESS", payload: response.data });

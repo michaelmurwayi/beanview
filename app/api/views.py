@@ -18,6 +18,12 @@ from .coffee.check_pockets import check_for_pockets
 import os
 import json 
 from .process_records.record_processing import process_uploaded_files, process_single_record
+import csv
+from io import StringIO
+from rest_framework.exceptions import ValidationError
+from django.conf import settings
+
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -152,6 +158,51 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             return Response({"deliveries": deliveries})        
         except Exception as E:
             raise(f"Error calculating total number of  farmers, {{E}}")
+    
+
+    @action(detail=False, methods=['post'])
+    def generate_summary_file(self, request, *args, **kwargs):
+        try:
+            summary_data = request.data.get('summary', [])
+            records_by_mark = request.data.get('recordsByMark', {})
+
+            if not summary_data or not records_by_mark:
+                raise ValidationError("Both 'summary_data' and 'records_by_mark' are required.")
+
+            # Create a filename with timestamp
+            filename = f"coffee_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            file_path = os.path.join(settings.MEDIA_ROOT, 'summaries', filename)
+
+            # Ensure the directory exists
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+            print(f"File path: {file_path}")
+            with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Mark', 'Total Weight (kg)', 'Number of Records', 'Grade', 'Outturn', 'Bags', 'Pockets', 'Weight (kg)', 'Status'])
+
+                for summary_item in summary_data:
+                    mark = summary_item.get('mark')
+                    total_weight = summary_item.get('totalWeight')
+                    count = summary_item.get('count')
+                    writer.writerow([mark, total_weight, count, '', '', '', '', '', ''])
+
+                    for record in records_by_mark.get(mark, []):
+                        writer.writerow([
+                            '', '', '', record.get('grade'),
+                            record.get('outturn'), record.get('bags'),
+                            record.get('pockets'), record.get('weight'),
+                            record.get('status', 'Unknown')
+                        ])
+            return Response({"message": "File generated", "path": file_path}, status=200)
+
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=400)
+        except Exception as e:
+            return Response({"error": "Internal server error"}, status=500)
+
+
+    
         
 class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
@@ -231,3 +282,4 @@ def read_data_from_pdf_file(mill,file,requests):
     import ipdb;ipdb.set_trace()
 
     return data
+
