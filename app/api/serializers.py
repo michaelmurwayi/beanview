@@ -12,16 +12,25 @@ class FarmerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Farmer
         fields = ['cbk_number', 'farmer_name', 'national_id', 'mark', 'address', 'phonenumber', 'email', 'county', 'town', 'bank', 'branch', 'account', 'currency']
+
 class CoffeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coffee
-        fields = ['id','outturn', 'grade', 'mark', 'type', 'bags', 'pockets', 'weight', 'mill', 'warehouse', 'season', 'status', 'file', 'sale_number', 'catalogue_type','created_at', 'updated_at']
+        fields = ['id','outturn', 'grade', 'mark', 'type', 'bags', 'pockets', 'weight', 'mill', 'warehouse', 'season', 'status_id', 'file', 'sale_number', 'catalogue_type','created_at', 'updated_at']
         extra_kwargs = {
                 'catalogue': {'required': False},
                 'reserve': {'required': False},
                 'buyer': {'required': False}
             }
     
+    def update(self, instance, validated_data):
+
+        instance.sale_number = validated_data.get('sale_number', instance.sale_number)
+        instance.status_id = validated_data.get('status_id', instance.status_id)  # Ensure this is updated
+        instance.save()
+
+        return instance
+
 class CatalogueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Catalogue

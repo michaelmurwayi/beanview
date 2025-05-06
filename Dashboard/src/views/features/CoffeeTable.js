@@ -8,6 +8,15 @@ import {
 import { Modal, Button } from "react-bootstrap";
 import "assets/css/coffee_table.css";
 
+// Status ID mapping
+const STATUS_MAP = {
+  1: "Pending",
+  2: "Catalogued",
+  3: "Sold",
+  
+  // Add more mappings if needed
+};
+
 const DataTable = (props) => {
   const {
     coffeeRecords,
@@ -106,7 +115,6 @@ const DataTable = (props) => {
 
   return (
     <div className="d-flex flex-column align-items-center">
-      {/* Title and Summary Button Row */}
       <div className="d-flex justify-content-between align-items-center w-75 mb-3">
         <h2 className="mb-0">Coffee Records</h2>
       </div>
@@ -116,7 +124,6 @@ const DataTable = (props) => {
         </Button>
       </div>
 
-      {/* Filter Inputs */}
       <div className="mb-3">
         <input
           type="text"
@@ -152,7 +159,6 @@ const DataTable = (props) => {
         />
       </div>
 
-      {/* Coffee Records Table */}
       <div className="table-responsive w-75">
         <table className="table table-bordered">
           <thead className="thead-dark">
@@ -199,7 +205,7 @@ const DataTable = (props) => {
         </table>
       </div>
 
-      {/* Edit Record Modal */}
+      {/* Edit Modal */}
       <Modal show={editModal} onHide={() => setEditModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Coffee Record</Modal.Title>
@@ -234,11 +240,11 @@ const DataTable = (props) => {
       </Modal>
 
       {/* Summary Modal */}
-      <Modal show={summaryModal} onHide={() => setSummaryModal(false)} size="lg">
+      <Modal show={summaryModal} onHide={() => setSummaryModal(false)} size="xl">
         <Modal.Header closeButton>
           <Modal.Title>Sale Summary by Mark</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body style={{ overflowX: "auto" }}>
           {summaryData.summary.length > 0 ? (
             <table className="table table-bordered">
               <thead>
@@ -256,14 +262,24 @@ const DataTable = (props) => {
                       <td>{item.totalWeight.toFixed(2)}</td>
                       <td>{item.count}</td>
                     </tr>
+                    <tr className="table-secondary">
+                      <th></th>
+                      <th>Grade</th>
+                      <th>Outturn</th>
+                      <th>Bags</th>
+                      <th>Pockets</th>
+                      <th>Weight (kg)</th>
+                      <th>Status</th>
+                    </tr>
                     {summaryData.recordsByMark[item.mark]?.map((record, i) => (
                       <tr key={i}>
-                        <td colSpan="1"></td>
-                        <td colSpan="2">
-                          <strong>Grade:</strong> {record.grade} |{" "}
-                          <strong>Outturn:</strong> {record.outturn} |{" "}
-                          <strong>Weight:</strong> {record.weight} kg
-                        </td>
+                        <td></td>
+                        <td>{record.grade}</td>
+                        <td>{record.outturn}</td>
+                        <td>{record.bags}</td>
+                        <td>{record.pockets}</td>
+                        <td>{record.weight}</td>
+                        <td>{STATUS_MAP[record.status_id] || "Unknown"}</td>
                       </tr>
                     ))}
                   </React.Fragment>
