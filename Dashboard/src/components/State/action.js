@@ -419,3 +419,13 @@ export const delete_catalogue_record = (coffeeRecord) => async (dispatch) => {
         dispatch({ type: 'UPDATE_COFFEE_DATA_FAILURE', payload: { error: error.message } });
     }
 };
+
+export const submit_sale_summary = (summaryData) => async (dispatch) => {
+    const api_url = `http://127.0.0.1:8000/api/coffee/sales_summary/`;
+    try {
+      const response = await axios.post(api_url, summaryData);
+      dispatch({ type: "SUBMIT_SALE_SUMMARY_SUCCESS", payload: response.data });
+    } catch (error) {
+      dispatch({ type: "SUBMIT_SALE_SUMMARY_FAILURE", payload: error });
+    }
+  };

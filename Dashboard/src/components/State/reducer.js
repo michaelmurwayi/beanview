@@ -235,8 +235,15 @@ const reducer = (state = initialState, action) => {
                 loading: false,
                 error: action.payload,
             }
-        
-            
+        case 'SUBMIT_SALE_SUMMARY':
+            return {
+                ...state,
+                saleSummary: action.payload.summary,
+                saleSummaryDetails: action.payload.recordsByMark,
+                loading: false,
+                error: null,
+            };
+              
         default:
             return state
     }

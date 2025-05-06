@@ -4,6 +4,7 @@ import {
   fetch_coffee_records,
   update_coffee_record,
   delete_coffee_record,
+  submit_sale_summary, // NEW ACTION
 } from "components/State/action";
 import { Modal, Button } from "react-bootstrap";
 import "assets/css/coffee_table.css";
@@ -13,8 +14,6 @@ const STATUS_MAP = {
   1: "Pending",
   2: "Catalogued",
   3: "Sold",
-  
-  // Add more mappings if needed
 };
 
 const DataTable = (props) => {
@@ -23,6 +22,7 @@ const DataTable = (props) => {
     fetch_coffee_records,
     updateCoffeeRecords,
     deleteCoffeeRecord,
+    submitSaleSummary, // NEW PROP
   } = props;
 
   const [editModal, setEditModal] = useState(false);
@@ -106,10 +106,13 @@ const DataTable = (props) => {
       ...data,
     }));
 
-    setSummaryData({
+    const summaryPayload = {
       summary: result,
       recordsByMark,
-    });
+    };
+
+    setSummaryData(summaryPayload);
+    submitSaleSummary(summaryPayload); // DISPATCH TO ACTION
     setSummaryModal(true);
   };
 
@@ -119,7 +122,7 @@ const DataTable = (props) => {
         <h2 className="mb-0">Coffee Records</h2>
       </div>
       <div>
-        <Button variant="info" onClick={generateSummary}>
+        <Button variant="info" className="mb-5" onClick={generateSummary}>
           Generate Sale Summary by Mark
         </Button>
       </div>
@@ -241,9 +244,26 @@ const DataTable = (props) => {
 
       {/* Summary Modal */}
       <Modal show={summaryModal} onHide={() => setSummaryModal(false)} size="xl">
-        <Modal.Header closeButton>
-          <Modal.Title>Sale Summary by Mark</Modal.Title>
+        <Modal.Header className="d-flex justify-content-between align-items-start">
+          <div>
+            <Modal.Title>Sale Summary by Mark</Modal.Title>
+          </div>
+          <div className="d-flex gap-2">
+            <Button
+              variant="success"
+              onClick={() => {
+                submitSaleSummary(summaryData);
+                alert("Sale summary has been submitted successfully.");
+              }}
+            >
+              Confirm & Submit Sale Summary
+            </Button>
+            <Button variant="secondary" onClick={() => setSummaryModal(false)}>
+              Close
+            </Button>
+          </div>
         </Modal.Header>
+
         <Modal.Body style={{ overflowX: "auto" }}>
           {summaryData.summary.length > 0 ? (
             <table className="table table-bordered">
@@ -290,11 +310,6 @@ const DataTable = (props) => {
             <p>No data available.</p>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setSummaryModal(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
       </Modal>
     </div>
   );
@@ -304,6 +319,7 @@ const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
   updateCoffeeRecords: (data) => dispatch(update_coffee_record(data)),
   deleteCoffeeRecord: (id) => dispatch(delete_coffee_record(id)),
+  submitSaleSummary: (summaryData) => dispatch(submit_sale_summary(summaryData)), // NEW
 });
 
 const mapStateToProps = (state) => ({

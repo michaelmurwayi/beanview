@@ -27,7 +27,9 @@ const initialState = {
     miscelleneousCatalogue: [],
     finalCatalogue: [],
     mainGrades: ['AA','E','PB', 'AB', 'C', 'TT', 'T'],
-    miscelleneousGrades: ['SB', 'HE', 'UG3', 'UG2', 'UG1', 'UG', 'T', 'TT', 'C', 'AB', 'PB', 'AA', 'NL', 'NH', 'RL', 'RH', 'ML', 'MH']
+    miscelleneousGrades: ['SB', 'HE', 'UG3', 'UG2', 'UG1', 'UG', 'T', 'TT', 'C', 'AB', 'PB', 'AA', 'NL', 'NH', 'RL', 'RH', 'ML', 'MH'],
+    saleSummary: [], // summarized rows
+    saleSummaryDetails: {}, // records grouped by mark
             
 }
 
