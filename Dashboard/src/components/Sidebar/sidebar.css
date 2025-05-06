@@ -1,0 +1,18 @@
+/* Sidebar.css */
+
+/* Add transition for the dropdown collapse */
+.navbar .dropdown-menu {
+    transition: height 0.3s ease, opacity 0.3s ease;
+    overflow: hidden;
+  }
+  
+  .navbar .dropdown-menu.collapsing {
+    opacity: 0;
+    height: 0;
+  }
+  
+  .navbar .dropdown-menu.collapse.show {
+    opacity: 1;
+    height: auto;
+  }
+  

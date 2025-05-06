@@ -1,0 +1,97 @@
+/* Custom table hover effect */
+.custom-hover-table tbody tr:hover {
+    background-color: #100f0f !important; /* Change background color on hover */
+    cursor: pointer;
+  }
+  
+  /* Additional styling for the Date Range Picker */
+  .date-range-picker {
+    margin-bottom: 20px;
+  }
+  
+  .custom-hover-table {
+    margin-top: 20px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+  }
+
+  /* Change the default date color */
+.rdrDateDisplayWrapper {
+  color: #000000 !important; /* Set a color you prefer */
+}
+
+.rdrCalendarWrapper .rdrMonthAndYear {
+  color: #000000 !important; /* Ensure the month and year text is visible */
+}
+
+.rdrDayNumber {
+  color: #000000 !important; /* Change the color of the day numbers */
+}
+
+.rdrDaySelected {
+  background-color: #4caf50 !important; /* Change the background color of the selected day */
+  color: white !important; /* Change the text color of selected day */
+}
+
+.rdrDayInPreview {
+  color: #000000 !important; /* Set a color for days in the preview */
+}
+
+/* Customize hover effect for days */
+.rdrDayHover {
+  background-color: #ddd !important;
+}
+
+.rdrStaticRangeLabel{ 
+  color: black;
+}
+  
+.action-card {
+  width: 280px;
+  padding: 20px;
+  border-radius: 12px;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+  cursor: pointer;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-body {
+  text-align: center;
+}
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-container {
+  background: white;
+  padding: 20px;
+  width: 350px;
+  border-radius: 8px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.popup-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.popup-buttons button {
+  padding: 8px 16px;
+  border-radius: 5px;
+}

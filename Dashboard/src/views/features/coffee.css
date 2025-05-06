@@ -1,0 +1,52 @@
+.container h1{
+    text-align: center;
+}
+/* MyForm.css */
+.my-form {
+    max-width: 100vw;
+    margin: auto;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  label {
+    margin-bottom: 8px;
+  }
+  
+  input {
+    padding: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  button {
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+  }
+  
+  /* Media query for responsiveness */
+  @media (min-width: 768px) {
+    .my-form {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  
+    .form-group {
+      flex: 1;
+      margin-right: 16px;
+      margin-bottom: 0;
+    }
+  }
+  
+  /* styles.css */
+.error-message {
+  color: red;
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 10px;
+}
