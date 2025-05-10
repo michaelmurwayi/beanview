@@ -158,7 +158,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             return Response({"deliveries": deliveries})        
         except Exception as E:
             raise(f"Error calculating total number of  farmers, {{E}}")
-    
 
     @action(detail=False, methods=['post'])
     def generate_summary_file(self, request, *args, **kwargs):
@@ -167,40 +166,71 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             records_by_mark = request.data.get('recordsByMark', {})
 
             if not summary_data or not records_by_mark:
-                raise ValidationError("Both 'summary_data' and 'records_by_mark' are required.")
+                raise ValidationError("Both 'summary' and 'recordsByMark' are required.")
 
-            # Create a filename with timestamp
-            filename = f"coffee_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-            file_path = os.path.join(settings.MEDIA_ROOT, 'summaries', filename)
+            base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
+            os.makedirs(base_dir, exist_ok=True)
 
-            # Ensure the directory exists
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            # Step 1: Collect all unique status_ids for bulk lookup
+            all_status_ids = {
+                record.get('status_id')
+                for records in records_by_mark.values()
+                for record in records
+                if record.get('status_id') is not None
+            }
+            
+            # Step 2: Fetch and map status_id -> status_name
+            # import ipdb;ipdb.set_trace()
+            status_map = {
+                status.id: status.name
+                for status in CoffeeStatus.objects.filter(id__in=all_status_ids)
+            }
+            
+            generated_files = []
+            
+            for summary_item in summary_data:
+                mark = summary_item.get('mark')
+                total_weight = summary_item.get('totalWeight')
+                count = summary_item.get('count')
 
-            print(f"File path: {file_path}")
-            with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(['Mark', 'Total Weight (kg)', 'Number of Records', 'Grade', 'Outturn', 'Bags', 'Pockets', 'Weight (kg)', 'Status'])
+                mark_dir = os.path.join(base_dir, mark)
+                os.makedirs(mark_dir, exist_ok=True)
 
-                for summary_item in summary_data:
-                    mark = summary_item.get('mark')
-                    total_weight = summary_item.get('totalWeight')
-                    count = summary_item.get('count')
-                    writer.writerow([mark, total_weight, count, '', '', '', '', '', ''])
+                filename = f"{mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                file_path = os.path.join(mark_dir, filename)
+
+                with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerow(['Mark', 'Total Weight (kg)', 'Number of Records'])
+                    writer.writerow([mark, total_weight, count])
+                    writer.writerow([])
+
+                    writer.writerow(['Grade', 'Outturn', 'Bags', 'Pockets', 'Weight (kg)', 'Status'])
 
                     for record in records_by_mark.get(mark, []):
+                        status_id = record.get('status_id')
+                        status_name = status_map.get(status_id, 'Unknown')
+
                         writer.writerow([
-                            '', '', '', record.get('grade'),
-                            record.get('outturn'), record.get('bags'),
-                            record.get('pockets'), record.get('weight'),
-                            record.get('status', 'Unknown')
+                            record.get('grade'),
+                            record.get('outturn'),
+                            record.get('bags'),
+                            record.get('pockets'),
+                            record.get('weight'),
+                            status_name,
                         ])
-            return Response({"message": "File generated", "path": file_path}, status=200)
+
+                generated_files.append({
+                    "mark": mark,
+                    "path": file_path
+                })
+
+            return Response({"message": "Files generated", "files": generated_files}, status=200)
 
         except ValidationError as e:
             return Response({"error": str(e)}, status=400)
         except Exception as e:
-            return Response({"error": "Internal server error"}, status=500)
-
+            return Response({"error": f"Internal server errors  : {str(e)}"}, status=500)
 
     
         
