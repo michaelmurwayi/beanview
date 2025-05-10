@@ -79,9 +79,12 @@ const DataTable = (props) => {
   const filteredRecords = coffeeRecords.filter((record) =>
     (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
     (filters.grade === "" || filters.grade === "ALL" || record.grade === filters.grade) &&
-    (filters.mark === "" || record.mark.toLowerCase().includes(filters.mark.toLowerCase())) &&
-    (filters.outturn === "" || record.outturn.toLowerCase().includes(filters.outturn.toLowerCase()))
+    (filters.mark === "" || (record.mark && record.mark.toLowerCase().includes(filters.mark.toLowerCase()))) &&
+    (filters.outturn === "" || (record.outturn && record.outturn.toLowerCase().includes(filters.outturn.toLowerCase()))) &&
+    (filters.sale_number === "" || (record.sale_number ?? "") === filters.sale_number)
   );
+  
+  
 
   const generateSummary = () => {
     const summary = {};
@@ -160,16 +163,34 @@ const DataTable = (props) => {
           onChange={handleChange}
           className="form-control d-inline w-auto"
         />
+        <input
+          type="text"
+          name="sale_number"
+          placeholder="Filter by Sale Number"
+          onChange={handleChange}
+          className="form-control d-inline w-auto ms-2"
+        />
       </div>
 
-      <div className="table-responsive w-75">
+      <div className="table-responsive w-100">
         <table className="table table-bordered">
-          <thead className="thead-dark">
+        <thead style={{ backgroundColor: '#003366', color: 'white' }}>
             <tr>
+              <th>Outturn</th>
               <th>Mark</th>
               <th>Grade</th>
-              <th>Outturn</th>
+              <th>Type</th>
+              <th>Bags</th>
+              <th>Pockets</th>
               <th>Weight (kg)</th>
+              <th>Sale Number</th>
+              <th>Season</th>
+              <th>Certificate</th>
+              <th>Mill</th>
+              <th>Warehouse</th>
+              <th>Price</th>
+              <th>Buyer</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -177,10 +198,21 @@ const DataTable = (props) => {
             {filteredRecords.length > 0 ? (
               filteredRecords.map((record) => (
                 <tr key={record.id}>
+                  <td>{record.outturn}</td>
                   <td>{record.mark}</td>
                   <td>{record.grade}</td>
-                  <td>{record.outturn}</td>
+                  <td>{record.type}</td>
+                  <td>{record.bags}</td>
+                  <td>{record.pockets}</td>
                   <td>{record.weight}</td>
+                  <td>{record.sale_number}</td>
+                  <td>{record.season}</td>
+                  <td>{record.certificate}</td>
+                  <td>{record.mill}</td>
+                  <td>{record.warehouse}</td>
+                  <td>{record.price}</td>
+                  <td>{record.buyer}</td>
+                  <td>{STATUS_MAP[record.status_id] || "Unknown"}</td>
                   <td>
                     <button
                       className="btn btn-warning btn-sm me-2"

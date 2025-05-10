@@ -212,11 +212,20 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                         status_name = status_map.get(status_id, 'Unknown')
 
                         writer.writerow([
-                            record.get('grade'),
                             record.get('outturn'),
+                            record.get('mark'),
+                            record.get('grade'),
+                            record.get('type'),
                             record.get('bags'),
                             record.get('pockets'),
                             record.get('weight'),
+                            record.get('sale_number'),
+                            record.get('season'),
+                            record.get('certificate'),
+                            record.get('mill'),
+                            record.get('warehouse'),
+                            record.get('price'),
+                            record.get('buyer'),
                             status_name,
                         ])
 
