@@ -178,16 +178,15 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 for record in records
                 if record.get('status_id') is not None
             }
-            
+
             # Step 2: Fetch and map status_id -> status_name
-            # import ipdb;ipdb.set_trace()
             status_map = {
                 status.id: status.name
                 for status in CoffeeStatus.objects.filter(id__in=all_status_ids)
             }
-            
+
             generated_files = []
-            
+
             for summary_item in summary_data:
                 mark = summary_item.get('mark')
                 total_weight = summary_item.get('totalWeight')
@@ -201,12 +200,18 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 
                 with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
                     writer = csv.writer(csvfile)
+
+                    # General summary
                     writer.writerow(['Mark', 'Total Weight (kg)', 'Number of Records'])
                     writer.writerow([mark, total_weight, count])
                     writer.writerow([])
 
-                    writer.writerow(['Grade', 'Outturn', 'Bags', 'Pockets', 'Weight (kg)', 'Status'])
+                    # Record headers
+                    writer.writerow(['Outturn', 'Mark', 'Grade', 'Type', 'Bags', 'Pockets',
+                                    'Weight (kg)', 'Sale Number', 'Season', 'Certificate',
+                                    'Mill', 'Warehouse', 'Price', 'Buyer', 'Status'])
 
+                    # Records
                     for record in records_by_mark.get(mark, []):
                         status_id = record.get('status_id')
                         status_name = status_map.get(status_id, 'Unknown')
@@ -239,7 +244,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({"error": str(e)}, status=400)
         except Exception as e:
-            return Response({"error": f"Internal server errors  : {str(e)}"}, status=500)
+            return Response({"error": f"Internal server error: {str(e)}"}, status=500)
 
     
         
