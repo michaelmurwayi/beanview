@@ -22,7 +22,7 @@ const DataTable = (props) => {
     fetch_coffee_records,
     updateCoffeeRecords,
     deleteCoffeeRecord,
-    submitSaleSummary, // NEW PROP
+    submitSaleSummary,
   } = props;
 
   const [editModal, setEditModal] = useState(false);
@@ -37,6 +37,7 @@ const DataTable = (props) => {
     grade: "",
     mark: "",
     outturn: "",
+    sale_number: "",
   });
 
   useEffect(() => {
@@ -76,15 +77,17 @@ const DataTable = (props) => {
     setEditModal(false);
   };
 
-  const filteredRecords = coffeeRecords.filter((record) =>
-    (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
-    (filters.grade === "" || filters.grade === "ALL" || record.grade === filters.grade) &&
-    (filters.mark === "" || (record.mark && record.mark.toLowerCase().includes(filters.mark.toLowerCase()))) &&
-    (filters.outturn === "" || (record.outturn && record.outturn.toLowerCase().includes(filters.outturn.toLowerCase()))) &&
-    (filters.sale_number === "" || (record.sale_number ?? "") === filters.sale_number)
-  );
-  
-  
+  const isFilterEmpty = Object.values(filters).every((val) => val === "");
+
+  const filteredRecords = isFilterEmpty
+    ? coffeeRecords
+    : coffeeRecords.filter((record) =>
+        (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
+        (filters.grade === "" || filters.grade === "ALL" || record.grade === filters.grade) &&
+        (filters.mark === "" || (record.mark && record.mark.toLowerCase().includes(filters.mark.toLowerCase()))) &&
+        (filters.outturn === "" || (record.outturn && record.outturn.toLowerCase().includes(filters.outturn.toLowerCase()))) &&
+        (filters.sale_number === "" || record.sale_number === filters.sale_number)
+      );
 
   const generateSummary = () => {
     const summary = {};
@@ -115,7 +118,7 @@ const DataTable = (props) => {
     };
 
     setSummaryData(summaryPayload);
-    submitSaleSummary(summaryPayload); // DISPATCH TO ACTION
+    submitSaleSummary(summaryPayload);
     setSummaryModal(true);
   };
 
@@ -174,7 +177,7 @@ const DataTable = (props) => {
 
       <div className="table-responsive w-100">
         <table className="table table-bordered">
-        <thead style={{ backgroundColor: '#003366', color: 'white' }}>
+          <thead style={{ backgroundColor: "#003366", color: "white" }}>
             <tr>
               <th>Outturn</th>
               <th>Mark</th>
@@ -231,7 +234,7 @@ const DataTable = (props) => {
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="text-center">
+                <td colSpan="16" className="text-center">
                   No matching records found.
                 </td>
               </tr>
@@ -351,7 +354,7 @@ const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
   updateCoffeeRecords: (data) => dispatch(update_coffee_record(data)),
   deleteCoffeeRecord: (id) => dispatch(delete_coffee_record(id)),
-  submitSaleSummary: (summaryData) => dispatch(submit_sale_summary(summaryData)), // NEW
+  submitSaleSummary: (summaryData) => dispatch(submit_sale_summary(summaryData)),
 });
 
 const mapStateToProps = (state) => ({

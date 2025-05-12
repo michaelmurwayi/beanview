@@ -22,6 +22,10 @@ import csv
 from io import StringIO
 from rest_framework.exceptions import ValidationError
 from django.conf import settings
+from openpyxl import load_workbook
+import traceback
+from openpyxl.cell.cell import MergedCell
+
 
 
 
@@ -159,8 +163,11 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         except Exception as E:
             raise(f"Error calculating total number of  farmers, {{E}}")
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post']) 
     def generate_summary_file(self, request, *args, **kwargs):
+        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'Sale Summary template.xlsx')
+        START_ROW = 27  # Change as needed for where to start writing records
+
         try:
             summary_data = request.data.get('summary', [])
             records_by_mark = request.data.get('recordsByMark', {})
@@ -171,7 +178,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
             os.makedirs(base_dir, exist_ok=True)
 
-            # Step 1: Collect all unique status_ids for bulk lookup
             all_status_ids = {
                 record.get('status_id')
                 for records in records_by_mark.values()
@@ -179,7 +185,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 if record.get('status_id') is not None
             }
 
-            # Step 2: Fetch and map status_id -> status_name
             status_map = {
                 status.id: status.name
                 for status in CoffeeStatus.objects.filter(id__in=all_status_ids)
@@ -195,44 +200,62 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 mark_dir = os.path.join(base_dir, mark)
                 os.makedirs(mark_dir, exist_ok=True)
 
-                filename = f"{mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                filename = f"{mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
                 file_path = os.path.join(mark_dir, filename)
 
-                with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.writer(csvfile)
+                wb = load_workbook(TEMPLATE_PATH)
+                ws = wb.active
 
-                    # General summary
-                    writer.writerow(['Mark', 'Total Weight (kg)', 'Number of Records'])
-                    writer.writerow([mark, total_weight, count])
-                    writer.writerow([])
+                # Write summary section before data table
+                ws['A6'] = 'Mark'
+                ws['B6'] = 'Total Weight (kg)'
+                ws['C6'] = 'Number of Records'
+                ws['A7'] = mark
+                ws['B7'] = total_weight
+                ws['C7'] = count
 
-                    # Record headers
-                    writer.writerow(['Outturn', 'Mark', 'Grade', 'Type', 'Bags', 'Pockets',
-                                    'Weight (kg)', 'Sale Number', 'Season', 'Certificate',
-                                    'Mill', 'Warehouse', 'Price', 'Buyer', 'Status'])
+                # Header row
+                headers = ['Outturn', 'Mark', 'Grade', 'Type', 'Bags', 'Pockets',
+                        'Weight (kg)', 'Sale Number', 'Season', 'Certificate',
+                        'Mill', 'Warehouse', 'Price', 'Buyer', 'Status']
+                for col_index, header in enumerate(headers, start=1):
+                    cell = ws.cell(row=START_ROW, column=col_index)
+                    if isinstance(cell, MergedCell):
+                        continue  # Skip writing to merged cells
+                    cell.value = header
 
-                    # Records
-                    for record in records_by_mark.get(mark, []):
-                        status_id = record.get('status_id')
-                        status_name = status_map.get(status_id, 'Unknown')
+                # Records
+                records = records_by_mark.get(mark, [])
+                for row_offset, record in enumerate(records, start=1):
+                    row = START_ROW + row_offset
+                    status_id = record.get('status_id')
+                    status_name = status_map.get(status_id, 'Unknown')
 
-                        writer.writerow([
-                            record.get('outturn'),
-                            record.get('mark'),
-                            record.get('grade'),
-                            record.get('type'),
-                            record.get('bags'),
-                            record.get('pockets'),
-                            record.get('weight'),
-                            record.get('sale_number'),
-                            record.get('season'),
-                            record.get('certificate'),
-                            record.get('mill'),
-                            record.get('warehouse'),
-                            record.get('price'),
-                            record.get('buyer'),
-                            status_name,
-                        ])
+                    values = [
+                        record.get('outturn'),
+                        record.get('mark'),
+                        record.get('grade'),
+                        record.get('type'),
+                        record.get('bags'),
+                        record.get('pockets'),
+                        record.get('weight'),
+                        record.get('sale_number'),
+                        record.get('season'),
+                        record.get('certificate'),
+                        record.get('mill'),
+                        record.get('warehouse'),
+                        record.get('price'),
+                        record.get('buyer'),
+                        status_name,
+                    ]
+
+                    for col_index, value in enumerate(values, start=1):
+                        cell = ws.cell(row=row, column=col_index)
+                        if isinstance(cell, MergedCell):
+                            continue
+                        cell.value = value
+
+                wb.save(file_path)
 
                 generated_files.append({
                     "mark": mark,
@@ -242,12 +265,15 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             return Response({"message": "Files generated", "files": generated_files}, status=200)
 
         except ValidationError as e:
+            print("Validation Error:", str(e))
+            traceback.print_exc()
             return Response({"error": str(e)}, status=400)
-        except Exception as e:
-            return Response({"error": f"Internal server error: {str(e)}"}, status=500)
 
-    
-        
+        except Exception as e:
+            print("Unexpected Error:", str(e))
+            traceback.print_exc()
+            return Response({"error": f"Internal server error: {str(e)}"}, status=500)
+            
 class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
