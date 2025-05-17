@@ -29,4 +29,5 @@ def read_xls_file(file, sheet_names):
         except Exception as e:
             print(f"Error loading sheet '{sheet}': {e}")
 
+    
     return data_df, file_name  # Return after processing all sheets

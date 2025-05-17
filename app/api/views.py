@@ -63,7 +63,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         data = request.data.dict()
         files = request.FILES
         sheets = data.get("sheetnames", "").split(",")
-
+        
         if files and sheets:
             return process_uploaded_files(self, data, sheets)
         

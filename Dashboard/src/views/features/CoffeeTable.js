@@ -15,23 +15,11 @@ const STATUS_MAP = {
   2: "Catalogued",
   3: "Sold",
 };
+
 const MILL_MAP = {
-  1: "ICM",
-  2: "BU",
-  3: "HM",
-  4: "TY",
-  5: "IM",
-  6: "KM",
-  7: "RF",
-  8: "TK",
-  9: "KF",
-  10: "LE",
-  11: "nan",
-  12: "KK",
-  13: "US",
-  14: "FH",
-  15: "GR",
-}
+  1: "ICM", 2: "BU", 3: "HM", 4: "TY", 5: "IM", 6: "KM", 7: "RF",
+  8: "TK", 9: "KF", 10: "LE", 11: "nan", 12: "KK", 13: "US", 14: "FH", 15: "GR",
+};
 
 const DataTable = (props) => {
   const {
@@ -103,7 +91,7 @@ const DataTable = (props) => {
         (filters.grade === "" || filters.grade === "ALL" || record.grade === filters.grade) &&
         (filters.mark === "" || (record.mark && record.mark.toLowerCase().includes(filters.mark.toLowerCase()))) &&
         (filters.outturn === "" || (record.outturn && record.outturn.toLowerCase().includes(filters.outturn.toLowerCase()))) &&
-        (filters.sale_number === "" || record.sale_number === filters.sale_number)
+        (filters.sale_number === "" || parseInt(record.sale) === parseInt(filters.sale_number))
       );
 
   const generateSummary = () => {
@@ -208,7 +196,12 @@ const DataTable = (props) => {
               <th>Season</th>
               <th>Certificate</th>
               <th>Mill</th>
+              <th>Milling Charges</th>
               <th>Warehouse</th>
+              <th>Warehouse Charges</th>
+              <th>Brokerage Charges</th>
+              <th>Export Charges</th>
+              <th>Transport Charges</th>
               <th>Price</th>
               <th>Buyer</th>
               <th>Status</th>
@@ -227,11 +220,16 @@ const DataTable = (props) => {
                   <td>{record.bags}</td>
                   <td>{record.pockets}</td>
                   <td>{record.weight}</td>
-                  <td>{record.sale_number}</td>
+                  <td>{parseInt(record.sale)}</td>
                   <td>{record.season}</td>
                   <td>{record.certificate}</td>
                   <td>{MILL_MAP[record.mill] || "unknown"}</td>
+                  <td>{record.milling_charges}</td>
                   <td>{record.warehouse}</td>
+                  <td>{record.warehouse_charges}</td>
+                  <td>{record.brokerage_charges}</td>
+                  <td>{record.export_charges}</td>
+                  <td>{record.transport_charges}</td>
                   <td>{record.price}</td>
                   <td>{record.buyer}</td>
                   <td>{STATUS_MAP[record.status_id] || "Unknown"}</td>
@@ -317,7 +315,6 @@ const DataTable = (props) => {
             </Button>
           </div>
         </Modal.Header>
-
         <Modal.Body style={{ overflowX: "auto" }}>
           {summaryData?.summary?.length > 0 ? (
             <table className="table table-bordered">

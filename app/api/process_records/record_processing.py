@@ -10,13 +10,19 @@ import numpy as np
 
 
 def process_uploaded_files(view, data, sheets):
+
     data_df, file_name = read.read_xls_file(data, sheets)
-    cleaned_outturn_data = clean.clean_outturns(data_df, sheets)
-    cleaned_data = pockets.check_for_pockets(cleaned_outturn_data, sheets)
+
+    for key, df in data_df.items():
+        if 'W/H' in df.columns:
+            df.rename(columns={'W/H': 'WAREHOUSE'}, inplace=True)
+
+    # import ipdb;ipdb.set_trace()
+    data =  data_df['AGL 2025'].to_dict(orient='records')
     
     existing_records = get_existing_records()
-    new_records = filter_new_records(cleaned_data, existing_records)
-
+    new_records = filter_new_records(data, existing_records)
+    
     if not new_records:
         return Response({
             "success": False,
@@ -64,20 +70,27 @@ def process_records(view, records):
     headers = None
     
     for record in records:
+        
+        if "SALE NO" in record:
+            record['BULKOUTTURN'] = record.pop("BULK_OUTTURN")
+            record["SALE"] = record.pop("SALE NO")
         try:
-
+            
             # Clean NaNs
             record = clean_nan_values(record)
             
             print(f"Processing record: {record}")
 
-            record["mill"] = get_foreign_key_instance(Mill, "Mill", record.get("mill")).pk
-            record["warehouse"] = get_foreign_key_instance(Warehouse, "Warehouse", record.get("warehouse")).pk
-            record["status"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("status")).pk
-            record["file"] = get_foreign_key_instance(File, "File", record.get("file")).pk
+            record["mill"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
             
-            serializer = view.get_serializer(data=record)
+            record["warehouse"] = get_foreign_key_instance(Warehouse, "Warehouse", record.get("WAREHOUSE")).pk
             
+            record["status"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("STATUS")).pk
+            
+            
+            lowercased_record = {k.lower(): v for k, v in record.items()}
+
+            serializer = view.get_serializer(data=lowercased_record)
             if serializer.is_valid(raise_exception=False):
                 view.perform_create(serializer)
                 created_records.append(serializer.data)
