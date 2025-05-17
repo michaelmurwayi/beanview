@@ -26,17 +26,23 @@ def check_for_pockets(df, sheets):
         end_year = f""
         
         for (outturn, grade), group in records.items():
+            
             aggregated_row = {
                 'outturn': outturn,
-                'grade': grade,
+                'bulkoutturn': group[0]['BULK_OUTTURN'],
                 'mark': group[0]['MARK'],
-                'bags': group[0]['BAGS'],
                 'type': group[0]['COFFEE TYPE'],
+                'grade': grade,
+                'bags': group[0]['BAGS'],
                 'pockets': group[0]["POCKETS"],
-                'weight': sum(row['Weight'] for row in group),
+                'weight': group[0]['WEIGHT'],
+                'sale': group[0]['SALE NO'],
+                'season': group[0]['SEASON'],
+                'certificate': group[0]['CERTIFICATE'],
                 'mill': group[0]['MILL'],
                 'warehouse': group[0]['W/H'],
-                'season': f"{start_year}/{end_year}",
+                'price': group[0]['PRICE'],
+                'buyer': group[0]['BUYER'],
                 'status': group[0]["STATUS"],
                 "file": sheet,
             }

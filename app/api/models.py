@@ -123,32 +123,42 @@ class Coffee(models.Model):
         SOLD = "SOLD", "Sold"
         WITHDRAWN = "WITHDRAWN", "Withdrawn"
         PENDING = "PENDING", "Pending"
-
+    lot = models.CharField(max_length=100, unique=False, default="")
     outturn = models.CharField(max_length=100)
-    mark = models.CharField(max_length=100)
-    bags = models.IntegerField(null=True, blank=True)
-    pockets = models.IntegerField(null=True, blank=True)
-    type = models.CharField(max_length=100)
-    grade = models.CharField(max_length=50)
-    weight = models.DecimalField(max_digits=10, decimal_places=2)
+    bulkoutturn = models.CharField(max_length=100, default="")
+    mark = models.CharField(max_length=100, default="")
+    type = models.CharField(max_length=100, default="")
+    grade = models.CharField(max_length=50, default="")
+    bags = models.IntegerField(null=True, blank=True, default=0)
+    pockets = models.IntegerField(null=True, blank=True, default=0)
+    weight = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    sale = models.CharField(max_length=52, null=True, blank=True, default="")
+    season = models.CharField(max_length=100, default="2024/2025")
     mill = models.ForeignKey(Mill, on_delete=models.SET_NULL, null=True)
+    milling_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     warehouse = models.ForeignKey(Warehouse, on_delete=models.SET_NULL, null=True)
-    certificate = models.CharField(max_length=100, null=True, blank=True)
+    warehouse_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
+    brokerage_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
+    export_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
+    transport_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
+    Net_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
+    gross_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
+    certificate = models.CharField(max_length=100, null=True, blank=True, default="")
     status = models.ForeignKey(CoffeeStatus, on_delete=models.SET_NULL, null=True, blank=True)
     catalogue = models.ForeignKey(Catalogue, on_delete=models.SET_NULL, null=True, blank=True)
-    catalogue_type = models.CharField(max_length=100, null=True, blank=True)
-    season = models.CharField(max_length=100)
-    reserve = models.IntegerField(null=True, blank=True)
-    buyer = models.CharField(max_length=100, null=True, blank=True)
-    remarks = models.TextField(null=True, blank=True)
+    catalogue_type = models.CharField(max_length=100, null=True, blank=True, default="")
+    reserve = models.IntegerField(null=True, blank=True, default=0)
+    buyer = models.CharField(max_length=100, null=True, blank=True, default="")
+    remarks = models.TextField(null=True, blank=True, default="")
     file = models.CharField(max_length=50, default="Master_Log.xlsx")
-    sale_number = models.CharField(max_length=52, null=True, blank=True)
     created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="coffee_created_by") 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.outturn
+
 
 class File(models.Model):
     name = models.CharField(max_length=50)

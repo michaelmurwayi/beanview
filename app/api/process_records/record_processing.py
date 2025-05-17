@@ -5,7 +5,8 @@ from ..coffee import clean_masterlog_df as clean
 from ..coffee import check_pockets as pockets
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
-
+import math
+import numpy as np
 
 
 def process_uploaded_files(view, data, sheets):
@@ -45,6 +46,18 @@ def get_foreign_key_instance(model, field_name, value):
         print(f"{field_name} '{value}' not found. Creating new instance.")
         return model.objects.create(name=value)
 
+def clean_nan_values(record):
+    cleaned = {}
+    for key, value in record.items():
+        if value is None:
+            cleaned[key] = ""
+        elif isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+            cleaned[key] = ""
+        elif isinstance(value, str) and value.strip().lower() in {"nan", "inf", "-inf"}:
+            cleaned[key] = ""
+        else:
+            cleaned[key] = value
+    return cleaned
 
 def process_records(view, records):
     created_records, failed_records = [], []
@@ -52,7 +65,12 @@ def process_records(view, records):
     
     for record in records:
         try:
+
+            # Clean NaNs
+            record = clean_nan_values(record)
+            
             print(f"Processing record: {record}")
+
             record["mill"] = get_foreign_key_instance(Mill, "Mill", record.get("mill")).pk
             record["warehouse"] = get_foreign_key_instance(Warehouse, "Warehouse", record.get("warehouse")).pk
             record["status"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("status")).pk

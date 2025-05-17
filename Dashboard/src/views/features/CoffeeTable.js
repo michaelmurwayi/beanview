@@ -4,7 +4,7 @@ import {
   fetch_coffee_records,
   update_coffee_record,
   delete_coffee_record,
-  submit_sale_summary, // NEW ACTION
+  submit_sale_summary,
 } from "components/State/action";
 import { Modal, Button } from "react-bootstrap";
 import "assets/css/coffee_table.css";
@@ -15,6 +15,23 @@ const STATUS_MAP = {
   2: "Catalogued",
   3: "Sold",
 };
+const MILL_MAP = {
+  1: "ICM",
+  2: "BU",
+  3: "HM",
+  4: "TY",
+  5: "IM",
+  6: "KM",
+  7: "RF",
+  8: "TK",
+  9: "KF",
+  10: "LE",
+  11: "nan",
+  12: "KK",
+  13: "US",
+  14: "FH",
+  15: "GR",
+}
 
 const DataTable = (props) => {
   const {
@@ -180,13 +197,14 @@ const DataTable = (props) => {
           <thead style={{ backgroundColor: "#003366", color: "white" }}>
             <tr>
               <th>Outturn</th>
+              <th>B/Outturn</th>
               <th>Mark</th>
-              <th>Grade</th>
               <th>Type</th>
+              <th>Grade</th>
               <th>Bags</th>
               <th>Pockets</th>
               <th>Weight (kg)</th>
-              <th>Sale Number</th>
+              <th>Sale</th>
               <th>Season</th>
               <th>Certificate</th>
               <th>Mill</th>
@@ -202,16 +220,17 @@ const DataTable = (props) => {
               filteredRecords.map((record) => (
                 <tr key={record.id}>
                   <td>{record.outturn}</td>
+                  <td>{record.bulkoutturn}</td>
                   <td>{record.mark}</td>
-                  <td>{record.grade}</td>
                   <td>{record.type}</td>
+                  <td>{record.grade}</td>
                   <td>{record.bags}</td>
                   <td>{record.pockets}</td>
                   <td>{record.weight}</td>
                   <td>{record.sale_number}</td>
                   <td>{record.season}</td>
                   <td>{record.certificate}</td>
-                  <td>{record.mill}</td>
+                  <td>{MILL_MAP[record.mill] || "unknown"}</td>
                   <td>{record.warehouse}</td>
                   <td>{record.price}</td>
                   <td>{record.buyer}</td>
@@ -234,7 +253,7 @@ const DataTable = (props) => {
               ))
             ) : (
               <tr>
-                <td colSpan="16" className="text-center">
+                <td colSpan="17" className="text-center">
                   No matching records found.
                 </td>
               </tr>
@@ -300,7 +319,7 @@ const DataTable = (props) => {
         </Modal.Header>
 
         <Modal.Body style={{ overflowX: "auto" }}>
-          {summaryData.summary.length > 0 ? (
+          {summaryData?.summary?.length > 0 ? (
             <table className="table table-bordered">
               <thead>
                 <tr>
