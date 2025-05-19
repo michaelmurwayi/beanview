@@ -11,8 +11,8 @@ import "assets/css/coffee_table.css";
 
 const STATUS_MAP = {
   1: "Pending",
-  2: "Catalogued",
-  3: "Sold",
+  2: "Sold",
+  3: "Catalogued",
 };
 
 const MILL_MAP = {
@@ -122,6 +122,7 @@ const DataTable = (props) => {
           </thead>
           <tbody>
             {filteredRecords.map((record) => (
+              console.log(record),
               <tr key={record.id}>
                 {[
                   "outturn", "bulkoutturn", "mark", "type", "grade",
@@ -143,7 +144,7 @@ const DataTable = (props) => {
                     )}
                   </td>
                 ))}
-                <td>{STATUS_MAP[record.status_id] || "Unknown"}</td>
+                <td>{STATUS_MAP[record.status] || "Unknown"}</td>
                 <td>
                   {editingId === record.id ? (
                     <>

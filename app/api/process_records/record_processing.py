@@ -81,11 +81,10 @@ def process_records(view, records):
             
             print(f"Processing record: {record}")
 
-            record["mill"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
-            
-            record["warehouse"] = get_foreign_key_instance(Warehouse, "Warehouse", record.get("WAREHOUSE")).pk
-            
-            record["status"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("STATUS")).pk
+            record["MILL"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
+            record['TYPE'] = record.pop("COFFEE TYPE")
+            record["WAREHOUSE"] = get_foreign_key_instance(Warehouse, "Warehouse", record.get("WAREHOUSE")).pk
+            record["STATUS"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("STATUS")).pk
             
             
             lowercased_record = {k.lower(): v for k, v in record.items()}

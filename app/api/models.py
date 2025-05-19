@@ -125,7 +125,7 @@ class Coffee(models.Model):
         PENDING = "PENDING", "Pending"
     lot = models.CharField(max_length=100, unique=False, default="")
     outturn = models.CharField(max_length=100)
-    bulkoutturn = models.CharField(max_length=100, default="")
+    bulkoutturn = models.CharField(max_length=100, default="", blank=True)
     mark = models.CharField(max_length=100, default="")
     type = models.CharField(max_length=100, default="")
     grade = models.CharField(max_length=50, default="")
