@@ -11,31 +11,25 @@ const ViewCatalogue = (props) => {
   } = props;
 
   const [saleNumber, setSaleNumber] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState("");
   const [filteredRecords, setFilteredRecords] = useState([]);
 
   useEffect(() => {
     fetch_coffee_records();
   }, [fetch_coffee_records]);
 
-  // Filter records immediately when saleNumber or coffeeRecords change
   useEffect(() => {
     const trimmedSaleNumber = saleNumber.trim();
+    const trimmedGrade = selectedGrade.trim().toLowerCase();
 
-    if (!trimmedSaleNumber) {
-      setFilteredRecords(coffeeRecords); // show all if empty
-      return;
-    }
+    const filtered = coffeeRecords.filter((record) => {
+      const saleMatch = !trimmedSaleNumber || record.sale?.toString().toLowerCase() === trimmedSaleNumber.toLowerCase();
+      const gradeMatch = !trimmedGrade || record.grade?.toLowerCase() === trimmedGrade;
+      return saleMatch && gradeMatch;
+    });
 
-    const matched = coffeeRecords.filter(record =>
-      record.sale?.toString().toLowerCase() === trimmedSaleNumber.toLowerCase()
-    );
-
-    if (matched.length > 0) {
-      setFilteredRecords(matched);
-    } else {
-      setFilteredRecords(coffeeRecords); // no match => show all
-    }
-  }, [saleNumber, coffeeRecords]);
+    setFilteredRecords(filtered);
+  }, [saleNumber, selectedGrade, coffeeRecords]);
 
   const handleDeleteRecord = (index) => {
     setFilteredRecords((prevRecords) => prevRecords.filter((_, i) => i !== index));
@@ -57,6 +51,7 @@ const ViewCatalogue = (props) => {
     post_catalogue_records(data);
 
     setSaleNumber("");
+    setSelectedGrade("");
     setFilteredRecords([]);
   };
 
@@ -77,6 +72,8 @@ const ViewCatalogue = (props) => {
     return acc;
   }, { total: 0, totalBags: 0, grades: {} });
 
+  const uniqueGrades = [...new Set(coffeeRecords.map((rec) => rec.grade))].sort();
+
   return (
     <div className="container mt-4">
       <h3 className="mb-4">Coffee Catalogue</h3>
@@ -93,7 +90,25 @@ const ViewCatalogue = (props) => {
           />
         </div>
 
-        <div className="col-md-6 d-flex align-items-end">
+        <div className="col-md-6">
+          <label>Filter by Grade</label>
+          <select
+            className="form-control"
+            value={selectedGrade}
+            onChange={(e) => setSelectedGrade(e.target.value)}
+          >
+            <option value="">All Grades</option>
+            {uniqueGrades.map((grade) => (
+              <option key={grade} value={grade}>
+                {grade}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="row mb-3">
+        <div className="col-12 d-flex align-items-end">
           <button className="btn btn-primary w-100" onClick={handleSubmit}>
             Generate Catalogue
           </button>

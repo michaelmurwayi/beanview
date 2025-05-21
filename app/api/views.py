@@ -25,6 +25,7 @@ from django.conf import settings
 from openpyxl import load_workbook
 import traceback
 from openpyxl.cell.cell import MergedCell
+import pandas as pd
 
 
 
@@ -278,29 +279,32 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
 
-
     def create(self, request):
         try:
-            data = request.data.dict()
-            
-            # Validate sale_number
-            sale_number = data.get("saleNumber")
-            catalogue_type = data.get("catalogueType")
+            data = request.data.dict()  # needed if still using multipart/form-data
 
-            if not sale_number:
+            # Parse stringified primitives
+            sale_number = json.loads(data.get("saleNumber", "null"))
+            catalogue_type = json.loads(data.get("catalogueType", "null"))
+            records_raw = data.get("records")
+            
+            if sale_number is None:
                 return Response({"error": "Sale number is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Validate records
-            records_json = data.get("records")
-            if not records_json:
-                return Response({"error": "Records data is required"}, status=status.HTTP_400_BAD_REQUEST)
-            
+            if not records_raw:
+                return Response({"error": "Records are required"}, status=status.HTTP_400_BAD_REQUEST)
+
             try:
-                records = json.loads(records_json)
+                records = json.loads(records_raw)
             except json.JSONDecodeError:
                 return Response({"error": "Invalid records JSON format"}, status=status.HTTP_400_BAD_REQUEST)
 
+            if not isinstance(records, list):
+                return Response({"error": "Records should be a list of objects"}, status=status.HTTP_400_BAD_REQUEST)
+
             updated_count = 0
+            updated_records = []
+
             for record in records:
                 outturn = record.get("outturn")
                 grade = record.get("grade")
@@ -312,23 +316,47 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                     )
 
                 coffee = Coffee.objects.filter(outturn=outturn, grade=grade)
-                update_result = coffee.update(sale_number=sale_number, status=3, catalogue_type=catalogue_type)
-                
+                update_result = coffee.update(
+                    sale=sale_number,
+                    status=3,
+                    
+                )
+
                 if update_result > 0:
                     updated_count += update_result
-                    print(f"Updated coffee record: {record}")
-                    
+                    updated_records.append({
+                        "outturn": outturn,
+                        "mark": record.get("mark"),
+                        "type": record.get("type"),
+                        "grade": grade,
+                        "bags": record.get("bags"),
+                        "pockets": record.get("pockets"),
+                        "weight": record.get("weight"),
+                        "sale": sale_number,
+                        "status": 3
+                    })
+
             if updated_count == 0:
                 return Response({"message": "No records were updated."}, status=status.HTTP_200_OK)
 
+            # Save to Excel
+            df = pd.DataFrame(updated_records)
+            excel_filename = "updated_coffee_records.xlsx"
+            excel_path = os.path.join(settings.MEDIA_ROOT, excel_filename)
+            df.to_excel(excel_path, index=False)
+
+            file_url = settings.MEDIA_URL + excel_filename
+
             return Response(
-                {"message": f"Successfully updated {updated_count} coffee records."},
+                {
+                    "message": f"Successfully updated {updated_count} coffee records.",
+                    "excel_file_url": file_url
+                },
                 status=status.HTTP_201_CREATED
             )
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 # @method_decorator(csrf_exempt, name='dispatch')
 # class LotsViewSet(viewsets.ModelViewSet):
