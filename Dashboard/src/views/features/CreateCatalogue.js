@@ -15,22 +15,37 @@ const ViewCatalogue = (props) => {
   const [filteredRecords, setFilteredRecords] = useState([]);
 
   useEffect(() => {
-    fetch_coffee_records();
-  }, [fetch_coffee_records]);
-
-  useEffect(() => {
-    const trimmedSaleNumber = saleNumber.trim();
+    const trimmedSaleNumber = saleNumber.trim().toLowerCase();
     const trimmedGrade = selectedGrade.trim().toLowerCase();
-
-    const filtered = coffeeRecords.filter((record) => {
-      const saleMatch = !trimmedSaleNumber || record.sale?.toString().toLowerCase() === trimmedSaleNumber.toLowerCase();
-      const gradeMatch = !trimmedGrade || record.grade?.toLowerCase() === trimmedGrade;
-      return saleMatch && gradeMatch;
-    });
-
+  
+    let filtered = [];
+  
+    if (trimmedSaleNumber) {
+      // Try filtering by sale number
+      const bySale = coffeeRecords.filter(
+        (record) =>
+          record.sale?.toString().toLowerCase() === trimmedSaleNumber
+      );
+  
+      // If matches found, use them; otherwise fallback to status === 1
+      filtered = bySale.length > 0
+        ? bySale
+        : coffeeRecords.filter((record) => record.status === 1);
+    } else {
+      // No sale number: show only status === 1
+      filtered = coffeeRecords.filter((record) => record.status === 1);
+    }
+  
+    // Apply grade filter if selected
+    if (trimmedGrade) {
+      filtered = filtered.filter(
+        (record) => record.grade?.toLowerCase() === trimmedGrade
+      );
+    }
+  
     setFilteredRecords(filtered);
   }, [saleNumber, selectedGrade, coffeeRecords]);
-
+  
   const handleDeleteRecord = (index) => {
     setFilteredRecords((prevRecords) => prevRecords.filter((_, i) => i !== index));
   };
