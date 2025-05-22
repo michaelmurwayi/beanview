@@ -319,7 +319,6 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 update_result = coffee.update(
                     sale=sale_number,
                     status=3,
-                    
                 )
 
                 if update_result > 0:
@@ -341,11 +340,16 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
             # Save to Excel
             df = pd.DataFrame(updated_records)
+            subdir = str(sale_number)  # directory name based on sale number
+            dir_path = os.path.join(settings.MEDIA_ROOT, subdir)
+
+            os.makedirs(dir_path, exist_ok=True)  # Create directory if it doesn't exist
+
             excel_filename = "updated_coffee_records.xlsx"
-            excel_path = os.path.join(settings.MEDIA_ROOT, excel_filename)
+            excel_path = os.path.join(dir_path, excel_filename)
             df.to_excel(excel_path, index=False)
 
-            file_url = settings.MEDIA_URL + excel_filename
+            file_url = settings.MEDIA_URL + f"{subdir}/{excel_filename}"
 
             return Response(
                 {
@@ -357,7 +361,6 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 # @method_decorator(csrf_exempt, name='dispatch')
 # class LotsViewSet(viewsets.ModelViewSet):
 #     queryset = Lots.objects.all()
