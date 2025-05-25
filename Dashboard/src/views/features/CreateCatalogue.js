@@ -1,72 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import { fetch_coffee_records, post_catalogue_records } from 'components/State/action';
+import { fetch_coffee_records, post_catalogue_records, post_coffee_records } from 'components/State/action';
 import 'assets/css/coffee_table.css';
 
 const ViewCatalogue = (props) => {
   const {
     coffeeRecords,
     fetch_coffee_records,
-    post_catalogue_records
+    post_coffee_records
   } = props;
 
-  const [saleNumber, setSaleNumber] = useState("");
+  const STATUS_MAP = {
+    1: "Pending",
+    2: "Sold",
+    3: "Catalogued",
+  };
+
+  const MILL_MAP = {
+    1: "ICM", 2: "BU", 3: "HM", 4: "TY", 5: "IM", 6: "KM", 7: "RF",
+    8: "TK", 9: "KF", 10: "LE", 11: "nan", 12: "KK", 13: "US", 14: "FH", 15: "GR",
+  };
+
   const [selectedGrade, setSelectedGrade] = useState("");
+  const [weightThreshold, setWeightThreshold] = useState("");
+  const [bagThreshold, setBagThreshold] = useState("");
   const [filteredRecords, setFilteredRecords] = useState([]);
 
   useEffect(() => {
-    const trimmedSaleNumber = saleNumber.trim().toLowerCase();
+    fetch_coffee_records();
+  }, []);
+
+  useEffect(() => {
     const trimmedGrade = selectedGrade.trim().toLowerCase();
-  
-    let filtered = [];
-  
-    if (trimmedSaleNumber) {
-      // Try filtering by sale number
-      const bySale = coffeeRecords.filter(
-        (record) =>
-          record.sale?.toString().toLowerCase() === trimmedSaleNumber
-      );
-  
-      // If matches found, use them; otherwise fallback to status === 1
-      filtered = bySale.length > 0
-        ? bySale
-        : coffeeRecords.filter((record) => record.status === 1);
-    } else {
-      // No sale number: show only status === 1
-      filtered = coffeeRecords.filter((record) => record.status === 1);
-    }
-  
-    // Apply grade filter if selected
+    const weightLimit = parseFloat(weightThreshold);
+    const bagLimit = parseFloat(bagThreshold);
+
+    let filtered = coffeeRecords.filter((record) => record.status === 1);
+
     if (trimmedGrade) {
       filtered = filtered.filter(
         (record) => record.grade?.toLowerCase() === trimmedGrade
       );
     }
-  
-    setFilteredRecords(filtered);
-  }, [saleNumber, selectedGrade, coffeeRecords]);
-  
-  const handleDeleteRecord = (index) => {
-    setFilteredRecords((prevRecords) => prevRecords.filter((_, i) => i !== index));
-  };
 
-  const handleSubmit = () => {
-    if (!saleNumber.trim()) {
+    if (weightThreshold.trim() !== "" && !isNaN(weightLimit)) {
+      filtered = filtered.filter((record) => Number(record.weight) >= weightLimit);
+    }
+
+    if (bagThreshold.trim() !== "" && !isNaN(bagLimit)) {
+      filtered = filtered.filter((record) => Number(record.bags) >= bagLimit);
+    }
+
+    setFilteredRecords(filtered);
+  }, [selectedGrade, weightThreshold, bagThreshold, coffeeRecords]);
+
+  const handleAddToSale = () => {
+    const userInput = prompt("Enter Sale Number:");
+    if (!userInput || !userInput.trim()) {
       alert("Sale number is required.");
       return;
     }
+    const finalSaleNumber = userInput.trim();
 
-    const data = {
-      saleNumber,
-      catalogueType: "all",
-      records: filteredRecords,
+    const updatedRecords = filteredRecords.map((record) => ({
+      ...record,
+      sale: finalSaleNumber,
+      status: 3 // Catalogued
+    }));
+
+    const payload = {
+      saleNumber: finalSaleNumber,
+      records: updatedRecords
     };
 
-    console.log(data);
-    post_catalogue_records(data);
+    post_catalogue_records(payload);
 
-    setSaleNumber("");
     setSelectedGrade("");
+    setWeightThreshold("");
+    setBagThreshold("");
     setFilteredRecords([]);
   };
 
@@ -91,20 +102,9 @@ const ViewCatalogue = (props) => {
 
   return (
     <div className="container mt-4">
-      <h3 className="mb-4">Coffee Catalogue</h3>
+      <h3 className="mb-4">Add Coffee to Sale</h3>
 
       <div className="row mb-3">
-        <div className="col-md-6">
-          <label>Sale Number</label>
-          <input
-            type="text"
-            value={saleNumber}
-            onChange={(e) => setSaleNumber(e.target.value)}
-            className="form-control"
-            placeholder="Enter Sale Number"
-          />
-        </div>
-
         <div className="col-md-6">
           <label>Filter by Grade</label>
           <select
@@ -123,9 +123,29 @@ const ViewCatalogue = (props) => {
       </div>
 
       <div className="row mb-3">
-        <div className="col-12 d-flex align-items-end">
-          <button className="btn btn-primary w-100" onClick={handleSubmit}>
-            Generate Catalogue
+        <div className="col-md-4">
+          <label>Weight (≥)</label>
+          <input
+            type="number"
+            className="form-control"
+            value={weightThreshold}
+            onChange={(e) => setWeightThreshold(e.target.value)}
+            placeholder="e.g. 50"
+          />
+        </div>
+        <div className="col-md-4">
+          <label>Bags (≥)</label>
+          <input
+            type="number"
+            className="form-control"
+            value={bagThreshold}
+            onChange={(e) => setBagThreshold(e.target.value)}
+            placeholder="e.g. 10"
+          />
+        </div>
+        <div className="col-md-4 d-flex align-items-end">
+          <button className="btn btn-success w-100" onClick={handleAddToSale}>
+            Add Coffee to Sale
           </button>
         </div>
       </div>
@@ -153,7 +173,7 @@ const ViewCatalogue = (props) => {
       </div>
 
       <div className="results-section">
-        <h5>All Coffee Records</h5>
+        <h5>Filtered Coffee Records</h5>
         {filteredRecords.length > 0 ? (
           <table className="coffee-table table table-striped">
             <thead>
@@ -164,8 +184,10 @@ const ViewCatalogue = (props) => {
                 <th>Grade</th>
                 <th>Bags</th>
                 <th>Pockets</th>
+                <th>Weight</th>
                 <th>Mill</th>
-                <th>Sale Number</th>
+                <th>Status</th>
+                <th>Sale</th>
               </tr>
             </thead>
             <tbody>
@@ -177,7 +199,9 @@ const ViewCatalogue = (props) => {
                   <td>{record.grade}</td>
                   <td>{record.bags}</td>
                   <td>{record.pockets}</td>
-                  <td>{record.mill}</td>
+                  <td>{record.weight}</td>
+                  <td>{MILL_MAP[record.mill] || record.mill}</td>
+                  <td>{STATUS_MAP[record.status] || "Unknown"}</td>
                   <td>{record.sale}</td>
                 </tr>
               ))}
@@ -193,7 +217,7 @@ const ViewCatalogue = (props) => {
 
 const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
-  post_catalogue_records: (data) => dispatch(post_catalogue_records(data)),
+  post_coffee_records: (data) => dispatch(post_coffee_records(data)),
 });
 
 const mapStateToProps = (state) => ({
