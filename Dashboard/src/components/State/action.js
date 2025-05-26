@@ -118,74 +118,76 @@ export const post_coffee_records = (farmersRecord) => async (dispatch) => {
 };
 export const update_coffee_record = (coffeeRecords) => async (dispatch) => {
     try {
-      dispatch({ type: 'UPDATE_COFFEE_DATA_REQUEST' });
-  
-      const excludedFields = ['id', 'created_at', 'updated_at'];
-      const updatedRecords = [];
-      const failedRecords = [];
-  
-      for (const record of coffeeRecords) {
-        const isFormData = record instanceof FormData;
-  
-        const recordId = isFormData ? record.get('id') : record.id;
-  
-        if (!recordId) {
-          failedRecords.push({ error: 'Missing ID', record });
-          continue;
-        }
-  
-        const api_url = `http://127.0.0.1:8000/api/coffee/${recordId}/`;
-        const formData = new FormData();
-  
-        if (isFormData) {
-          for (const [key, value] of record.entries()) {
-            if (excludedFields.includes(key)) continue;
-            if (value === 'null' || value === '') continue;
-            formData.append(key, value);
-          }
-        } else {
-          Object.keys(record).forEach((key) => {
-            if (excludedFields.includes(key)) return;
-  
-            const value = record[key];
-            if (value === '' || value === 'null') return;
-  
-            if (key === 'file' && value) {
-              formData.append(key, value[0]);
-            } else {
-              formData.append(key, value);
+        console.log("we are here")
+        dispatch({ type: 'UPDATE_COFFEE_DATA_REQUEST' });
+        
+        const excludedFields = ['id', 'created_at', 'updated_at'];
+        const updatedRecords = [];
+        const failedRecords = [];
+        
+        for (const record of coffeeRecords) {
+            console.log("Processing record:", record);
+            const isFormData = record instanceof FormData;
+    
+            const recordId = isFormData ? record.get('id') : record.id;
+    
+            if (!recordId) {
+            failedRecords.push({ error: 'Missing ID', record });
+            continue;
             }
-          });
+    
+            const api_url = `http://127.0.0.1:8000/api/coffee/${recordId}/`;
+            const formData = new FormData();
+    
+            if (isFormData) {
+            for (const [key, value] of record.entries()) {
+                if (excludedFields.includes(key)) continue;
+                if (value === 'null' || value === '') continue;
+                formData.append(key, value);
+            }
+            } else {
+            Object.keys(record).forEach((key) => {
+                if (excludedFields.includes(key)) return;
+    
+                const value = record[key];
+                if (value === '' || value === 'null') return;
+    
+                if (key === 'file' && value) {
+                formData.append(key, value[0]);
+                } else {
+                formData.append(key, value);
+                }
+            });
+            }
+            console.log("FormData for record:", Array.from(formData.entries()));
+            const response = await fetch(api_url, {
+            method: 'PUT',
+            body: formData,
+            });
+    
+            if (response.ok) {
+            const data = await response.json();
+            updatedRecords.push(data);
+            } else {
+            const errorData = await response.json();
+            failedRecords.push({ error: errorData.detail, record });
+            }
         }
-  
-        const response = await fetch(api_url, {
-          method: 'PUT',
-          body: formData,
-        });
-  
-        if (response.ok) {
-          const data = await response.json();
-          updatedRecords.push(data);
+        console.log("Updated records:", updatedRecords);
+        if (failedRecords.length === 0) {
+            dispatch({ type: 'UPDATE_COFFEE_DATA_SUCCESS', payload: updatedRecords });
         } else {
-          const errorData = await response.json();
-          failedRecords.push({ error: errorData.detail, record });
+            dispatch({
+            type: 'UPDATE_COFFEE_DATA_PARTIAL_FAILURE',
+            payload: { updated: updatedRecords, failed: failedRecords },
+            });
         }
-      }
-  
-      if (failedRecords.length === 0) {
-        dispatch({ type: 'UPDATE_COFFEE_DATA_SUCCESS', payload: updatedRecords });
-      } else {
+        } catch (error) {
         dispatch({
-          type: 'UPDATE_COFFEE_DATA_PARTIAL_FAILURE',
-          payload: { updated: updatedRecords, failed: failedRecords },
+            type: 'UPDATE_COFFEE_DATA_FAILURE',
+            payload: error.message || 'Unknown error occurred while updating multiple records.',
         });
-      }
-    } catch (error) {
-      dispatch({
-        type: 'UPDATE_COFFEE_DATA_FAILURE',
-        payload: error.message || 'Unknown error occurred while updating multiple records.',
-      });
-    }
+        }
   };
   
     

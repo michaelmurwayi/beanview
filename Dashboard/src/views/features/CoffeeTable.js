@@ -1,100 +1,62 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import { fetch_coffee_records } from 'components/State/action';
+import { fetch_coffee_records, update_coffee_record } from 'components/State/action';
 import 'assets/css/coffee_table.css';
 
-const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records }) => {
-  const STATUS_MAP = {
-    1: 'Pending',
-    2: 'Sold',
-    3: 'Catalogued',
-  };
-
+const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records, update_coffee_record }) => {
+  const STATUS_MAP = { 1: 'Pending', 2: 'Sold', 3: 'Catalogued' };
   const MILL_MAP = {
     1: 'ICM', 2: 'BU', 3: 'HM', 4: 'TY', 5: 'IM', 6: 'KM', 7: 'RF',
     8: 'TK', 9: 'KF', 10: 'LE', 11: 'nan', 12: 'KK', 13: 'US', 14: 'FH', 15: 'GR',
   };
 
-  const [outturnFilter, setOutturnFilter] = useState('');
-  const [bulkOutturnFilter, setBulkOutturnFilter] = useState('');
-  const [saleFilter, setSaleFilter] = useState('');
-  const [markFilter, setMarkFilter] = useState('');
-  const [gradeFilter, setGradeFilter] = useState('');
-  const [buyerFilter, setBuyerFilter] = useState('');
+  const [filters, setFilters] = useState({
+    outturn: '', bulkOutturn: '', sale: '', mark: '', grade: '', buyer: ''
+  });
 
   const [filteredRecords, setFilteredRecords] = useState([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
+  useEffect(() => { fetch_coffee_records(); }, []);
 
   useEffect(() => {
-    fetch_coffee_records();
-  }, []);
-
-  useEffect(() => {
-    let filtered = coffeeRecords;
-
-    if (outturnFilter.trim()) {
-      filtered = filtered.filter((r) =>
-        r.outturn?.toLowerCase().includes(outturnFilter.trim().toLowerCase())
-      );
-    }
-
-    if (bulkOutturnFilter.trim()) {
-      filtered = filtered.filter((r) =>
-        r.bulkoutturn?.toLowerCase().includes(bulkOutturnFilter.trim().toLowerCase())
-      );
-    }
-
-    if (saleFilter.trim()) {
-      filtered = filtered.filter((r) =>
-        r.sale?.toLowerCase().includes(saleFilter.trim().toLowerCase())
-      );
-    }
-
-    if (markFilter.trim()) {
-      filtered = filtered.filter((r) =>
-        r.mark?.toLowerCase().includes(markFilter.trim().toLowerCase())
-      );
-    }
-
-    if (gradeFilter.trim()) {
-      filtered = filtered.filter((r) =>
-        r.grade?.toLowerCase().includes(gradeFilter.trim().toLowerCase())
-      );
-    }
-
-    if (buyerFilter.trim()) {
-      filtered = filtered.filter((r) =>
-        r.buyer?.toLowerCase().includes(buyerFilter.trim().toLowerCase())
-      );
-    }
-
+    let filtered = coffeeRecords.filter(r => {
+      return (!filters.outturn || r.outturn?.toLowerCase().includes(filters.outturn.toLowerCase()))
+        && (!filters.bulkOutturn || r.bulkoutturn?.toLowerCase().includes(filters.bulkOutturn.toLowerCase()))
+        && (!filters.sale || r.sale?.toLowerCase().includes(filters.sale.toLowerCase()))
+        && (!filters.mark || r.mark?.toLowerCase().includes(filters.mark.toLowerCase()))
+        && (!filters.grade || r.grade?.toLowerCase().includes(filters.grade.toLowerCase()))
+        && (!filters.buyer || r.buyer?.toLowerCase().includes(filters.buyer.toLowerCase()));
+    });
     setFilteredRecords(filtered);
-  }, [
-    coffeeRecords,
-    outturnFilter,
-    bulkOutturnFilter,
-    saleFilter,
-    markFilter,
-    gradeFilter,
-    buyerFilter,
-  ]);
+  }, [coffeeRecords, filters]);
+
+  const handleEditClick = (record) => {
+    setSelectedRecord({ ...record });
+    setShowEditModal(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedRecord(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpdate = () => {
+    console.log('Updating record:', selectedRecord);
+    update_coffee_record([selectedRecord]);
+    setShowEditModal(false);
+  };
 
   const getSummary = (records) => {
-    const totalWeight = records.reduce(
-      (sum, rec) => sum + (parseFloat(rec.weight) || 0),
-      0
-    );
-    const totalBags = records.reduce(
-      (sum, rec) => sum + (parseInt(rec.bags) || 0),
-      0
-    );
-
+    const totalWeight = records.reduce((sum, rec) => sum + (parseFloat(rec.weight) || 0), 0);
+    const totalBags = records.reduce((sum, rec) => sum + (parseInt(rec.bags) || 0), 0);
     const gradeBreakdown = {};
     records.forEach((rec) => {
       const grade = rec.grade || 'Unknown';
       const bags = parseInt(rec.bags) || 0;
       gradeBreakdown[grade] = (gradeBreakdown[grade] || 0) + bags;
     });
-
     return { totalWeight, totalBags, gradeBreakdown };
   };
 
@@ -108,25 +70,18 @@ const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records }) => {
       <div className="card mb-4 p-3 shadow-sm">
         <h5 className="mb-3">Filter Records</h5>
         <div className="row g-3">
-          {[
-            { label: 'Outturn', value: outturnFilter, setter: setOutturnFilter },
-            { label: 'Bulk Outturn', value: bulkOutturnFilter, setter: setBulkOutturnFilter },
-            { label: 'Sale Number', value: saleFilter, setter: setSaleFilter },
-            { label: 'Mark', value: markFilter, setter: setMarkFilter },
-            { label: 'Grade', value: gradeFilter, setter: setGradeFilter },
-            { label: 'Buyer', value: buyerFilter, setter: setBuyerFilter },
-          ].map(({ label, value, setter }, idx) => (
+          {['outturn', 'bulkOutturn', 'sale', 'mark', 'grade', 'buyer'].map((field, idx) => (
             <div className="col-md-4" key={idx}>
               <div className="form-floating">
                 <input
                   type="text"
                   className="form-control"
-                  id={`filter-${label}`}
-                  placeholder={label}
-                  value={value}
-                  onChange={(e) => setter(e.target.value)}
+                  id={`filter-${field}`}
+                  placeholder={field}
+                  value={filters[field]}
+                  onChange={(e) => setFilters({ ...filters, [field]: e.target.value })}
                 />
-                <label htmlFor={`filter-${label}`}>{label}</label>
+                <label htmlFor={`filter-${field}`}>{field}</label>
               </div>
             </div>
           ))}
@@ -140,14 +95,11 @@ const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records }) => {
           <div className="col-md-4"><strong>Total Weight:</strong> {summary.totalWeight.toFixed(2)} kg</div>
           <div className="col-md-4"><strong>Total Bags:</strong> {summary.totalBags}</div>
         </div>
-
         <div className="mb-2"><strong>Grade Breakdown (by bags):</strong></div>
         <div className="row">
           {Object.entries(summary.gradeBreakdown).map(([grade, bagCount]) => (
             <div key={grade} className="col-md-2 col-4 mb-1">
-              <span className="badge bg-secondary w-100 py-2">
-                {grade}: {bagCount} bags
-              </span>
+              <span className="badge bg-secondary w-100 py-2">{grade}: {bagCount} bags</span>
             </div>
           ))}
         </div>
@@ -171,6 +123,7 @@ const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records }) => {
                 <th>Status</th>
                 <th>Sale</th>
                 <th>Buyer</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -188,6 +141,9 @@ const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records }) => {
                   <td>{STATUS_MAP[record.status] || 'Unknown'}</td>
                   <td>{record.sale}</td>
                   <td>{record.buyer}</td>
+                  <td>
+                    <button className="btn btn-sm btn-primary" onClick={() => handleEditClick(record)}>Edit</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -196,6 +152,45 @@ const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records }) => {
           <p className="text-muted">No matching records found.</p>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {selectedRecord && (
+        <div
+          className={`modal fade show d-block`}
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
+          <div className="modal-dialog modal-dialog-scrollable" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Coffee Record</h5>
+                <button type="button" className="btn-close" onClick={() => setShowEditModal(false)}></button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                {[
+                  'outturn', 'bulkoutturn', 'mark', 'grade',
+                  'bags', 'pockets', 'weight', 'sale', 'buyer'
+                ].map((field) => (
+                  <div className="mb-3" key={field}>
+                    <label className="form-label">{field}</label>
+                    <input
+                      className="form-control"
+                      name={field}
+                      value={selectedRecord[field] || ''}
+                      onChange={handleEditChange}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="button" className="btn btn-success" onClick={handleUpdate}>Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -206,6 +201,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
+  update_coffee_record: (data) => dispatch(update_coffee_record(data)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ViewCatalogue);

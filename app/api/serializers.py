@@ -22,14 +22,13 @@ class CoffeeSerializer(serializers.ModelSerializer):
                 'reserve': {'required': False},
                 'buyer': {'required': False}
             }
-    
+
     def update(self, instance, validated_data):
-
-        instance.sale = validated_data.get('sale', instance.sale)
-        instance.status_id = validated_data.get('status_id', instance.status_id)  # Ensure this is updated
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
-
         return instance
+
 
 class CatalogueSerializer(serializers.ModelSerializer):
     class Meta:
