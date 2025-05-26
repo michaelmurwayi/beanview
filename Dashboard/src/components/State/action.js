@@ -158,9 +158,6 @@ export const update_coffee_record = (coffeeRecords) => async (dispatch) => {
           });
         }
   
-        // Force status to "catalogued"
-        formData.set('status', '3');
-  
         const response = await fetch(api_url, {
           method: 'PUT',
           body: formData,
