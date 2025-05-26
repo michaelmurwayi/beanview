@@ -145,27 +145,25 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['POST'])
     def generate_summary_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'Sale Summary template.xlsx')
-        START_ROW = 27  # Change as needed for where to start writing records
+        START_ROW = 27
 
         try:
-            summary_data = request.data.get('summary', [])
-            records_by_mark = request.data.get('recordsByMark', {})
+            summaries = request.data.get('summaries', [])
 
-            if not summary_data or not records_by_mark:
-                raise ValidationError("Both 'summary' and 'recordsByMark' are required.")
+            if not summaries:
+                raise ValidationError("'summaries' is required and must not be empty.")
 
             base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
             os.makedirs(base_dir, exist_ok=True)
 
-            # Collect all status IDs used in the records
+            # Collect all status IDs from all records
             all_status_ids = {
                 record.get('status_id')
-                for records in records_by_mark.values()
-                for record in records
+                for summary in summaries
+                for record in summary.get('records', [])
                 if record.get('status_id') is not None
             }
 
-            # Map status IDs to names
             status_map = {
                 status.id: status.name
                 for status in CoffeeStatus.objects.filter(id__in=all_status_ids)
@@ -173,10 +171,15 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 
             generated_files = []
 
-            for summary_item in summary_data:
-                mark = summary_item.get('mark')
-                total_weight = summary_item.get('totalWeight')
-                count = summary_item.get('count')
+            for summary in summaries:
+                mark = summary.get('mark')
+                records = summary.get('records', [])
+
+                if not mark or not records:
+                    continue  # skip invalid
+
+                total_weight = sum(float(r.get('weight') or 0) for r in records)
+                count = len(records)
 
                 mark_dir = os.path.join(base_dir, mark)
                 os.makedirs(mark_dir, exist_ok=True)
@@ -187,7 +190,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 wb = load_workbook(TEMPLATE_PATH)
                 ws = wb.active
 
-                # Write summary section before data table
+                # Write summary data
                 ws['A6'] = 'Mark'
                 ws['B6'] = 'Total Weight (kg)'
                 ws['C6'] = 'Number of Records'
@@ -195,18 +198,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 ws['B7'] = total_weight
                 ws['C7'] = count
 
-                # Header row
-                headers = ['Outturn', 'Mark', 'Grade', 'Type', 'Bags', 'Pockets',
-                           'Weight (kg)', 'Sale Number', 'Season', 'Certificate',
-                           'Mill', 'Warehouse', 'Price', 'Buyer', 'Status']
-                for col_index, header in enumerate(headers, start=1):
-                    cell = ws.cell(row=START_ROW, column=col_index)
-                    if isinstance(cell, MergedCell):
-                        continue  # Skip writing to merged cells
-                    cell.value = header
-
-                # Records rows
-                records = records_by_mark.get(mark, [])
                 for row_offset, record in enumerate(records, start=1):
                     row = START_ROW + row_offset
                     status_id = record.get('status_id')
@@ -214,9 +205,10 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 
                     values = [
                         record.get('outturn'),
+                        record.get('bulkoutturn'),
                         record.get('mark'),
-                        record.get('grade'),
                         record.get('type'),
+                        record.get('grade'),
                         record.get('bags'),
                         record.get('pockets'),
                         record.get('weight'),
@@ -248,7 +240,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         except Exception as e:
             traceback.print_exc()
             return Response({"error": f"Internal server error: {str(e)}"}, status=500)
-            
+
 class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
