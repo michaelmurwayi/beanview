@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import { fetch_coffee_records, update_coffee_record } from 'components/State/action';
+import { fetch_coffee_records, update_coffee_record, delete_coffee_record } from 'components/State/action';
 import 'assets/css/coffee_table.css';
 
-const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records, update_coffee_record }) => {
+const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records, update_coffee_record, delete_coffee_record }) => {
   const STATUS_MAP = { 1: 'Pending', 2: 'Sold', 3: 'Catalogued' };
   const MILL_MAP = {
     1: 'ICM', 2: 'BU', 3: 'HM', 4: 'TY', 5: 'IM', 6: 'KM', 7: 'RF',
@@ -43,9 +43,14 @@ const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records, update_coffee_reco
   };
 
   const handleUpdate = () => {
-    console.log('Updating record:', selectedRecord);
     update_coffee_record([selectedRecord]);
     setShowEditModal(false);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      delete_coffee_record(id);
+    }
   };
 
   const getSummary = (records) => {
@@ -142,7 +147,8 @@ const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records, update_coffee_reco
                   <td>{record.sale}</td>
                   <td>{record.buyer}</td>
                   <td>
-                    <button className="btn btn-sm btn-primary" onClick={() => handleEditClick(record)}>Edit</button>
+                    <button className="btn btn-sm btn-primary me-1" onClick={() => handleEditClick(record)}>Edit</button>
+                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(record.id)}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -154,7 +160,7 @@ const ViewCatalogue = ({ coffeeRecords, fetch_coffee_records, update_coffee_reco
       </div>
 
       {/* Edit Modal */}
-      {selectedRecord && (
+      {selectedRecord && showEditModal && (
         <div
           className={`modal fade show d-block`}
           tabIndex="-1"
@@ -202,6 +208,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
   update_coffee_record: (data) => dispatch(update_coffee_record(data)),
+  delete_coffee_record: (id) => dispatch(delete_coffee_record(id)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ViewCatalogue);
