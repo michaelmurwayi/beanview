@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import { fetch_coffee_records, post_catalogue_records, post_coffee_records } from 'components/State/action';
+import {
+  fetch_coffee_records,
+  update_coffee_record
+} from 'components/State/action';
 import 'assets/css/coffee_table.css';
 
 const ViewCatalogue = (props) => {
   const {
     coffeeRecords,
     fetch_coffee_records,
-    post_coffee_records
+    update_coffee_record
   } = props;
 
   const STATUS_MAP = {
@@ -24,16 +27,18 @@ const ViewCatalogue = (props) => {
   const [selectedGrade, setSelectedGrade] = useState("");
   const [weightThreshold, setWeightThreshold] = useState("");
   const [bagThreshold, setBagThreshold] = useState("");
+  const [selectedOutturn, setSelectedOutturn] = useState("");
   const [filteredRecords, setFilteredRecords] = useState([]);
 
   useEffect(() => {
     fetch_coffee_records();
-  }, []);
+  }, [fetch_coffee_records]);
 
   useEffect(() => {
     const trimmedGrade = selectedGrade.trim().toLowerCase();
     const weightLimit = parseFloat(weightThreshold);
     const bagLimit = parseFloat(bagThreshold);
+    const trimmedOutturn = selectedOutturn.trim().toLowerCase();
 
     let filtered = coffeeRecords.filter((record) => record.status === 1);
 
@@ -51,10 +56,16 @@ const ViewCatalogue = (props) => {
       filtered = filtered.filter((record) => Number(record.bags) >= bagLimit);
     }
 
-    setFilteredRecords(filtered);
-  }, [selectedGrade, weightThreshold, bagThreshold, coffeeRecords]);
+    if (trimmedOutturn) {
+      filtered = filtered.filter(
+        (record) => record.outturn?.toLowerCase() === trimmedOutturn
+      );
+    }
 
-  const handleAddToSale = () => {
+    setFilteredRecords(filtered);
+  }, [selectedGrade, weightThreshold, bagThreshold, selectedOutturn, coffeeRecords]);
+
+  const handleAddToSale = async () => {
     const userInput = prompt("Enter Sale Number:");
     if (!userInput || !userInput.trim()) {
       alert("Sale number is required.");
@@ -62,22 +73,39 @@ const ViewCatalogue = (props) => {
     }
     const finalSaleNumber = userInput.trim();
 
-    const updatedRecords = filteredRecords.map((record) => ({
-      ...record,
-      sale: finalSaleNumber,
-      status: 3 // Catalogued
-    }));
+    for (const record of filteredRecords) {
+      // Prepare FormData to match backend expectations
+      const formData = new FormData();
 
-    const payload = {
-      saleNumber: finalSaleNumber,
-      records: updatedRecords
-    };
+      // Append existing record fields
+      for (const key in record) {
+        if (Object.hasOwnProperty.call(record, key)) {
+          let value = record[key];
+          
+          // Force status to "catalogued" before appending
+          if (key === 'status') {
+            value = '3'; // or whatever ID corresponds to "catalogued"
+          }
+      
+          formData.append(key, value);
+        }
+      }
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+      // Override sale and status fields
+      formData.set('sale', finalSaleNumber);
+      formData.set('status', 3); // Catalogued
 
-    post_catalogue_records(payload);
+      // Await update action dispatch
+      await update_coffee_record(formData);
+    }
 
+    // Clear filters and filtered records after update
     setSelectedGrade("");
     setWeightThreshold("");
     setBagThreshold("");
+    setSelectedOutturn("");
     setFilteredRecords([]);
   };
 
@@ -99,6 +127,7 @@ const ViewCatalogue = (props) => {
   }, { total: 0, totalBags: 0, grades: {} });
 
   const uniqueGrades = [...new Set(coffeeRecords.map((rec) => rec.grade))].sort();
+  const uniqueOutturns = [...new Set(coffeeRecords.filter(r => r.status === 1).map((rec) => rec.outturn))].sort();
 
   return (
     <div className="container mt-4">
@@ -119,6 +148,21 @@ const ViewCatalogue = (props) => {
               </option>
             ))}
           </select>
+        </div>
+        <div className="col-md-6">
+          <label>Filter by Outturn</label>
+          <input
+            className="form-control mb-2"
+            placeholder="Type or select outturn"
+            value={selectedOutturn}
+            onChange={(e) => setSelectedOutturn(e.target.value)}
+            list="outturn-list"
+          />
+          <datalist id="outturn-list">
+            {uniqueOutturns.map((outturn) => (
+              <option key={outturn} value={outturn} />
+            ))}
+          </datalist>
         </div>
       </div>
 
@@ -217,7 +261,7 @@ const ViewCatalogue = (props) => {
 
 const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
-  post_coffee_records: (data) => dispatch(post_coffee_records(data)),
+  update_coffee_record: (data) => dispatch(update_coffee_record(data))
 });
 
 const mapStateToProps = (state) => ({

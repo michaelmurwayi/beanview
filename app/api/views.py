@@ -52,119 +52,97 @@ class FarmersViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.instance)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         
-
 @method_decorator(csrf_exempt, name='dispatch')
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
-    
-
 
     def create(self, request, *args, **kwargs):
-        data = request.data.dict()
+        data = request.data.dict() if hasattr(request.data, 'dict') else request.data
         files = request.FILES
-        sheets = data.get("sheetnames", "").split(",")
-        
+        sheets = data.get("sheetnames", "").split(",") if data.get("sheetnames") else []
+
         if files and sheets:
             return process_uploaded_files(self, data, sheets)
-        
         return process_single_record(self, data)
-    
+
     def update(self, request, *args, **kwargs):
         """Handle the PUT method for updating a Coffee record."""
-        # Retrieve the object to be updated
+        
         instance = self.get_object()
-        # Deserialize and validate the incoming data
-        serializer = self.get_serializer(instance, data=request.data, partial=True)  # Use `partial=True` for PATCH
+        # PUT should usually update entire resource, so partial=False
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        
         serializer.is_valid(raise_exception=True)
-
-        # Save the updated instance
         self.perform_update(serializer)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_update(self, serializer):
-        """Customize save logic during the update."""
         serializer.save()
 
     @action(detail=False, methods=['GET'], url_path='total_net_weight')
     def total_net_weight(self, request):
-        weights = []
         try:
-            records = self.queryset.values()
-            for record in records:
-                if record["status"] != "SOLD":
-                    weights.append(record["net_weight"])
-                total_net_weight = sum(weights)
+            records = self.queryset.exclude(status="SOLD").values_list('net_weight', flat=True)
+            total_net_weight = sum(records)
             return Response({"total_net_weight": total_net_weight})
-        except Exception as E:
-            raise(f"Error calculating total net weight, {E}")
-    
+        except Exception as e:
+            return Response({"error": f"Error calculating total net weight: {str(e)}"}, status=400)
+
     @action(detail=False, methods=['GET'], url_path='total_tare_weight')
     def total_tare_weight(self, request):
-        weights = []
         try:
-            records = self.queryset.values()
-            for record in records:
-                if record["status"] != "SOLD":
-                    weights.append(record["tare_weight"])
-                total_tare_weight = sum(weights)
+            records = self.queryset.exclude(status="SOLD").values_list('tare_weight', flat=True)
+            total_tare_weight = sum(records)
             return Response({"total_tare_weight": total_tare_weight})
-        except Exception as E:
-            raise(f"Error calculating total tare weight, {E}")
-    
+        except Exception as e:
+            return Response({"error": f"Error calculating total tare weight: {str(e)}"}, status=400)
+
     @action(detail=False, methods=['GET'], url_path='total_number_bags')
     def total_number_bags(self, request):
-        bags = []
         try:
-            records = self.queryset.values()
-            for record in records:
-                if record["status"] != "SOLD":
-                    bags.append(record["bags"])
-                total_number_bags = sum(bags)
+            records = self.queryset.exclude(status="SOLD").values_list('bags', flat=True)
+            total_number_bags = sum(records)
             return Response({"total_number_bags": total_number_bags})
-        except Exception as E:
-            raise(f"Error calculating total number of  bags, {E}")
+        except Exception as e:
+            return Response({"error": f"Error calculating total number of bags: {str(e)}"}, status=400)
 
     @action(detail=False, methods=['GET'], url_path='total_number_farmers')
     def total_number_farmers(self, request):
         try:
             total_number_farmers = self.queryset.values("estate").distinct().count()
             return Response({"total_number_farmers": total_number_farmers})
-        except Exception as E:
-            raise(f"Error calculating total number of  farmers, {E}")
-            
-    
+        except Exception as e:
+            return Response({"error": f"Error calculating total number of farmers: {str(e)}"}, status=400)
+
     @action(detail=False, methods=['GET'], url_path='performance_per_grade')
-    def perfomance_per_grade(self, request):
-        performance_per_grade = []
+    def performance_per_grade(self, request):
         try:
-            records = self.queryset.values("grade").distinct()
-            for record in records:
-                grade_record = records.filter(grade=record["grade"])
-                total_weight = grade_record.aggregate(total_weight=Sum('net_weight'))['total_weight']
-                data = {"grade": record["grade"],
-                        "net_weight": total_weight }
-                performance_per_grade.append(data)
+            performance_per_grade = []
+            distinct_grades = self.queryset.values("grade").distinct()
+            for record in distinct_grades:
+                grade = record["grade"]
+                grade_records = self.queryset.filter(grade=grade)
+                total_weight = grade_records.aggregate(total_weight=Sum('net_weight'))['total_weight'] or 0
+                performance_per_grade.append({"grade": grade, "net_weight": total_weight})
             return Response({"Performance": performance_per_grade})
-        except Exception as E:
-            raise(f"Error calculating total number of  farmers, {{E}}")
-    
+        except Exception as e:
+            return Response({"error": f"Error calculating performance per grade: {str(e)}"}, status=400)
+
     @action(detail=False, methods=['GET'], url_path='daily_delivery')
     def daily_delivery(self, request):
-        deliveries = []
         try:
+            deliveries = []
             records = self.queryset.values()
             for record in records:
-                 # Get the current date and time
-                target_date = record['created_at']
-                if is_less_than_24_hours_ago(target_date):
+                target_date = record.get('created_at')
+                if target_date and is_less_than_24_hours_ago(target_date):
                     deliveries.append(record)
-            return Response({"deliveries": deliveries})        
-        except Exception as E:
-            raise(f"Error calculating total number of  farmers, {{E}}")
+            return Response({"deliveries": deliveries})
+        except Exception as e:
+            return Response({"error": f"Error fetching daily deliveries: {str(e)}"}, status=400)
 
-    @action(detail=False, methods=['post']) 
+    @action(detail=False, methods=['POST'])
     def generate_summary_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'Sale Summary template.xlsx')
         START_ROW = 27  # Change as needed for where to start writing records
@@ -179,6 +157,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
             os.makedirs(base_dir, exist_ok=True)
 
+            # Collect all status IDs used in the records
             all_status_ids = {
                 record.get('status_id')
                 for records in records_by_mark.values()
@@ -186,6 +165,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 if record.get('status_id') is not None
             }
 
+            # Map status IDs to names
             status_map = {
                 status.id: status.name
                 for status in CoffeeStatus.objects.filter(id__in=all_status_ids)
@@ -217,15 +197,15 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 
                 # Header row
                 headers = ['Outturn', 'Mark', 'Grade', 'Type', 'Bags', 'Pockets',
-                        'Weight (kg)', 'Sale Number', 'Season', 'Certificate',
-                        'Mill', 'Warehouse', 'Price', 'Buyer', 'Status']
+                           'Weight (kg)', 'Sale Number', 'Season', 'Certificate',
+                           'Mill', 'Warehouse', 'Price', 'Buyer', 'Status']
                 for col_index, header in enumerate(headers, start=1):
                     cell = ws.cell(row=START_ROW, column=col_index)
                     if isinstance(cell, MergedCell):
                         continue  # Skip writing to merged cells
                     cell.value = header
 
-                # Records
+                # Records rows
                 records = records_by_mark.get(mark, [])
                 for row_offset, record in enumerate(records, start=1):
                     row = START_ROW + row_offset
@@ -257,21 +237,15 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                         cell.value = value
 
                 wb.save(file_path)
-
-                generated_files.append({
-                    "mark": mark,
-                    "path": file_path
-                })
+                generated_files.append({"mark": mark, "path": file_path})
 
             return Response({"message": "Files generated", "files": generated_files}, status=200)
 
         except ValidationError as e:
-            print("Validation Error:", str(e))
             traceback.print_exc()
             return Response({"error": str(e)}, status=400)
 
         except Exception as e:
-            print("Unexpected Error:", str(e))
             traceback.print_exc()
             return Response({"error": f"Internal server error: {str(e)}"}, status=500)
             

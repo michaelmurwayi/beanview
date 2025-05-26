@@ -116,59 +116,82 @@ export const post_coffee_records = (farmersRecord) => async (dispatch) => {
         dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: { error: error.message } });
     }
 };
-
-export const update_coffee_record = (coffeeRecord) => async (dispatch) => {
+export const update_coffee_record = (coffeeRecords) => async (dispatch) => {
     try {
-        const api_url = `http://127.0.0.1:8000/api/coffee/${coffeeRecord.id}/`; // Assuming the record has an `id` field
-        
-        // Initialize FormData
+      dispatch({ type: 'UPDATE_COFFEE_DATA_REQUEST' });
+  
+      const excludedFields = ['id', 'created_at', 'updated_at'];
+      const updatedRecords = [];
+      const failedRecords = [];
+  
+      for (const record of coffeeRecords) {
+        const isFormData = record instanceof FormData;
+  
+        const recordId = isFormData ? record.get('id') : record.id;
+  
+        if (!recordId) {
+          failedRecords.push({ error: 'Missing ID', record });
+          continue;
+        }
+  
+        const api_url = `http://127.0.0.1:8000/api/coffee/${recordId}/`;
         const formData = new FormData();
-        // Check if coffeeRecord is a FormData instance
-        if (coffeeRecord instanceof FormData) {
-            for (const [key, value] of coffeeRecord.entries()) {
-                formData.append(key, value);
-                console.log(JSON.stringify(formData))
+  
+        if (isFormData) {
+          for (const [key, value] of record.entries()) {
+            if (excludedFields.includes(key)) continue;
+            if (value === 'null' || value === '') continue;
+            formData.append(key, value);
+          }
+        } else {
+          Object.keys(record).forEach((key) => {
+            if (excludedFields.includes(key)) return;
+  
+            const value = record[key];
+            if (value === '' || value === 'null') return;
+  
+            if (key === 'file' && value) {
+              formData.append(key, value[0]);
+            } else {
+              formData.append(key, value);
             }
-        } else {
-            // Add each key-value pair to FormData
-            Object.keys(coffeeRecord).forEach((key) => {
-                // If the value is an array or file, handle it accordingly
-                if (key === 'file' && coffeeRecord[key]) {
-                    formData.append(key, coffeeRecord[key][0]); // Assuming file is an array
-                } else {
-                    formData.append(key, coffeeRecord[key]);
-                }
-            });
+          });
         }
-        
-        // Fetch configuration for PUT request (to update the record)
-        const fetchConfig = {
-            method: 'PUT',
-            body: formData,
-        };
-
-        // Dispatch request action
-        dispatch({ type: 'UPDATE_COFFEE_DATA_REQUEST' });
-
-        // Perform API request
-        const response = await fetch(api_url, fetchConfig);
-        
-        // Check for successful response
+  
+        // Force status to "catalogued"
+        formData.set('status', '3');
+  
+        const response = await fetch(api_url, {
+          method: 'PUT',
+          body: formData,
+        });
+  
         if (response.ok) {
-            const responseData = await response.json();
-            dispatch({ type: 'UPDATE_COFFEE_DATA_SUCCESS', payload: responseData });
+          const data = await response.json();
+          updatedRecords.push(data);
         } else {
-            // Handle non-OK responses
-            const errorData = await response.json();
-            const errorMessage = errorData.detail || 'Failed to update the record.';
-            dispatch({ type: 'UPDATE_COFFEE_DATA_FAILURE', payload: errorMessage });
+          const errorData = await response.json();
+          failedRecords.push({ error: errorData.detail, record });
         }
+      }
+  
+      if (failedRecords.length === 0) {
+        dispatch({ type: 'UPDATE_COFFEE_DATA_SUCCESS', payload: updatedRecords });
+      } else {
+        dispatch({
+          type: 'UPDATE_COFFEE_DATA_PARTIAL_FAILURE',
+          payload: { updated: updatedRecords, failed: failedRecords },
+        });
+      }
     } catch (error) {
-        // Catch unexpected errors and dispatch failure action
-        dispatch({ type: 'UPDATE_COFFEE_DATA_FAILURE', payload: { error: error.message } });
+      dispatch({
+        type: 'UPDATE_COFFEE_DATA_FAILURE',
+        payload: error.message || 'Unknown error occurred while updating multiple records.',
+      });
     }
-};
-
+  };
+  
+    
 export const delete_coffee_record = (id) => async (dispatch) => {
     try {
         const api_url = `http://127.0.0.1:8000/api/coffee/${id}/`;

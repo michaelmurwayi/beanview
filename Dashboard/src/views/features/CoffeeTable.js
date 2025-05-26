@@ -1,172 +1,297 @@
-import React, { useEffect, useState } from "react";
-import { connect } from "react-redux";
+import React, { useEffect, useState } from 'react';
+import { connect } from 'react-redux';
 import {
   fetch_coffee_records,
-  update_coffee_record,
-  delete_coffee_record,
-  submit_sale_summary,
-} from "components/State/action";
-import { Button } from "react-bootstrap";
-import "assets/css/coffee_table.css";
+  post_catalogue_records,
+  post_coffee_records,
+} from 'components/State/action';
+import 'assets/css/coffee_table.css';
 
-const STATUS_MAP = {
-  1: "Pending",
-  2: "Sold",
-  3: "Catalogued",
-};
-
-const MILL_MAP = {
-  1: "ICM", 2: "BU", 3: "HM", 4: "TY", 5: "IM", 6: "KM", 7: "RF",
-  8: "TK", 9: "KF", 10: "LE", 11: "nan", 12: "KK", 13: "US", 14: "FH", 15: "GR",
-};
-
-const DataTable = (props) => {
+const ViewCatalogue = (props) => {
   const {
     coffeeRecords,
     fetch_coffee_records,
-    updateCoffeeRecords,
-    deleteCoffeeRecord,
-    submitSaleSummary,
+    post_coffee_records,
   } = props;
 
+  const STATUS_MAP = {
+    1: 'Pending',
+    2: 'Sold',
+    3: 'Catalogued',
+  };
+
+  const MILL_MAP = {
+    1: 'ICM', 2: 'BU', 3: 'HM', 4: 'TY', 5: 'IM', 6: 'KM', 7: 'RF',
+    8: 'TK', 9: 'KF', 10: 'LE', 11: 'nan', 12: 'KK', 13: 'US', 14: 'FH', 15: 'GR',
+  };
+
+  const [selectedGrade, setSelectedGrade] = useState('');
+  const [weightThreshold, setWeightThreshold] = useState('');
+  const [bagThreshold, setBagThreshold] = useState('');
+  const [outturnInput, setOutturnInput] = useState('');
+  const [filteredRecords, setFilteredRecords] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editRecord, setEditRecord] = useState({});
-  const [filters, setFilters] = useState({
-    weight: "",
-    grade: "",
-    mark: "",
-    outturn: "",
-    sale_number: "",
-  });
 
   useEffect(() => {
     fetch_coffee_records();
-  }, [fetch_coffee_records]);
+  }, []);
 
-  const handleChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    const trimmedGrade = selectedGrade.trim().toLowerCase();
+    const weightLimit = parseFloat(weightThreshold);
+    const bagLimit = parseFloat(bagThreshold);
+    const trimmedOutturn = outturnInput.trim().toLowerCase();
+
+    let filtered = coffeeRecords.filter((record) => record.status === 1);
+
+    if (trimmedGrade) {
+      filtered = filtered.filter(
+        (record) => record.grade?.toLowerCase() === trimmedGrade
+      );
+    }
+
+    if (weightThreshold.trim() !== '' && !isNaN(weightLimit)) {
+      filtered = filtered.filter((record) => Number(record.weight) >= weightLimit);
+    }
+
+    if (bagThreshold.trim() !== '' && !isNaN(bagLimit)) {
+      filtered = filtered.filter((record) => Number(record.bags) >= bagLimit);
+    }
+
+    if (trimmedOutturn) {
+      filtered = filtered.filter(
+        (record) => record.outturn?.toLowerCase().includes(trimmedOutturn)
+      );
+    }
+
+    setFilteredRecords(filtered);
+  }, [selectedGrade, weightThreshold, bagThreshold, outturnInput, coffeeRecords]);
 
   const handleEdit = (record) => {
     setEditingId(record.id);
     setEditRecord({ ...record });
   };
 
-  const handleSaveEdit = () => {
-    updateCoffeeRecords(editRecord);
-    setEditingId(null);
-    setEditRecord({});
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditRecord({});
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this record?")) {
-      deleteCoffeeRecord(id);
-    }
-  };
-
-  const isFilterEmpty = Object.values(filters).every((val) => val === "");
-
-  const filteredRecords = isFilterEmpty
-    ? coffeeRecords
-    : coffeeRecords.filter((record) =>
-        (filters.weight === "" || record.weight >= parseFloat(filters.weight)) &&
-        (filters.grade === "" || filters.grade === "ALL" || record.grade === filters.grade) &&
-        (filters.mark === "" || (record.mark && record.mark.toLowerCase().includes(filters.mark.toLowerCase()))) &&
-        (filters.outturn === "" || (record.outturn && record.outturn.toLowerCase().includes(filters.outturn.toLowerCase()))) &&
-        (filters.sale_number === "" || parseInt(record.sale) === parseInt(filters.sale_number))
+  const handleSave = (id = null) => {
+    if (id) {
+      // Single edit
+      const updated = coffeeRecords.map((rec) =>
+        rec.id === id ? { ...rec, ...editRecord } : rec
       );
+      post_coffee_records(updated);
+    } else {
+      // Batch save from filtered
+      const updatedRecords = filteredRecords.map((record) => ({
+        ...record,
+        sale: editRecord.sale || record.sale,
+        status: 3,
+      }));
+
+      post_catalogue_records({
+        saleNumber: editRecord.sale || 'N/A',
+        records: updatedRecords,
+      });
+    }
+    setEditingId(null);
+    setEditRecord({});
+  };
+
+  const handleAddToSale = () => {
+    const userInput = prompt('Enter Sale Number:');
+    if (!userInput || !userInput.trim()) {
+      alert('Sale number is required.');
+      return;
+    }
+    setEditRecord({ sale: userInput.trim() });
+    handleSave(null);
+  };
+
+  const weightSummary = filteredRecords.reduce(
+    (acc, record) => {
+      const weight = Number(record.weight) || 0;
+      const bags = Number(record.bags) || 0;
+
+      acc.total += weight;
+      acc.totalBags += bags;
+
+      if (!acc.grades[record.grade]) {
+        acc.grades[record.grade] = { weight: 0, bags: 0 };
+      }
+
+      acc.grades[record.grade].weight += weight;
+      acc.grades[record.grade].bags += bags;
+
+      return acc;
+    },
+    { total: 0, totalBags: 0, grades: {} }
+  );
+
+  const uniqueGrades = [...new Set(coffeeRecords.map((rec) => rec.grade))].sort();
+  const pendingOutturns = [...new Set(coffeeRecords.filter(r => r.status === 1).map(r => r.outturn))].sort();
 
   return (
-    <div className="d-flex flex-column align-items-center">
-      <h2 className="mb-3">Coffee Records</h2>
-      <div className="mb-3">
-        <input type="text" name="mark" placeholder="Filter by Mark" onChange={handleChange} className="form-control d-inline w-auto me-2" />
-        <select name="grade" onChange={handleChange} className="form-control d-inline w-auto me-2">
-          <option value="">All Grades</option>
-          <option value="AA">AA</option>
-          <option value="AB">AB</option>
-          <option value="PB">PB</option>
-          <option value="C">C</option>
-        </select>
-        <input type="text" name="outturn" placeholder="Filter by Outturn" onChange={handleChange} className="form-control d-inline w-auto me-2" />
-        <input type="number" name="weight" placeholder="Min Weight (kg)" onChange={handleChange} className="form-control d-inline w-auto" />
-        <input type="text" name="sale_number" placeholder="Filter by Sale Number" onChange={handleChange} className="form-control d-inline w-auto ms-2" />
+    <div className="container mt-4">
+      <h3 className="mb-4">Add Coffee to Sale</h3>
+
+      <div className="row mb-3">
+        <div className="col-md-6">
+          <label>Filter by Grade</label>
+          <select
+            className="form-control"
+            value={selectedGrade}
+            onChange={(e) => setSelectedGrade(e.target.value)}
+          >
+            <option value="">All Grades</option>
+            {uniqueGrades.map((grade) => (
+              <option key={grade} value={grade}>
+                {grade}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="col-md-6">
+          <label>Filter by Outturn</label>
+          <input
+            className="form-control mb-1"
+            placeholder="Enter Outturn"
+            value={outturnInput}
+            onChange={(e) => setOutturnInput(e.target.value)}
+          />
+          <select
+            className="form-control"
+            value={outturnInput}
+            onChange={(e) => setOutturnInput(e.target.value)}
+          >
+            <option value="">All Pending Outturns</option>
+            {pendingOutturns.map((out) => (
+              <option key={out} value={out}>
+                {out}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className="table-responsive w-100">
-        <table className="table table-bordered">
-          <thead style={{ backgroundColor: "#003366", color: "white" }}>
-            <tr>
-              <th>Outturn</th>
-              <th>Bulk Outturn</th>
-              <th>Mark</th>
-              <th>Type</th>
-              <th>Grade</th>
-              <th>Bags</th>
-              <th>Pockets</th>
-              <th>Weight (kg)</th>
-              <th>Sale</th>
-              <th>Season</th>
-              <th>Certificate</th>
-              <th>Mill</th>
-              <th>Price</th>
-              <th>Buyer</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRecords.map((record) => (
-              console.log(record),
-              <tr key={record.id}>
-                {[
-                  "outturn", "bulkoutturn", "mark", "type", "grade",
-                  "bags", "pockets", "weight", "sale", "season",
-                  "certificate", "mill", "price", "buyer"
-                ].map((field) => (
-                  <td key={field}>
+      <div className="row mb-3">
+        <div className="col-md-4">
+          <label>Weight (≥)</label>
+          <input
+            type="number"
+            className="form-control"
+            value={weightThreshold}
+            onChange={(e) => setWeightThreshold(e.target.value)}
+            placeholder="e.g. 50"
+          />
+        </div>
+        <div className="col-md-4">
+          <label>Bags (≥)</label>
+          <input
+            type="number"
+            className="form-control"
+            value={bagThreshold}
+            onChange={(e) => setBagThreshold(e.target.value)}
+            placeholder="e.g. 10"
+          />
+        </div>
+        <div className="col-md-4 d-flex align-items-end">
+          <button className="btn btn-success w-100" onClick={handleAddToSale}>
+            Add Coffee to Sale
+          </button>
+        </div>
+      </div>
+
+      <div className="summary mb-3 p-3 border rounded bg-light">
+        <h5>Summary</h5>
+        <div className="row">
+          <div className="col-md-3">
+            <p><strong>Total Weight:</strong> {weightSummary.total.toFixed(2)}</p>
+          </div>
+          <div className="col-md-3">
+            <p><strong>Total Bags:</strong> {weightSummary.totalBags}</p>
+          </div>
+          <div className="col-md-6">
+            <p><strong>Grades Summary:</strong></p>
+            <div className="d-flex flex-wrap">
+              {Object.entries(weightSummary.grades).map(([grade, data]) => (
+                <div key={grade} className="me-3">
+                  <p className="mb-0"><strong>{grade}:</strong> {data.bags} bags</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="results-section">
+        <h5>Filtered Coffee Records</h5>
+        {filteredRecords.length > 0 ? (
+          <table className="coffee-table table table-striped">
+            <thead>
+              <tr>
+                <th>Outturn</th>
+                <th>Bulk Outturn</th>
+                <th>Mark</th>
+                <th>Grade</th>
+                <th>Bags</th>
+                <th>Pockets</th>
+                <th>Weight</th>
+                <th>Mill</th>
+                <th>Status</th>
+                <th>Sale</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRecords.map((record) => (
+                <tr key={record.id}>
+                  <td>{record.outturn}</td>
+                  <td>{record.bulkoutturn}</td>
+                  <td>{record.mark}</td>
+                  <td>{record.grade}</td>
+                  <td>{record.bags}</td>
+                  <td>{record.pockets}</td>
+                  <td>{record.weight}</td>
+                  <td>{MILL_MAP[record.mill] || record.mill}</td>
+                  <td>{STATUS_MAP[record.status] || 'Unknown'}</td>
+                  <td>
                     {editingId === record.id ? (
                       <input
-                        type={field === "weight" || field === "sale" ? "number" : "text"}
-                        value={editRecord[field] || ""}
-                        onChange={(e) => setEditRecord({ ...editRecord, [field]: e.target.value })}
-                        className="form-control form-control-sm"
+                        type="text"
+                        value={editRecord.sale || ''}
+                        onChange={(e) =>
+                          setEditRecord({ ...editRecord, sale: e.target.value })
+                        }
                       />
-                    ) : field === "mill" ? (
-                      MILL_MAP[record[field]] || "unknown"
                     ) : (
-                      record[field]
+                      record.sale
                     )}
                   </td>
-                ))}
-                <td>{STATUS_MAP[record.status] || "Unknown"}</td>
-                <td>
-                  {editingId === record.id ? (
-                    <>
-                      <button className="btn btn-sm btn-success me-1" onClick={handleSaveEdit}>Save</button>
-                      <button className="btn btn-sm btn-secondary" onClick={handleCancelEdit}>Cancel</button>
-                    </>
-                  ) : (
-                    <>
-                      <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(record)}>Edit</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(record.id)}>Delete</button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {filteredRecords.length === 0 && (
-              <tr>
-                <td colSpan="16" className="text-center">No matching records found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                  <td>
+                    {editingId === record.id ? (
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => handleSave(record.id)}
+                      >
+                        Save
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => handleEdit(record)}
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No matching records found.</p>
+        )}
       </div>
     </div>
   );
@@ -174,13 +299,12 @@ const DataTable = (props) => {
 
 const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
-  updateCoffeeRecords: (data) => dispatch(update_coffee_record(data)),
-  deleteCoffeeRecord: (id) => dispatch(delete_coffee_record(id)),
-  submitSaleSummary: (summaryData) => dispatch(submit_sale_summary(summaryData)),
+  post_coffee_records: (data) => dispatch(post_coffee_records(data)),
+  post_catalogue_records: (data) => dispatch(post_catalogue_records(data)),
 });
 
 const mapStateToProps = (state) => ({
   coffeeRecords: state.reducer.coffeeRecords,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(DataTable);
+export default connect(mapStateToProps, mapDispatchToProps)(ViewCatalogue);
