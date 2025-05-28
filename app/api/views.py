@@ -144,7 +144,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def generate_summary_file(self, request, *args, **kwargs):
-        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'Sale Summary template.xlsx')
+        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'sale summary template.xlsx')
         START_ROW = 27
 
         try:
@@ -191,17 +191,14 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 ws = wb.active
 
                 # Write summary data
-                ws['A6'] = 'Mark'
-                ws['B6'] = 'Total Weight (kg)'
-                ws['C6'] = 'Number of Records'
-                ws['A7'] = mark
-                ws['B7'] = total_weight
-                ws['C7'] = count
-
+               
+                ws['B6'] = mark
+               
                 for row_offset, record in enumerate(records, start=1):
                     row = START_ROW + row_offset
-                    status_id = record.get('status_id')
-                    status_name = status_map.get(status_id, 'Unknown')
+                    status_id = record.get('status')
+                    
+                    status_name = CoffeeStatus.objects.get(id=status_id).name
 
                     values = [
                         record.get('outturn'),
