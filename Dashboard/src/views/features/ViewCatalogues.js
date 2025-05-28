@@ -10,11 +10,9 @@ import { Modal, Button } from "react-bootstrap";
 
 const Files = (props) => {
   const { coffeeRecords, fetch_coffee_records, updateRecord, deleteRecord } = props;
-  const [expandedSale, setExpandedSale] = useState(null);
-  const [filteredCatalogue, setFilteredCatalogue] = useState([]);
-  const [selectedCatalogueType, setSelectedCatalogueType] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [filteredByType, setFilteredByType] = useState([]);
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [filteredRecords, setFilteredRecords] = useState([]);
   const [editModal, setEditModal] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
 
@@ -26,29 +24,12 @@ const Files = (props) => {
     return [...new Set(coffeeRecords.map(record => record.sale).filter(Boolean))];
   }, [coffeeRecords]);
 
-  const handleFolderSelection = useCallback((saleNumber) => {
-    if (expandedSale === saleNumber) {
-      setExpandedSale(null);
-      setFilteredCatalogue([]);
-      return;
-    }
-
+  const handleFolderClick = (saleNumber) => {
     const filtered = coffeeRecords.filter(
       (record) => record.sale === saleNumber && record.status_id === 3
     );
-
-    setFilteredCatalogue(filtered);
-    setExpandedSale(saleNumber);
-  }, [expandedSale, coffeeRecords]);
-
-  const catalogueTypes = useMemo(() => {
-    return [...new Set(filteredCatalogue.map(record => record.catalogue_type).filter(Boolean))];
-  }, [filteredCatalogue]);
-
-  const handleCatalogueClick = (type) => {
-    const filtered = filteredCatalogue.filter(record => record.catalogue_type === type);
-    setFilteredByType(filtered);
-    setSelectedCatalogueType(type);
+    setFilteredRecords(filtered);
+    setSelectedSale(saleNumber);
     setShowModal(true);
   };
 
@@ -59,10 +40,9 @@ const Files = (props) => {
 
   const handleSaveEdit = () => {
     if (!editRecord) return;
-    alert("Coffee record will be permanently updated. Are you sure you want to proceed?");
     updateRecord(editRecord);
-    setFilteredByType((prev) =>
-      prev.map((rec) => (rec.outturn === editRecord.outturn && rec.grade === editRecord.grade ? editRecord : rec))
+    setFilteredRecords((prev) =>
+      prev.map((rec) => rec.id === editRecord.id ? editRecord : rec)
     );
     setEditModal(false);
   };
@@ -70,7 +50,7 @@ const Files = (props) => {
   const handleDelete = (record) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
       deleteRecord(record);
-      setFilteredByType((prev) => prev.filter((rec) => rec.id !== record.id));
+      setFilteredRecords((prev) => prev.filter((rec) => rec.id !== record.id));
     }
   };
 
@@ -83,24 +63,20 @@ const Files = (props) => {
           border-radius: 8px;
           cursor: pointer;
         }
-
         .folder-icon-wrapper:hover {
           background-color: #f0f0f0;
         }
-
         .folder-name {
           font-size: 0.95rem;
           font-weight: 500;
           color: #333;
         }
-
         .folder-grid {
           display: flex;
           flex-wrap: wrap;
           justify-content: space-evenly;
           gap: 20px;
         }
-
         .folder-item {
           flex: 0 1 120px;
           text-align: center;
@@ -108,18 +84,14 @@ const Files = (props) => {
       `}</style>
 
       <h1 className="text-center mb-2">Files</h1>
-      <h4 className="text-center text-muted mb-4">Auction File and DSS Files Ordered by Sale Numbers</h4>
+      <h4 className="text-center text-muted mb-4">Auction File and DSS Files Ordered by Sale</h4>
 
-      {/* Folder Grid */}
       <div className="folder-grid mb-4">
         {uniqueSaleNumbers.map((saleNumber) => (
           <div key={saleNumber} className="folder-item">
             <div
-              className={`folder-icon-wrapper ${expandedSale === saleNumber ? 'active' : ''}`}
-              onClick={() => handleFolderSelection(saleNumber)}
-              style={{
-                backgroundColor: expandedSale === saleNumber ? "#e9f5ff" : "transparent",
-              }}
+              className="folder-icon-wrapper"
+              onClick={() => handleFolderClick(saleNumber)}
             >
               <MDBIcon icon="folder" size="4x" className="mb-2 text-primary" />
               <div className="folder-name">Sale {saleNumber}</div>
@@ -128,36 +100,13 @@ const Files = (props) => {
         ))}
       </div>
 
-      {/* Catalogue Types */}
-      {expandedSale && (
-        <div className="mt-3 p-3 bg-light border rounded">
-          <h5 className="text-center">Catalogue Types for Sale {expandedSale}</h5>
-          {catalogueTypes.length > 0 ? (
-            <ul className="list-group">
-              {catalogueTypes.map((type, index) => (
-                <li
-                  key={index}
-                  className="list-group-item"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => handleCatalogueClick(type)}
-                >
-                  {type}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-center text-muted">No catalogues found for this sale.</p>
-          )}
-        </div>
-      )}
-
-      {/* Catalogue Modal */}
+      {/* Modal with records for clicked sale */}
       <Modal show={showModal} onHide={() => setShowModal(false)} dialogClassName="modal-lg">
         <Modal.Header closeButton>
-          <Modal.Title>Catalogue: {selectedCatalogueType}</Modal.Title>
+          <Modal.Title>Records for Sale {selectedSale}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {filteredByType.length > 0 ? (
+          {filteredRecords.length > 0 ? (
             <div className="table-responsive">
               <table className="table table-striped">
                 <thead>
@@ -172,8 +121,8 @@ const Files = (props) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredByType.map((record, index) => (
-                    <tr key={index}>
+                  {filteredRecords.map((record) => (
+                    <tr key={record.id}>
                       <td>{record.mark}</td>
                       <td>{record.outturn}</td>
                       <td>{record.grade}</td>
@@ -190,7 +139,7 @@ const Files = (props) => {
               </table>
             </div>
           ) : (
-            <p className="text-center text-muted">No records found for this catalogue type.</p>
+            <p className="text-center text-muted">No records found for this sale.</p>
           )}
         </Modal.Body>
         <Modal.Footer>
