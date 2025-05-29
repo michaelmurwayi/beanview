@@ -20,13 +20,14 @@ import { connect } from 'react-redux';
 const AddUser = (props) => {
   const { dispatchFarmersRecords } = props;
   const [file, setFile] = useState(null);
-  const [sheetNames, setSheetNames] = useState([])
-  const [selectedSheet, setSelectedSheet] = useState('all'); // State for selected sheet or 'all'
-  const [uploadMethod, setUploadMethod] = useState('form'); // New state to track upload method
+  const [sheetNames, setSheetNames] = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState('all');
+  const [uploadMethod, setUploadMethod] = useState('form');
+
   const [formData, setFormData] = useState({
-    farmer_name: '',
+    name: '',
     mark: '',
-    cbk_number: '',
+    code: '',
     national_id: '',
     phonenumber: '',
     email: '',
@@ -39,13 +40,12 @@ const AddUser = (props) => {
     currency: ''
   });
 
-  // Handle form field changes
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
     if (type === 'file') {
       setFormData((prevState) => ({
         ...prevState,
-        [name]: files[0],  // Save the uploaded file
+        [name]: files[0],
       }));
     } else {
       setFormData((prevState) => ({
@@ -55,40 +55,33 @@ const AddUser = (props) => {
     }
   };
 
-  // Handle form submission
   const handleSubmit = (event) => {
-      event.preventDefault(); // Prevent default form submission
-      const dataToSend = new FormData();
-      // Append form data or file based on upload method
-      // Append form data or file based on upload method
-      if (uploadMethod === 'form') {
-        Object.entries(formData).forEach(([key, value]) => {
-          console.log(`Key: ${key}, Value:`, value);
-        
-          // Avoid falsy values like 0 or empty strings being skipped
-          if (value !== undefined && value !== null && value !== '') {
-            console.log("Appending:", key, value);
-            dataToSend.append(key, value);
-          }
-        });
-        
-        
-      } else if (uploadMethod === 'file' && file) {
-        dataToSend.append('file', file);
-        dataToSend.append('filename', file.name);
-        if (selectedSheet == "all"){
-            dataToSend.append("sheetnames", sheetNames)
-        }else{
-          dataToSend.append("sheetnames", selectedSheet)
+    event.preventDefault();
+    const dataToSend = new FormData();
+
+    if (uploadMethod === 'form') {
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          dataToSend.append(key, value);
         }
-      }
-      // Only dispatch if there's data to send
-      if (dataToSend.has('file') || Object.keys(formData).some((key) => formData[key] !== '')) {
-        dispatchFarmersRecords(dataToSend);
+      });
+    } else if (uploadMethod === 'file' && file) {
+      dataToSend.append('file', file);
+      dataToSend.append('filename', file.name);
+      if (selectedSheet === "all") {
+        dataToSend.append("sheetnames", sheetNames);
       } else {
-        toast.warn("⚠️ No data to submit. Please fill in the required fields.");
+        dataToSend.append("sheetnames", selectedSheet);
       }
-    };
+    }
+
+    if (dataToSend.has('file') || Object.keys(formData).some((key) => formData[key] !== '')) {
+      dispatchFarmersRecords(dataToSend);
+    } else {
+      toast.warn("⚠️ No data to submit. Please fill in the required fields.");
+    }
+  };
+
   return (
     <>
       <UserHeader />
@@ -115,15 +108,15 @@ const AddUser = (props) => {
                     <Row>
                       <Col lg="6">
                         <FormGroup>
-                          <label className="form-control-label" htmlFor="farmerName">
+                          <label className="form-control-label" htmlFor="name">
                             Farmer Name
                           </label>
                           <Input
-                            id="farmer_name"
-                            name="farmer_name"
+                            id="name"
+                            name="name"
                             placeholder="Farmer name"
                             type="text"
-                            value={formData.farmer_name}
+                            value={formData.name}
                             onChange={handleChange}
                           />
                         </FormGroup>
@@ -145,22 +138,22 @@ const AddUser = (props) => {
                       </Col>
                       <Col lg="6">
                         <FormGroup>
-                          <label className="form-control-label" htmlFor="cbkNumber">
+                          <label className="form-control-label" htmlFor="code">
                             CBK Number
                           </label>
                           <Input
-                            id="cbk_number"
-                            name="cbk_number"
+                            id="code"
+                            name="code"
                             placeholder="YY.****"
                             type="text"
-                            value={formData.cbkNumber}
+                            value={formData.code}
                             onChange={handleChange}
                           />
                         </FormGroup>
                       </Col>
                       <Col lg="6">
                         <FormGroup>
-                          <label className="form-control-label" htmlFor="nationalId">
+                          <label className="form-control-label" htmlFor="national_id">
                             National ID
                           </label>
                           <Input
@@ -168,7 +161,7 @@ const AddUser = (props) => {
                             name="national_id"
                             placeholder="National ID"
                             type="text"
-                            value={formData.nationalId}
+                            value={formData.national_id}
                             onChange={handleChange}
                           />
                         </FormGroup>
@@ -182,7 +175,7 @@ const AddUser = (props) => {
                     <Row>
                       <Col lg="6">
                         <FormGroup>
-                          <label className="form-control-label" htmlFor="phoneNumber">
+                          <label className="form-control-label" htmlFor="phonenumber">
                             Phone Number
                           </label>
                           <Input
@@ -190,7 +183,7 @@ const AddUser = (props) => {
                             name="phonenumber"
                             placeholder="Enter phone number"
                             type="text"
-                            value={formData.phoneNumber}
+                            value={formData.phonenumber}
                             onChange={handleChange}
                           />
                         </FormGroup>
@@ -328,14 +321,13 @@ const AddUser = (props) => {
                       </Col>
                     </Row>
                   </div>
-
-                 
                 </Form>
               </CardBody>
             </Card>
           </Col>
         </Row>
       </Container>
+      <ToastContainer />
     </>
   );
 };
@@ -344,4 +336,4 @@ const mapDispatchToProps = (dispatch) => ({
   dispatchFarmersRecords: (data) => dispatch(post_farmers_records(data)),
 });
 
-export default connect(null,mapDispatchToProps) (AddUser);
+export default connect(null, mapDispatchToProps)(AddUser);

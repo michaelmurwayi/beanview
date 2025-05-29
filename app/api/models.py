@@ -53,26 +53,21 @@ class Bank(models.Model):
     def __str__(self):
         return self.name
 
-class Branch(models.Model):
-    bank = models.ForeignKey(Bank, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    location = models.CharField(max_length=255)
-
-    def __str__(self):
-        return f"{self.name} - {self.bank.name}"
 
 class Farmer(models.Model):
-    cbk_number = models.CharField(max_length=100, unique=True, primary_key=True)
-    farmer_name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
     national_id = models.CharField(max_length=10, unique=True)
+    code  = models.CharField(max_length=100, unique=True, primary_key=True)
     mark = models.CharField(max_length=100)
-    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
-    phonenumber = models.CharField(max_length=15)
+    address = models.CharField(max_length=255 , blank=True, null=True)
+    phonenumber = models.CharField(max_length=15 , unique=True)
     email = models.EmailField(unique=True)
-    town = models.CharField(max_length=100)
-    bank_branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True)
-    account = models.CharField(max_length=20)
-    currency = models.CharField(max_length=3)
+    county = models.CharField(max_length=100 , blank=True, null=True)
+    town = models.CharField(max_length=100 , blank=True, null=True)
+    bank = models.CharField(max_length=100, blank=True, null=True)
+    branch = models.CharField(max_length=100, blank=True, null=True)
+    account = models.CharField(max_length=20 , blank=True, null=True)
+    currency = models.CharField(max_length=3 , default='KES', blank=True, null=True)
 
     def __str__(self):
         return self.farmer_name

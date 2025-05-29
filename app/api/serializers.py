@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 class FarmerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Farmer
-        fields = ['cbk_number', 'farmer_name', 'national_id', 'mark', 'address', 'phonenumber', 'email', 'county', 'town', 'bank', 'branch', 'account', 'currency']
+        fields = ['code', 'name', 'national_id', 'mark', 'address', 'phonenumber', 'email', 'county', 'town', 'bank', 'branch', 'account', 'currency']
 
 class CoffeeSerializer(serializers.ModelSerializer):
     class Meta:
