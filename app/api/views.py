@@ -68,7 +68,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         """Handle the PUT method for updating a Coffee record."""
-        import ipdb;ipdb.set_trace()
+        
         instance = self.get_object()
         # PUT should usually update entire resource, so partial=False
         serializer = self.get_serializer(instance, data=request.data, partial=True)

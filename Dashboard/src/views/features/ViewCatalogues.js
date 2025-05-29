@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { connect } from "react-redux";
 import {
   fetch_coffee_records,
@@ -9,7 +9,7 @@ import { MDBIcon } from "mdbreact";
 import { Modal, Button } from "react-bootstrap";
 
 const Files = (props) => {
-  const { coffeeRecords, fetch_coffee_records, updateRecord, deleteRecord } = props;
+  const { coffeeRecords, fetch_coffee_records, updateRecord } = props;
   const [showModal, setShowModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const [filteredRecords, setFilteredRecords] = useState([]);
@@ -25,9 +25,7 @@ const Files = (props) => {
   }, [coffeeRecords]);
 
   const handleFolderClick = (saleNumber) => {
-    const filtered = coffeeRecords.filter(
-      (record) => record.sale === saleNumber && record.status_id === 3
-    );
+    const filtered = coffeeRecords.filter(record => record.sale === saleNumber);
     setFilteredRecords(filtered);
     setSelectedSale(saleNumber);
     setShowModal(true);
@@ -41,16 +39,18 @@ const Files = (props) => {
   const handleSaveEdit = () => {
     if (!editRecord) return;
     updateRecord(editRecord);
-    setFilteredRecords((prev) =>
-      prev.map((rec) => rec.id === editRecord.id ? editRecord : rec)
+    setFilteredRecords(prev =>
+      prev.map(rec => rec.id === editRecord.id ? editRecord : rec)
     );
     setEditModal(false);
   };
 
+  // ✅ Updated "Delete" to clear the sale field
   const handleDelete = (record) => {
-    if (window.confirm("Are you sure you want to delete this record?")) {
-      deleteRecord(record);
-      setFilteredRecords((prev) => prev.filter((rec) => rec.id !== record.id));
+    if (window.confirm("Are you sure you want to remove this record from the sale?")) {
+      const updatedRecord = { ...record, sale: "" };
+      updateRecord(updatedRecord);
+      setFilteredRecords(prev => prev.filter(rec => rec.id !== record.id));
     }
   };
 
@@ -100,8 +100,8 @@ const Files = (props) => {
         ))}
       </div>
 
-      {/* Modal with records for clicked sale */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} dialogClassName="modal-lg">
+      {/* Modal for Sale Records */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} dialogClassName="modal-xl">
         <Modal.Header closeButton>
           <Modal.Title>Records for Sale {selectedSale}</Modal.Title>
         </Modal.Header>
@@ -116,6 +116,7 @@ const Files = (props) => {
                     <th>Grade</th>
                     <th>Type</th>
                     <th>Bags</th>
+                    <th>Pockets</th>
                     <th>Weight</th>
                     <th>Actions</th>
                   </tr>
@@ -128,10 +129,11 @@ const Files = (props) => {
                       <td>{record.grade}</td>
                       <td>{record.type}</td>
                       <td>{record.bags}</td>
+                      <td>{record.pockets}</td>
                       <td>{record.weight}</td>
                       <td>
                         <Button variant="warning" size="sm" onClick={() => handleEdit(record)}>Edit</Button>{" "}
-                        <Button variant="danger" size="sm" onClick={() => handleDelete(record)}>Delete</Button>
+                        <Button variant="danger" size="sm" onClick={() => handleDelete(record)}>Remove</Button>
                       </td>
                     </tr>
                   ))}
@@ -181,7 +183,7 @@ const Files = (props) => {
 const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
   updateRecord: (data) => dispatch(update_catalogue_record(data)),
-  deleteRecord: (data) => dispatch(delete_catalogue_record(data)),
+  deleteRecord: (data) => dispatch(delete_catalogue_record(data)), // kept for other uses if needed
 });
 
 const mapStateToProps = (state) => ({
