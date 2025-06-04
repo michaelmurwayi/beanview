@@ -29,7 +29,43 @@ const Files = (props) => {
     setFilteredRecords(filtered);
     setSelectedSale(saleNumber);
     setShowModal(true);
+  
+    // Categorize by bulkoutturn and grade
+    const categorized = {};
+    filtered.forEach(record => {
+      const key = `${record.bulkoutturn}-${record.grade}`;
+      if (!categorized[key]) {
+        categorized[key] = {
+          outturn: record.outturn,
+          bulkoutturn: record.bulkoutturn,
+          grade: record.grade,
+          weight: parseInt(record.weight, 10),
+          sale: record.sale,
+        };
+      }
+      console.log(record.bulkoutturn,record.weight);
+      // Convert weight to integer before adding
+      categorized[key].weight += parseInt(record.weight, 10)
+    });
+  
+    // Compute bags and pockets
+    const summary = Object.values(categorized).map(entry => {
+      console.log("Processing entry:", entry);
+      const bags = Math.floor(entry.weight / 60);
+      const pockets = entry.weight % 60;
+      return {
+        outturn: entry.bulkoutturn || entry.outturn,  // Use bulkoutturn if available 
+        grade: entry.grade,
+        bags,
+        pockets,
+        sale: entry.sale,
+      };
+    });
+  
+    console.log("Categorized summary:", summary);
+    // Optionally: setSummary(summary);
   };
+  
 
   const handleEdit = (record) => {
     setEditRecord(record);
@@ -113,6 +149,7 @@ const Files = (props) => {
                   <tr>
                     <th>Mark</th>
                     <th>Outturn</th>
+                    <th>Bulk Outturn</th>
                     <th>Grade</th>
                     <th>Type</th>
                     <th>Bags</th>
@@ -126,6 +163,7 @@ const Files = (props) => {
                     <tr key={record.id}>
                       <td>{record.mark}</td>
                       <td>{record.outturn}</td>
+                      <td>{record.bulkoutturn}</td>
                       <td>{record.grade}</td>
                       <td>{record.type}</td>
                       <td>{record.bags}</td>
