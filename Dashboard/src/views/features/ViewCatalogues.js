@@ -15,6 +15,7 @@ const Files = (props) => {
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [editModal, setEditModal] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
+  const agentCode = 49;
 
   useEffect(() => {
     fetch_coffee_records();
@@ -33,36 +34,54 @@ const Files = (props) => {
     // Categorize by bulkoutturn and grade
     const categorized = {};
     filtered.forEach(record => {
-      const key = `${record.bulkoutturn}-${record.grade}`;
-      if (!categorized[key]) {
+      // If bulkoutturn is missing or falsy, skip categorization and handle separately
+      if (!record.bulkoutturn) {
+        const key = `no-bulkoutturn-${Math.random()}`; // Ensure unique key for each ungrouped record
         categorized[key] = {
+          mark: record.outturn + '/' +record.mark,
           outturn: record.outturn,
           bulkoutturn: record.bulkoutturn,
           grade: record.grade,
+          type: record.type,
           weight: parseInt(record.weight, 10),
           sale: record.sale,
         };
+        return;
       }
-      console.log(record.bulkoutturn,record.weight);
-      // Convert weight to integer before adding
-      categorized[key].weight += parseInt(record.weight, 10)
+    
+      const key = `${record.bulkoutturn}-${record.grade}`;
+    
+      if (!categorized[key]) {
+        categorized[key] = {
+          mark: record.bulkoutturn + '/' + record.grade + '/' + 'Bulk',
+          outturn: record.bulkoutturn,
+          grade: record.grade,
+          weight: 0,
+          sale: record.sale,
+        };
+      }
+    
+      categorized[key].weight += parseInt(record.weight, 10);
     });
-  
     // Compute bags and pockets
     const summary = Object.values(categorized).map(entry => {
       console.log("Processing entry:", entry);
       const bags = Math.floor(entry.weight / 60);
       const pockets = entry.weight % 60;
       return {
+        mark: entry.mark,
         outturn: entry.bulkoutturn || entry.outturn,  // Use bulkoutturn if available 
         grade: entry.grade,
+        type: entry.type,
         bags,
         pockets,
+        weight: entry.weight,
         sale: entry.sale,
       };
     });
   
     console.log("Categorized summary:", summary);
+    setFilteredRecords(summary);
     // Optionally: setSummary(summary);
   };
   
@@ -147,28 +166,39 @@ const Files = (props) => {
               <table className="table table-striped">
                 <thead>
                   <tr>
+                    <th>C_Outturn</th>
                     <th>Mark</th>
-                    <th>Outturn</th>
-                    <th>Bulk Outturn</th>
                     <th>Grade</th>
-                    <th>Type</th>
                     <th>Bags</th>
                     <th>Pockets</th>
                     <th>Weight</th>
+                    <th>Sale No</th>
+                    <th>Season</th>
+                    <th>Certificate</th>
+                    <th>Mill</th>
+                    <th>W/H</th>
+                    <th>Agent Code</th>
+                    <th>Reserve Price</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRecords.map((record) => (
                     <tr key={record.id}>
-                      <td>{record.mark}</td>
                       <td>{record.outturn}</td>
-                      <td>{record.bulkoutturn}</td>
+                      <td>{record.mark}</td>
                       <td>{record.grade}</td>
-                      <td>{record.type}</td>
                       <td>{record.bags}</td>
                       <td>{record.pockets}</td>
                       <td>{record.weight}</td>
+                      <td>{record.sale}</td>
+                      <td>{record.season}</td>
+                      <td>{record.certificate}</td>
+                      <td>{record.mill}</td>
+                      <td>{record.warehouse}</td>
+                      <td>{record.agentCode || agentCode}</td>
+                      <td>{record.reservePrice}</td>
+
                       <td>
                         <Button variant="warning" size="sm" onClick={() => handleEdit(record)}>Edit</Button>{" "}
                         <Button variant="danger" size="sm" onClick={() => handleDelete(record)}>Remove</Button>
