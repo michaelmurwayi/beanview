@@ -452,13 +452,22 @@ export const submit_sale_summary = (summaryData) => async (dispatch) => {
     }
   };
 
-  export const generate_auction_file = (auctionData) => async (dispatch) => {
+export const generate_auction_file = (auctionData) => async (dispatch) => {
     const api_url = `http://127.0.1:8000/api/catalogue/generate_auction_file/`;
     try {
-      const response = await axios.post(api_url, auctionData);
-      dispatch({ type: "SUBMIT_AUCTION_FILE_SUCCESS", payload: response.data });
+        const response = await axios.post(api_url, auctionData);
+        dispatch({ type: "SUBMIT_AUCTION_FILE_SUCCESS", payload: response.data });
     } catch (error) {
-      dispatch({ type: "SUBMIT_AUCTION_FILE_FAILURE", payload: error });
+        dispatch({ type: "SUBMIT_AUCTION_FILE_FAILURE", payload: error });
     }
-  };
-  
+};
+
+export const generate_catalogue_file = (catalogueData) => async (dispatch) => {
+    const api_url = `http://127.0.1:8000/api/catalogue/generate_catalogue_file/`;
+    try {
+        const response = await axios.post(api_url, catalogueData);
+        dispatch({ type: "SUBMIT_CATALOGUE_FILE_SUCCESS", payload: response.data });
+    } catch (error) {
+        dispatch({ type: "SUBMIT_CATALOGUE_FILE_FAILURE", payload: error });
+    }   
+}

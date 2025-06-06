@@ -257,6 +257,20 @@ const reducer = (state = initialState, action) => {
                 loading: false,
                 error: action.payload,
             };
+        case 'SUBMIT_CATALOGUE_DATA':
+            return {
+                ...state,
+                auctionData: action.payload,
+                loading: false,
+                error: null,
+            };
+        case 'SUBMIT_CATALOGUE_DATA_ERROR':
+            return {
+                ...state,
+                auctionData: null,  
+                loading: false,
+                error: action.payload,
+            };
               
         default:
             return state
