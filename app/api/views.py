@@ -299,6 +299,46 @@ class CatalogueViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=False, methods=['POST'])
+    def generate_catalogue_file(self, request):
+        try:
+            sale_number = request.data.get("sale")
+            records = request.data.get("records")
+
+            if not sale_number or not records:
+                return Response({"error": "Sale number and records are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Desired columns
+            expected_columns = [
+                "MARKS", "GRADE", "BAGS", "POCKETS", "WEIGHT", "SALENO", "SEASON",
+                "CERTIFICATION", "AGENT CODE", "RESERVE PRICE", "REMARKS"
+            ]
+
+            df = pd.DataFrame(records)
+
+            # Keep only expected columns (drop others)
+            df = df[[col for col in expected_columns if col in df.columns]]
+
+            # Create directory and file path
+            subdir = str(sale_number)
+            dir_path = os.path.join(settings.MEDIA_ROOT, "catalogue", subdir)
+            os.makedirs(dir_path, exist_ok=True)
+
+            filename = "catalogue_file.xlsx"
+            filepath = os.path.join(dir_path, filename)
+
+            # Write to Excel
+            df.to_excel(filepath, index=False)
+
+            file_url = settings.MEDIA_URL + f"catalogue/{subdir}/{filename}"
+
+            return Response({
+                "message": f"Catalogue file created for sale {sale_number}.",
+                "file_url": file_url
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 def is_less_than_24_hours_ago(target_date):
     # Get the current date and time
     current_date = datetime.now()

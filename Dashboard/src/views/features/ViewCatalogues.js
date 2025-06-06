@@ -43,13 +43,11 @@ const Files = (props) => {
 
   const handleFolderClick = (saleNumber) => {
     const filtered = coffeeRecords.filter(record => record.sale === saleNumber);
-    console.log(filtered);
     setSelectedSale(saleNumber);
     setShowModal(true);
 
     const categorized = {};
     filtered.forEach(record => {
-      console.log(record);
       if (!record.bulkoutturn) {
         const key = `no-bulkoutturn-${Math.random()}`;
         categorized[key] = {
@@ -66,10 +64,7 @@ const Files = (props) => {
           warehouse: record.warehouse,
           agentCode: record.agentCode || agentCode,
           reserve: record.reserve,
-          certificate: record.certificate ,
-          
         };
-        console.log(categorized[key]);
         return;
       }
 
@@ -89,8 +84,6 @@ const Files = (props) => {
           warehouse: record.warehouse,
           agentCode: record.agentCode || agentCode,
           reserve: record.reserve,
-          certificate: record.certificate,
-          
         };
       }
 
@@ -138,6 +131,16 @@ const Files = (props) => {
       generateAuctionFile({
         sale: selectedSale,
         records: filteredRecords
+      });
+    }
+  };
+
+  const handleGenerateCatalogueFile = () => {
+    if (window.confirm(`Generate catalogue file for sale ${selectedSale}?`)) {
+      generateAuctionFile({
+        sale: selectedSale,
+        records: filteredRecords,
+        type: "catalogue"
       });
     }
   };
@@ -249,6 +252,9 @@ const Files = (props) => {
           <Button variant="success" onClick={handleGenerateAuctionFile}>
             Generate Auction File
           </Button>
+          <Button variant="info" onClick={handleGenerateCatalogueFile}>
+            Generate Catalogue File
+          </Button>
           <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
         </Modal.Footer>
       </Modal>
@@ -288,7 +294,7 @@ const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
   updateRecord: (data) => dispatch(update_catalogue_record(data)),
   deleteRecord: (data) => dispatch(delete_catalogue_record(data)),
-  generateAuctionFile: (data) => dispatch(generate_auction_file(data))
+  generateAuctionFile: (data, type) => dispatch(generate_auction_file(data, type))
 });
 
 const mapStateToProps = (state) => ({
