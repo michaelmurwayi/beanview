@@ -17,8 +17,8 @@ def process_uploaded_files(view, data, sheets):
         if 'W/H' in df.columns:
             df.rename(columns={'W/H': 'WAREHOUSE'}, inplace=True)
 
-    # import ipdb;ipdb.set_trace()
-    data =  data_df['AGL 2025'].to_dict(orient='records')
+    
+    data =  data_df[sheets[0]].to_dict(orient='records')
     
     existing_records = get_existing_records()
     new_records = filter_new_records(data, existing_records)

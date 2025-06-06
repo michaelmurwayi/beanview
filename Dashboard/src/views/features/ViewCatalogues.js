@@ -17,6 +17,11 @@ const Files = (props) => {
   const [editRecord, setEditRecord] = useState(null);
   const agentCode = 49;
 
+  const gradeOrder = [
+    "T", "TT", "C", "AB", "PB", "E", "AA", "SB", "HE", "UG3",
+    "UG2", "UG1", "UG", "NL", "ML"
+  ];
+
   useEffect(() => {
     fetch_coffee_records();
   }, [fetch_coffee_records]);
@@ -25,20 +30,28 @@ const Files = (props) => {
     return [...new Set(coffeeRecords.map(record => record.sale).filter(Boolean))];
   }, [coffeeRecords]);
 
+  const orderByGrade = (records) => {
+    return [...records].sort((a, b) => {
+      const indexA = gradeOrder.indexOf(a.grade);
+      const indexB = gradeOrder.indexOf(b.grade);
+      // If grade not found, put it at the end
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  };
+
   const handleFolderClick = (saleNumber) => {
     const filtered = coffeeRecords.filter(record => record.sale === saleNumber);
-    setFilteredRecords(filtered);
     setSelectedSale(saleNumber);
     setShowModal(true);
-  
-    // Categorize by bulkoutturn and grade
+
     const categorized = {};
     filtered.forEach(record => {
-      // If bulkoutturn is missing or falsy, skip categorization and handle separately
       if (!record.bulkoutturn) {
-        const key = `no-bulkoutturn-${Math.random()}`; // Ensure unique key for each ungrouped record
+        const key = `no-bulkoutturn-${Math.random()}`;
         categorized[key] = {
-          mark: record.outturn + '/' +record.mark,
+          mark: record.outturn + '/' + record.mark,
           outturn: record.outturn,
           bulkoutturn: record.bulkoutturn,
           grade: record.grade,
@@ -48,29 +61,29 @@ const Files = (props) => {
         };
         return;
       }
-    
+
       const key = `${record.bulkoutturn}-${record.grade}`;
-    
       if (!categorized[key]) {
         categorized[key] = {
           mark: record.bulkoutturn + '/' + record.grade + '/' + 'Bulk',
           outturn: record.bulkoutturn,
+          bulkoutturn: record.bulkoutturn,
           grade: record.grade,
+          type: record.type,
           weight: 0,
           sale: record.sale,
         };
       }
-    
+
       categorized[key].weight += parseInt(record.weight, 10);
     });
-    // Compute bags and pockets
+
     const summary = Object.values(categorized).map(entry => {
-      console.log("Processing entry:", entry);
       const bags = Math.floor(entry.weight / 60);
       const pockets = entry.weight % 60;
       return {
         mark: entry.mark,
-        outturn: entry.bulkoutturn || entry.outturn,  // Use bulkoutturn if available 
+        outturn: entry.outturn,
         grade: entry.grade,
         type: entry.type,
         bags,
@@ -79,12 +92,30 @@ const Files = (props) => {
         sale: entry.sale,
       };
     });
-  
-    console.log("Categorized summary:", summary);
-    setFilteredRecords(summary);
-    // Optionally: setSummary(summary);
+
+    // Sort summary by grade before setting filtered records
+    const sortedSummary = orderByGrade(summary);
+    setFilteredRecords(sortedSummary);
+
+    const { mainCatalogue, miscellaneous } = categorizeSummary(sortedSummary);
+    console.log("Main Catalogue:", mainCatalogue);
+    console.log("Miscellaneous:", miscellaneous);
+
+    function categorizeSummary(summary) {
+      const mainCatalogue = [];
+      const miscellaneous = [];
+
+      summary.forEach(entry => {
+        if (entry.type === "P1" || entry.type === "P2") {
+          mainCatalogue.push(entry);
+        } else {
+          miscellaneous.push(entry);
+        }
+      });
+
+      return { mainCatalogue, miscellaneous };
+    }
   };
-  
 
   const handleEdit = (record) => {
     setEditRecord(record);
@@ -100,7 +131,6 @@ const Files = (props) => {
     setEditModal(false);
   };
 
-  // ✅ Updated "Delete" to clear the sale field
   const handleDelete = (record) => {
     if (window.confirm("Are you sure you want to remove this record from the sale?")) {
       const updatedRecord = { ...record, sale: "" };
@@ -198,7 +228,6 @@ const Files = (props) => {
                       <td>{record.warehouse}</td>
                       <td>{record.agentCode || agentCode}</td>
                       <td>{record.reservePrice}</td>
-
                       <td>
                         <Button variant="warning" size="sm" onClick={() => handleEdit(record)}>Edit</Button>{" "}
                         <Button variant="danger" size="sm" onClick={() => handleDelete(record)}>Remove</Button>
@@ -251,7 +280,7 @@ const Files = (props) => {
 const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
   updateRecord: (data) => dispatch(update_catalogue_record(data)),
-  deleteRecord: (data) => dispatch(delete_catalogue_record(data)), // kept for other uses if needed
+  deleteRecord: (data) => dispatch(delete_catalogue_record(data)), // reserved
 });
 
 const mapStateToProps = (state) => ({
