@@ -4,13 +4,14 @@ import {
   fetch_coffee_records,
   update_catalogue_record,
   delete_catalogue_record,
-  generate_auction_file
+  generate_auction_file,
+  generate_catalogue_file
 } from "components/State/action";
 import { MDBIcon } from "mdbreact";
 import { Modal, Button } from "react-bootstrap";
 
 const Files = (props) => {
-  const { coffeeRecords, fetch_coffee_records, updateRecord, generateAuctionFile } = props;
+  const { coffeeRecords, fetch_coffee_records, updateRecord, generateAuctionFile, generateCatalogueFile } = props;
   const [showModal, setShowModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const [filteredRecords, setFilteredRecords] = useState([]);
@@ -137,10 +138,10 @@ const Files = (props) => {
 
   const handleGenerateCatalogueFile = () => {
     if (window.confirm(`Generate catalogue file for sale ${selectedSale}?`)) {
-      generateAuctionFile({
+      generateCatalogueFile({
         sale: selectedSale,
         records: filteredRecords,
-        type: "catalogue"
+        
       });
     }
   };
@@ -294,7 +295,8 @@ const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
   updateRecord: (data) => dispatch(update_catalogue_record(data)),
   deleteRecord: (data) => dispatch(delete_catalogue_record(data)),
-  generateAuctionFile: (data, type) => dispatch(generate_auction_file(data, type))
+  generateAuctionFile: (data, type) => dispatch(generate_auction_file(data, type)),
+  generateCatalogueFile: (data) => dispatch(generate_catalogue_file(data, "catalogue"))
 });
 
 const mapStateToProps = (state) => ({
