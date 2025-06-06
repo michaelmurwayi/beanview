@@ -3,13 +3,13 @@ import { connect } from "react-redux";
 import {
   fetch_coffee_records,
   update_catalogue_record,
-  delete_catalogue_record
+  delete_catalogue_record,
 } from "components/State/action";
 import { MDBIcon } from "mdbreact";
 import { Modal, Button } from "react-bootstrap";
 
 const Files = (props) => {
-  const { coffeeRecords, fetch_coffee_records, updateRecord } = props;
+  const { coffeeRecords, fetch_coffee_records, updateRecord, generateAuctionFile } = props;
   const [showModal, setShowModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const [filteredRecords, setFilteredRecords] = useState([]);
@@ -34,7 +34,6 @@ const Files = (props) => {
     return [...records].sort((a, b) => {
       const indexA = gradeOrder.indexOf(a.grade);
       const indexB = gradeOrder.indexOf(b.grade);
-      // If grade not found, put it at the end
       if (indexA === -1) return 1;
       if (indexB === -1) return -1;
       return indexA - indexB;
@@ -58,6 +57,13 @@ const Files = (props) => {
           type: record.type,
           weight: parseInt(record.weight, 10),
           sale: record.sale,
+          season: record.season,
+          certificate: record.certificate,
+          mill: record.mill,
+          warehouse: record.warehouse,
+          agentCode: record.agentCode || agentCode,
+          reservePrice: record.reservePrice,
+          id: record.id
         };
         return;
       }
@@ -72,6 +78,13 @@ const Files = (props) => {
           type: record.type,
           weight: 0,
           sale: record.sale,
+          season: record.season,
+          certificate: record.certificate,
+          mill: record.mill,
+          warehouse: record.warehouse,
+          agentCode: record.agentCode || agentCode,
+          reservePrice: record.reservePrice,
+          id: record.id
         };
       }
 
@@ -82,39 +95,14 @@ const Files = (props) => {
       const bags = Math.floor(entry.weight / 60);
       const pockets = entry.weight % 60;
       return {
-        mark: entry.mark,
-        outturn: entry.outturn,
-        grade: entry.grade,
-        type: entry.type,
+        ...entry,
         bags,
         pockets,
-        weight: entry.weight,
-        sale: entry.sale,
       };
     });
 
-    // Sort summary by grade before setting filtered records
     const sortedSummary = orderByGrade(summary);
     setFilteredRecords(sortedSummary);
-
-    const { mainCatalogue, miscellaneous } = categorizeSummary(sortedSummary);
-    console.log("Main Catalogue:", mainCatalogue);
-    console.log("Miscellaneous:", miscellaneous);
-
-    function categorizeSummary(summary) {
-      const mainCatalogue = [];
-      const miscellaneous = [];
-
-      summary.forEach(entry => {
-        if (entry.type === "P1" || entry.type === "P2") {
-          mainCatalogue.push(entry);
-        } else {
-          miscellaneous.push(entry);
-        }
-      });
-
-      return { mainCatalogue, miscellaneous };
-    }
   };
 
   const handleEdit = (record) => {
@@ -138,6 +126,8 @@ const Files = (props) => {
       setFilteredRecords(prev => prev.filter(rec => rec.id !== record.id));
     }
   };
+
+  const titleCase = (str) => str.replace(/\b\w/g, l => l.toUpperCase());
 
   return (
     <div className="container py-4">
@@ -242,6 +232,9 @@ const Files = (props) => {
           )}
         </Modal.Body>
         <Modal.Footer>
+          <Button variant="success" onClick={() => generateAuctionFile(selectedSale)}>
+            Generate Auction File
+          </Button>
           <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
         </Modal.Footer>
       </Modal>
@@ -256,8 +249,9 @@ const Files = (props) => {
             <>
               {["mark", "outturn", "grade", "type", "bags", "weight"].map((field) => (
                 <div className="mb-3" key={field}>
-                  <label>{field.charAt(0).toUpperCase() + field.slice(1)}:</label>
+                  <label htmlFor={field}>{titleCase(field)}:</label>
                   <input
+                    id={field}
                     type={field === "bags" || field === "weight" ? "number" : "text"}
                     className="form-control"
                     value={editRecord[field]}
@@ -281,6 +275,12 @@ const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
   updateRecord: (data) => dispatch(update_catalogue_record(data)),
   deleteRecord: (data) => dispatch(delete_catalogue_record(data)), // reserved
+  generateAuctionFile: (saleNumber) => {
+    if (window.confirm(`Are you sure you want to generate the auction file for sale ${saleNumber}?`)) {
+      console.log(`Generating auction file for sale number: ${saleNumber}`);
+      // Dispatch real generation logic here if available
+    }
+  }
 });
 
 const mapStateToProps = (state) => ({

@@ -451,3 +451,13 @@ export const submit_sale_summary = (summaryData) => async (dispatch) => {
       dispatch({ type: "SUBMIT_SALE_SUMMARY_FAILURE", payload: error });
     }
   };
+
+export const submit_auction_file = (auctionData) => async (dispatch) => {
+    const api_url = `http://127.0.1:8000/api/coffee/generate_auction_file/`;
+    try {
+        const response = await axios.post(api_url, auctionData);
+        dispatch({ type: "SUBMIT_AUCTION_FILE_SUCCESS", payload: response.data });
+    } catch (error) {
+        dispatch({ type: "SUBMIT_AUCTION_FILE_FAILURE", payload: error });
+    }
+};
