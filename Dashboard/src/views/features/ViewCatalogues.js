@@ -43,11 +43,13 @@ const Files = (props) => {
 
   const handleFolderClick = (saleNumber) => {
     const filtered = coffeeRecords.filter(record => record.sale === saleNumber);
+    console.log(filtered);
     setSelectedSale(saleNumber);
     setShowModal(true);
 
     const categorized = {};
     filtered.forEach(record => {
+      console.log(record);
       if (!record.bulkoutturn) {
         const key = `no-bulkoutturn-${Math.random()}`;
         categorized[key] = {
@@ -63,9 +65,11 @@ const Files = (props) => {
           mill: record.mill,
           warehouse: record.warehouse,
           agentCode: record.agentCode || agentCode,
-          reservePrice: record.reservePrice,
-          id: record.id
+          reserve: record.reserve,
+          certificate: record.certificate ,
+          
         };
+        console.log(categorized[key]);
         return;
       }
 
@@ -84,8 +88,9 @@ const Files = (props) => {
           mill: record.mill,
           warehouse: record.warehouse,
           agentCode: record.agentCode || agentCode,
-          reservePrice: record.reservePrice,
-          id: record.id
+          reserve: record.reserve,
+          certificate: record.certificate,
+          
         };
       }
 
@@ -125,6 +130,15 @@ const Files = (props) => {
       const updatedRecord = { ...record, sale: "" };
       updateRecord(updatedRecord);
       setFilteredRecords(prev => prev.filter(rec => rec.id !== record.id));
+    }
+  };
+
+  const handleGenerateAuctionFile = () => {
+    if (window.confirm(`Generate auction file for sale ${selectedSale}?`)) {
+      generateAuctionFile({
+        sale: selectedSale,
+        records: filteredRecords
+      });
     }
   };
 
@@ -176,7 +190,6 @@ const Files = (props) => {
         ))}
       </div>
 
-      {/* Modal for Sale Records */}
       <Modal show={showModal} onHide={() => setShowModal(false)} dialogClassName="modal-xl">
         <Modal.Header closeButton>
           <Modal.Title>Records for Sale {selectedSale}</Modal.Title>
@@ -218,7 +231,7 @@ const Files = (props) => {
                       <td>{record.mill}</td>
                       <td>{record.warehouse}</td>
                       <td>{record.agentCode || agentCode}</td>
-                      <td>{record.reservePrice}</td>
+                      <td>{record.reserve}</td>
                       <td>
                         <Button variant="warning" size="sm" onClick={() => handleEdit(record)}>Edit</Button>{" "}
                         <Button variant="danger" size="sm" onClick={() => handleDelete(record)}>Remove</Button>
@@ -233,14 +246,13 @@ const Files = (props) => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="success" onClick={() => generateAuctionFile(selectedSale)}>
+          <Button variant="success" onClick={handleGenerateAuctionFile}>
             Generate Auction File
           </Button>
           <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
         </Modal.Footer>
       </Modal>
 
-      {/* Edit Modal */}
       <Modal show={editModal} onHide={() => setEditModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Record</Modal.Title>
@@ -275,14 +287,8 @@ const Files = (props) => {
 const mapDispatchToProps = (dispatch) => ({
   fetch_coffee_records: () => dispatch(fetch_coffee_records()),
   updateRecord: (data) => dispatch(update_catalogue_record(data)),
-  deleteRecord: (data) => dispatch(delete_catalogue_record(data)), // reserved
-  generateAuctionFile: (saleNumber) => {
-    if (window.confirm(`Are you sure you want to generate the auction file for sale ${saleNumber}?`)) {
-      console.log(`Generating auction file for sale number: ${saleNumber}`);
-      dispatch(generate_auction_file({"sale": saleNumber}));
-      // Dispatch real generation logic here if available
-    }
-  }
+  deleteRecord: (data) => dispatch(delete_catalogue_record(data)),
+  generateAuctionFile: (data) => dispatch(generate_auction_file(data))
 });
 
 const mapStateToProps = (state) => ({

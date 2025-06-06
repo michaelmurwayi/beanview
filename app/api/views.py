@@ -241,118 +241,52 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
 
-    def create(self, request):
-        try:
-            data = request.data.dict()  # needed if still using multipart/form-data
-
-            # Parse stringified primitives
-            sale_number = json.loads(data.get("saleNumber", "null"))
-            catalogue_type = json.loads(data.get("catalogueType", "null"))
-            records_raw = data.get("records")
-            
-            if sale_number is None:
-                return Response({"error": "Sale number is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-            if not records_raw:
-                return Response({"error": "Records are required"}, status=status.HTTP_400_BAD_REQUEST)
-
-            try:
-                records = json.loads(records_raw)
-            except json.JSONDecodeError:
-                return Response({"error": "Invalid records JSON format"}, status=status.HTTP_400_BAD_REQUEST)
-
-            if not isinstance(records, list):
-                return Response({"error": "Records should be a list of objects"}, status=status.HTTP_400_BAD_REQUEST)
-
-            updated_count = 0
-            updated_records = []
-
-            for record in records:
-                outturn = record.get("outturn")
-                grade = record.get("grade")
-
-                if not outturn or not grade:
-                    return Response(
-                        {"error": f"Missing 'outturn' or 'grade' in record: {record}"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-
-                coffee = Coffee.objects.filter(outturn=outturn, grade=grade)
-                update_result = coffee.update(
-                    sale=sale_number,
-                    status=3,
-                )
-
-                if update_result > 0:
-                    updated_count += update_result
-                    updated_records.append({
-                        "outturn": outturn,
-                        "mark": record.get("mark"),
-                        "type": record.get("type"),
-                        "grade": grade,
-                        "bags": record.get("bags"),
-                        "pockets": record.get("pockets"),
-                        "weight": record.get("weight"),
-                        "sale": sale_number,
-                        "status": 3
-                    })
-
-            if updated_count == 0:
-                return Response({"message": "No records were updated."}, status=status.HTTP_200_OK)
-
-            # Save to Excel
-            df = pd.DataFrame(updated_records)
-            subdir = str(sale_number)  # directory name based on sale number
-            dir_path = os.path.join(settings.MEDIA_ROOT, subdir)
-
-            os.makedirs(dir_path, exist_ok=True)  # Create directory if it doesn't exist
-
-            excel_filename = "updated_coffee_records.xlsx"
-            excel_path = os.path.join(dir_path, excel_filename)
-            df.to_excel(excel_path, index=False)
-
-            file_url = settings.MEDIA_URL + f"{subdir}/{excel_filename}"
-
-            return Response(
-                {
-                    "message": f"Successfully updated {updated_count} coffee records.",
-                    "excel_file_url": file_url
-                },
-                status=status.HTTP_201_CREATED
-            )
-
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
     @action(detail=False, methods=['POST'])
     def generate_auction_file(self, request):
         try:
-            
-            sale_number = request.data["sale"]
+            sale_number = request.data.get("sale")
 
             if not sale_number:
                 return Response({"error": "Sale number is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-            records = Coffee.objects.filter(sale=sale_number)
+            records = request.data.get("records", [])
 
-            if not records.exists():
+            if not records:
                 return Response({"error": "No records found for this sale"}, status=status.HTTP_404_NOT_FOUND)
 
-            # Convert queryset to DataFrame
-            df = pd.DataFrame(list(records.values()))
+            # Convert records to DataFrame
+            df = pd.DataFrame(records)
+            # Define the required columns and rename mapping
+            columns_to_export = {
+                "mark": "MARKS",
+                "grade": "GRADE",
+                "bags": "BAGS",
+                "pockets": "POCKETS",
+                "weight": "WEIGHT",
+                "sale": "SALENO",
+                "season": "SEASON",
+                "certificate": "CERTIFICATE",
+                "agentCode": "AGENT CODE",
+                "reserve": "RESERVE PRICE"
+            }
+
             
+            # Select and rename only the specified columns
+            df_filtered = df[list(columns_to_export.keys())].rename(columns=columns_to_export)
+
+            # Add empty "REMARKS" column
+            df_filtered["REMARKS"] = ""
             # Directory path based on sale number
             subdir = str(sale_number)
-            dir_path = os.path.join(settings.MEDIA_ROOT, "auction",subdir)
-
+            dir_path = os.path.join(settings.MEDIA_ROOT, "auction", subdir)
             os.makedirs(dir_path, exist_ok=True)
-            # Write Excel file
+
+            # Save to Excel
             excel_filename = "auction_file.xlsx"
             excel_path = os.path.join(dir_path, excel_filename)
-            df.to_excel(excel_path, index=False)
+            df_filtered.to_excel(excel_path, index=False)
 
-            # Construct downloadable file URL
-            file_url = settings.MEDIA_URL + f"{subdir}/{excel_filename}"
+            file_url = settings.MEDIA_URL + f"auction/{subdir}/{excel_filename}"
 
             return Response(
                 {
