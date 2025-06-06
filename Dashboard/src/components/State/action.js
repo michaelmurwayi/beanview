@@ -452,8 +452,8 @@ export const submit_sale_summary = (summaryData) => async (dispatch) => {
     }
   };
 
-export const submit_auction_file = (auctionData) => async (dispatch) => {
-    const api_url = `http://127.0.1:8000/api/coffee/generate_auction_file/`;
+export const generate_auction_file = (auctionData) => async (dispatch) => {
+    const api_url = `http://127.0.1:8000/api/catalogue/generate_auction_file/`;
     try {
         const response = await axios.post(api_url, auctionData);
         dispatch({ type: "SUBMIT_AUCTION_FILE_SUCCESS", payload: response.data });

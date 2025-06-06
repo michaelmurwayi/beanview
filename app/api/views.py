@@ -197,7 +197,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 for row_offset, record in enumerate(records, start=1):
                     row = START_ROW + row_offset
                     status_id = record.get('status')
-                    
                     status_name = CoffeeStatus.objects.get(id=status_id).name
 
                     values = [
@@ -324,12 +323,47 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-# @method_decorator(csrf_exempt, name='dispatch')
-# class LotsViewSet(viewsets.ModelViewSet):
-#     queryset = Lots.objects.all()
-#     serializer_class = LotsSerializer
 
+    @action(detail=False, methods=['POST'])
+    def generate_auction_file(self, request):
+        try:
+            
+            sale_number = request.data["sale"]
 
+            if not sale_number:
+                return Response({"error": "Sale number is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            records = Coffee.objects.filter(sale=sale_number)
+
+            if not records.exists():
+                return Response({"error": "No records found for this sale"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Convert queryset to DataFrame
+            df = pd.DataFrame(list(records.values()))
+            
+            # Directory path based on sale number
+            subdir = str(sale_number)
+            dir_path = os.path.join(settings.MEDIA_ROOT, "auction",subdir)
+
+            os.makedirs(dir_path, exist_ok=True)
+            # Write Excel file
+            excel_filename = "auction_file.xlsx"
+            excel_path = os.path.join(dir_path, excel_filename)
+            df.to_excel(excel_path, index=False)
+
+            # Construct downloadable file URL
+            file_url = settings.MEDIA_URL + f"{subdir}/{excel_filename}"
+
+            return Response(
+                {
+                    "message": f"Successfully generated auction file for sale {sale_number}.",
+                    "excel_file_url": file_url
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 def is_less_than_24_hours_ago(target_date):
     # Get the current date and time

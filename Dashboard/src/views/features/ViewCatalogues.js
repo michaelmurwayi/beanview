@@ -4,6 +4,7 @@ import {
   fetch_coffee_records,
   update_catalogue_record,
   delete_catalogue_record,
+  generate_auction_file
 } from "components/State/action";
 import { MDBIcon } from "mdbreact";
 import { Modal, Button } from "react-bootstrap";
@@ -278,6 +279,7 @@ const mapDispatchToProps = (dispatch) => ({
   generateAuctionFile: (saleNumber) => {
     if (window.confirm(`Are you sure you want to generate the auction file for sale ${saleNumber}?`)) {
       console.log(`Generating auction file for sale number: ${saleNumber}`);
+      dispatch(generate_auction_file({"sale": saleNumber}));
       // Dispatch real generation logic here if available
     }
   }
