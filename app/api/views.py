@@ -298,7 +298,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    
     @action(detail=False, methods=['POST'])
     def generate_catalogue_file(self, request):
         try:
@@ -306,31 +306,91 @@ class CatalogueViewSet(viewsets.ModelViewSet):
             records = request.data.get("records")
 
             if not sale_number or not records:
-                return Response({"error": "Sale number and records are required."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Sale number and records are required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-            # Desired columns
-            expected_columns = [
-                "MARKS", "GRADE", "BAGS", "POCKETS", "WEIGHT", "SALENO", "SEASON",
-                "CERTIFICATION", "AGENT CODE", "RESERVE PRICE", "REMARKS"
-            ]
+            if not isinstance(records, list):
+                return Response({"error": "Records must be a list."}, status=400)
 
+            # Input dataframe from records
             df = pd.DataFrame(records)
 
-            # Keep only expected columns (drop others)
-            df = df[[col for col in expected_columns if col in df.columns]]
+            # Mapping your input data columns to the expected template columns
+            column_map = {
+                "LOT": "",
+                "C_OUTTURN": "outturn",
+                "MARK": "mark",
+                "GRADE": "grade",
+                "BAGS": "bags",
+                "POCKETS": "pockets",
+                "Weight": "weight",
+                "SALE NO": "sale",
+                "SEASON": "season",
+                "CERTIFICATE": "certificate",
+                "MILL": "mill",
+                "W/H": "warehouse",
+                "AGENT CODE": "agentCode",
+                "RESERVE PRICE": "reserve",
+                "REMARKS": ""  # no remarks field in input, empty
+            }
 
-            # Create directory and file path
+            # Build DataFrame with expected columns in correct order from mapped input columns
+            data_for_template = {}
+            for template_col, data_col in column_map.items():
+                if data_col and data_col in df.columns:
+                    data_for_template[template_col] = df[data_col]
+                else:
+                    data_for_template[template_col] = [""] * len(df)  # fill empty if no data
+
+            df_template = pd.DataFrame(data_for_template)
+
+            if df_template.empty:
+                return Response(
+                    {"error": "No valid data found in provided records after mapping."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Load Excel template
+            template_path = os.path.join(settings.BASE_DIR, "media/templates", "catalogue_template.xlsx")
+            wb = load_workbook(template_path)
+
+            ws = wb.active  # or use specific sheet name if needed
+
+            start_row = 49
+            template_row = 49
+
+            # Write data rows preserving template row styles
+            for i, row in df_template.iterrows():
+                for j, col in enumerate(column_map.keys()):
+                    target_cell = ws.cell(row=start_row + i, column=j + 1)
+                    template_cell = ws.cell(row=template_row, column=j + 1)
+
+                    # Write the value
+                    target_cell.value = row.get(col, "")
+
+                    # Copy style from template row 49
+                    if template_cell.has_style:
+                        target_cell.font = copy(template_cell.font)
+                        target_cell.border = copy(template_cell.border)
+                        target_cell.fill = copy(template_cell.fill)
+                        target_cell.number_format = copy(template_cell.number_format)
+                        target_cell.protection = copy(template_cell.protection)
+                        target_cell.alignment = copy(template_cell.alignment)
+
+            # Create output directory
             subdir = str(sale_number)
             dir_path = os.path.join(settings.MEDIA_ROOT, "catalogue", subdir)
             os.makedirs(dir_path, exist_ok=True)
 
+            # Save Excel file
             filename = "catalogue_file.xlsx"
             filepath = os.path.join(dir_path, filename)
+            wb.save(filepath)
 
-            # Write to Excel
-            df.to_excel(filepath, index=False)
-
-            file_url = settings.MEDIA_URL + f"catalogue/{subdir}/{filename}"
+            # Return file URL
+            file_url = os.path.join(settings.MEDIA_URL, "catalogue", subdir, filename)
 
             return Response({
                 "message": f"Catalogue file created for sale {sale_number}.",
@@ -338,7 +398,12 @@ class CatalogueViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
+            return Response(
+                {"error": "Internal server error.", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 def is_less_than_24_hours_ago(target_date):
     # Get the current date and time
     current_date = datetime.now()
