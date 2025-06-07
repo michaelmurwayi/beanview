@@ -26,6 +26,8 @@ from openpyxl import load_workbook
 import traceback
 from openpyxl.cell.cell import MergedCell
 import pandas as pd
+from copy import copy
+
 
 
 
@@ -237,68 +239,37 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             traceback.print_exc()
             return Response({"error": f"Internal server error: {str(e)}"}, status=500)
 
+
+def assign_lots(df, start_lot=7301):
+    df = df.copy()
+    df["LOT"] = list(range(start_lot, start_lot + len(df)))
+    return df, len(df)
+
+
+def summarize_grades(df):
+    summary = df.groupby("grade")["bags"].sum().to_dict()
+    total_bags = df["bags"].sum()
+    return summary, total_bags
+
+
+def write_grade_summary(ws, summary, start_row=16, start_col=8):
+    row = start_row
+    for grade, bags in summary.items():
+        cell_grade = ws.cell(row=row, column=start_col)
+        cell_bags = ws.cell(row=row, column=start_col + 1)
+        cell_grade.value = grade
+        cell_bags.value = bags
+        row += 1
+
+def write_summary_to_excel(ws, num_bags, num_lots):
+    summary_text = f"{num_bags} bags of Kenya Coffee In {num_lots} Lots"
+    ws["I9"] = summary_text
+
+
 class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
 
-    @action(detail=False, methods=['POST'])
-    def generate_auction_file(self, request):
-        try:
-            sale_number = request.data.get("sale")
-
-            if not sale_number:
-                return Response({"error": "Sale number is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-            records = request.data.get("records", [])
-
-            if not records:
-                return Response({"error": "No records found for this sale"}, status=status.HTTP_404_NOT_FOUND)
-
-            # Convert records to DataFrame
-            df = pd.DataFrame(records)
-            # Define the required columns and rename mapping
-            columns_to_export = {
-                "mark": "MARKS",
-                "grade": "GRADE",
-                "bags": "BAGS",
-                "pockets": "POCKETS",
-                "weight": "WEIGHT",
-                "sale": "SALENO",
-                "season": "SEASON",
-                "certificate": "CERTIFICATE",
-                "agentCode": "AGENT CODE",
-                "reserve": "RESERVE PRICE"
-            }
-
-            
-            # Select and rename only the specified columns
-            df_filtered = df[list(columns_to_export.keys())].rename(columns=columns_to_export)
-
-            # Add empty "REMARKS" column
-            df_filtered["REMARKS"] = ""
-            # Directory path based on sale number
-            subdir = str(sale_number)
-            dir_path = os.path.join(settings.MEDIA_ROOT, "auction", subdir)
-            os.makedirs(dir_path, exist_ok=True)
-
-            # Save to Excel
-            excel_filename = "auction_file.xlsx"
-            excel_path = os.path.join(dir_path, excel_filename)
-            df_filtered.to_excel(excel_path, index=False)
-
-            file_url = settings.MEDIA_URL + f"auction/{subdir}/{excel_filename}"
-
-            return Response(
-                {
-                    "message": f"Successfully generated auction file for sale {sale_number}.",
-                    "excel_file_url": file_url
-                },
-                status=status.HTTP_201_CREATED
-            )
-
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
     @action(detail=False, methods=['POST'])
     def generate_catalogue_file(self, request):
         try:
@@ -314,12 +285,12 @@ class CatalogueViewSet(viewsets.ModelViewSet):
             if not isinstance(records, list):
                 return Response({"error": "Records must be a list."}, status=400)
 
-            # Input dataframe from records
             df = pd.DataFrame(records)
+            df, num_lots = assign_lots(df)
+            grade_summary, num_bags = summarize_grades(df)
 
-            # Mapping your input data columns to the expected template columns
             column_map = {
-                "LOT": "",
+                "LOT": "LOT",
                 "C_OUTTURN": "outturn",
                 "MARK": "mark",
                 "GRADE": "grade",
@@ -333,16 +304,15 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 "W/H": "warehouse",
                 "AGENT CODE": "agentCode",
                 "RESERVE PRICE": "reserve",
-                "REMARKS": ""  # no remarks field in input, empty
+                "REMARKS": ""  # optional or blank
             }
 
-            # Build DataFrame with expected columns in correct order from mapped input columns
             data_for_template = {}
             for template_col, data_col in column_map.items():
                 if data_col and data_col in df.columns:
                     data_for_template[template_col] = df[data_col]
                 else:
-                    data_for_template[template_col] = [""] * len(df)  # fill empty if no data
+                    data_for_template[template_col] = [""] * len(df)
 
             df_template = pd.DataFrame(data_for_template)
 
@@ -352,25 +322,19 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Load Excel template
             template_path = os.path.join(settings.BASE_DIR, "media/templates", "catalogue_template.xlsx")
             wb = load_workbook(template_path)
-
-            ws = wb.active  # or use specific sheet name if needed
+            ws = wb.active
 
             start_row = 49
             template_row = 49
 
-            # Write data rows preserving template row styles
             for i, row in df_template.iterrows():
                 for j, col in enumerate(column_map.keys()):
                     target_cell = ws.cell(row=start_row + i, column=j + 1)
                     template_cell = ws.cell(row=template_row, column=j + 1)
 
-                    # Write the value
                     target_cell.value = row.get(col, "")
-
-                    # Copy style from template row 49
                     if template_cell.has_style:
                         target_cell.font = copy(template_cell.font)
                         target_cell.border = copy(template_cell.border)
@@ -379,17 +343,18 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                         target_cell.protection = copy(template_cell.protection)
                         target_cell.alignment = copy(template_cell.alignment)
 
-            # Create output directory
+            # ✅ Write summaries
+            write_grade_summary(ws, grade_summary, start_row=16, start_col=8)
+            write_summary_to_excel(ws, num_bags, num_lots)
+
             subdir = str(sale_number)
             dir_path = os.path.join(settings.MEDIA_ROOT, "catalogue", subdir)
             os.makedirs(dir_path, exist_ok=True)
 
-            # Save Excel file
             filename = "catalogue_file.xlsx"
             filepath = os.path.join(dir_path, filename)
             wb.save(filepath)
 
-            # Return file URL
             file_url = os.path.join(settings.MEDIA_URL, "catalogue", subdir, filename)
 
             return Response({
@@ -404,6 +369,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 {"error": "Internal server error.", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 def is_less_than_24_hours_ago(target_date):
     # Get the current date and time
     current_date = datetime.now()
