@@ -265,6 +265,54 @@ def write_summary_to_excel(ws, num_bags, num_lots):
     summary_text = f"{num_bags} bags of Kenya Coffee In {num_lots} Lots"
     ws["I9"] = summary_text
 
+def write_warehouse_location(ws, records):
+    # Extract unique warehouse IDs from records
+    warehouse_ids = {record.get("warehouse") for record in records if record.get("warehouse")}
+    
+    # Get warehouse names from DB
+    warehouses = Warehouse.objects.filter(id__in=warehouse_ids).values_list("name", flat=True)
+    warehouses = sorted({w.strip().upper() for w in warehouses if w})
+
+    # Format location string
+    if not warehouses:
+        location_text = "Located at (No warehouse info)"
+    elif len(warehouses) == 1:
+        location_text = f"Located at ({warehouses[0]} warehouse)"
+    else:
+        location_text = f"Located at ({' & '.join(warehouses)} warehouse)"
+
+    ws["I10"] = location_text
+
+def write_milled_by(ws, records, start_row=12, column_letter="A"):
+    # Get unique mill IDs from the records
+    mill_ids = {record.get("mill") for record in records if record.get("mill")}
+    
+    # Query the Mill model for names and codes
+    mills = Mill.objects.filter(id__in=mill_ids).values_list("name", "location")
+
+    # Clean, deduplicate, and sort
+    unique_mills = sorted({(name.strip(), code.strip()) for name, code in mills if name and code})
+
+    # Write each mill on its own line starting from `start_row`
+    for i, (name, code) in enumerate(unique_mills):
+        text = f"Milled BY({name} Coffee Mill Denoted as {code})"
+        cell = f"{column_letter}{start_row + i}"
+        ws[cell] = text
+
+def replace_mill_ids_with_names(df):
+    if "mill" not in df.columns:
+        return df  # nothing to do
+
+    # Get unique mill IDs from the DataFrame
+    mill_ids = df["mill"].dropna().unique().tolist()
+
+    # Fetch mill names from the database
+    mill_map = dict(Mill.objects.filter(id__in=mill_ids).values_list("id", "location"))
+
+    # Replace the IDs with mill names in the DataFrame
+    df["mill"] = df["mill"].map(mill_map).fillna("")
+
+    return df
 
 class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
@@ -287,6 +335,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
             df = pd.DataFrame(records)
             df, num_lots = assign_lots(df)
+            df = replace_mill_ids_with_names(df)
             grade_summary, num_bags = summarize_grades(df)
 
             column_map = {
@@ -346,6 +395,9 @@ class CatalogueViewSet(viewsets.ModelViewSet):
             # ✅ Write summaries
             write_grade_summary(ws, grade_summary, start_row=16, start_col=8)
             write_summary_to_excel(ws, num_bags, num_lots)
+            write_warehouse_location(ws, records)
+            write_milled_by(ws, records, start_row=11, column_letter="H")
+
 
             subdir = str(sale_number)
             dir_path = os.path.join(settings.MEDIA_ROOT, "catalogue", subdir)
