@@ -54,23 +54,25 @@ class Bank(models.Model):
         return self.name
 
 
+
 class Farmer(models.Model):
     name = models.CharField(max_length=255)
-    national_id = models.CharField(max_length=10, unique=True)
-    code  = models.CharField(max_length=100, unique=True, primary_key=True)
-    mark = models.CharField(max_length=100)
-    address = models.CharField(max_length=255 , blank=True, null=True)
-    phonenumber = models.CharField(max_length=15 , unique=True)
-    email = models.EmailField(unique=True)
-    county = models.CharField(max_length=100 , blank=True, null=True)
-    town = models.CharField(max_length=100 , blank=True, null=True)
+    national_id = models.CharField(max_length=10, null=True, blank=True)  # Removed unique=True
+    code  = models.CharField(max_length=100, blank=True)  # Still must be unique (primary key)
+    mark = models.CharField(max_length=100, blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    phonenumber = models.CharField(max_length=15, blank=True, null=True)
+    email = models.EmailField(null=True, blank=True)  # Removed unique=True (if enforced in DB)
+    county = models.CharField(max_length=100, blank=True, null=True)
+    town = models.CharField(max_length=100, blank=True, null=True)
     bank = models.CharField(max_length=100, blank=True, null=True)
     branch = models.CharField(max_length=100, blank=True, null=True)
-    account = models.CharField(max_length=20 , blank=True, null=True)
-    currency = models.CharField(max_length=3 , default='KES', blank=True, null=True)
+    account = models.CharField(max_length=20, blank=True, null=True)
+    currency = models.CharField(max_length=3, default='KES', blank=True, null=True)
 
     def __str__(self):
-        return self.farmer_name
+        return self.name
+
 
 class Buyer(models.Model):
     name = models.CharField(max_length=255)
