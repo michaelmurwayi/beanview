@@ -85,12 +85,15 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], url_path='total_net_weight')
     def total_net_weight(self, request):
         try:
-            records = self.queryset.exclude(status="SOLD").values_list('net_weight', flat=True)
+            # Exclude coffee with status 'SOLD' (compare via related CoffeeStatus.name)
+            records = self.queryset.exclude(status_id=1).values_list('weight', flat=True)
             total_net_weight = sum(records)
             return Response({"total_net_weight": total_net_weight})
         except Exception as e:
-            return Response({"error": f"Error calculating total net weight: {str(e)}"}, status=400)
-
+            return Response(
+                {"error": f"Error calculating total net weight: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     @action(detail=False, methods=['GET'], url_path='total_tare_weight')
     def total_tare_weight(self, request):
         try:
@@ -251,15 +254,17 @@ def summarize_grades(df):
     total_bags = df["bags"].sum()
     return summary, total_bags
 
-
-def write_grade_summary(ws, summary, start_row=16, start_col=8):
+def write_grade_summary(ws, summary, start_row=19, start_col=8):
     row = start_row
     for grade, bags in summary.items():
+        # Write the grade in the specified column
         cell_grade = ws.cell(row=row, column=start_col)
+        # Write the bags in the column to the right
         cell_bags = ws.cell(row=row, column=start_col + 1)
         cell_grade.value = grade
         cell_bags.value = bags
-        row += 1
+        row += 1  # Move to the next row for the next pair
+
 
 def write_summary_to_excel(ws, num_bags, num_lots):
     summary_text = f"{num_bags} bags of Kenya Coffee In {num_lots} Lots"
@@ -307,10 +312,21 @@ def replace_mill_ids_with_names(df):
     mill_ids = df["mill"].dropna().unique().tolist()
 
     # Fetch mill names from the database
-    mill_map = dict(Mill.objects.filter(id__in=mill_ids).values_list("id", "location"))
+    mill_map = dict(Mill.objects.filter(id__in=mill_ids).values_list("id", "name"))
 
     # Replace the IDs with mill names in the DataFrame
     df["mill"] = df["mill"].map(mill_map).fillna("")
+
+    return df
+def replace_warehouse_ids_with_names(df):
+    if "warehouse" not in df.columns:
+        return df
+    # Get unique warehouse IDs from the DataFrame
+    warehouse_ids = df["warehouse"].dropna().unique().tolist()
+    # Fetch warehouse names from the database
+    warehouse_map = dict(Warehouse.objects.filter(id__in=warehouse_ids).values_list("id", "name"))
+    # Replace the IDs with warehouse names in the DataFrame
+    df["warehouse"] = df["warehouse"].map(warehouse_map).fillna("")
 
     return df
 
@@ -336,6 +352,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
             df = pd.DataFrame(records)
             df, num_lots = assign_lots(df)
             df = replace_mill_ids_with_names(df)
+            df = replace_warehouse_ids_with_names(df)
             grade_summary, num_bags = summarize_grades(df)
 
             column_map = {
@@ -393,10 +410,10 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                         target_cell.alignment = copy(template_cell.alignment)
 
             # ✅ Write summaries
-            write_grade_summary(ws, grade_summary, start_row=16, start_col=8)
             write_summary_to_excel(ws, num_bags, num_lots)
             write_warehouse_location(ws, records)
             write_milled_by(ws, records, start_row=11, column_letter="H")
+            write_grade_summary(ws, grade_summary, start_row=19, start_col=8)
 
 
             subdir = str(sale_number)
