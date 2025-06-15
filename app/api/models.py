@@ -2,11 +2,6 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from .manage import UserManager
 
-class County(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-
-    def __str__(self):
-        return self.name
 
 class Role(models.Model):
     """User Roles"""
@@ -15,22 +10,13 @@ class Role(models.Model):
     def __str__(self):
         return self.name
 
-class Address(models.Model):
-    street_address = models.CharField(max_length=255)
-    city = models.CharField(max_length=100)
-    county = models.ForeignKey(County, on_delete=models.SET_NULL, null=True)
-    country = models.CharField(max_length=50)
-    postal_code = models.CharField(max_length=10, null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.street_address}, {self.city}, {self.country}"
 
 class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
     phonenumber = models.CharField(max_length=15, unique=True)
-    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
     password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
@@ -47,30 +33,25 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-class Bank(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-
-    def __str__(self):
-        return self.name
-
 
 class Farmer(models.Model):
     name = models.CharField(max_length=255)
     national_id = models.CharField(max_length=10, unique=True)
-    code  = models.CharField(max_length=100, unique=True, primary_key=True)
-    mark = models.CharField(max_length=100)
-    address = models.CharField(max_length=255 , blank=True, null=True)
-    phonenumber = models.CharField(max_length=15 , unique=True)
+    code = models.CharField(max_length=100, unique=True, primary_key=True)
+    mark = models.CharField(max_length=100, unique=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    phonenumber = models.CharField(max_length=15, unique=True)
     email = models.EmailField(unique=True)
-    county = models.CharField(max_length=100 , blank=True, null=True)
-    town = models.CharField(max_length=100 , blank=True, null=True)
+    county = models.CharField(max_length=100, blank=True, null=True)
+    town = models.CharField(max_length=100, blank=True, null=True)
     bank = models.CharField(max_length=100, blank=True, null=True)
     branch = models.CharField(max_length=100, blank=True, null=True)
-    account = models.CharField(max_length=20 , blank=True, null=True)
-    currency = models.CharField(max_length=3 , default='KES', blank=True, null=True)
+    account = models.CharField(max_length=20, blank=True, null=True)
+    currency = models.CharField(max_length=3, default='KES', blank=True, null=True)
 
     def __str__(self):
-        return self.farmer_name
+        return self.name
+
 
 class Buyer(models.Model):
     name = models.CharField(max_length=255)
@@ -78,6 +59,7 @@ class Buyer(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Catalogue(models.Model):
     lot = models.CharField(max_length=100)
@@ -88,21 +70,24 @@ class Catalogue(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.lot
+        return f"{self.lot} - {self.certificate}"
+
 
 class Warehouse(models.Model):
     name = models.CharField(max_length=100)
-    location = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
+
 
 class Mill(models.Model):
     name = models.CharField(max_length=100)
-    location = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
+
 
 class CoffeeStatus(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -113,15 +98,16 @@ class CoffeeStatus(models.Model):
 
 class Coffee(models.Model):
     class Status(models.TextChoices):
-        RECIEVED = "RECIEVED", "Received"
+        RECEIVED = "RECEIVED", "Received"
         CATALOGUED = "CATALOGUED", "Catalogued"
         SOLD = "SOLD", "Sold"
         WITHDRAWN = "WITHDRAWN", "Withdrawn"
         PENDING = "PENDING", "Pending"
-    lot = models.CharField(max_length=100, unique=False, default="")
+
+    lot = models.CharField(max_length=100, default="", db_index=True)
     outturn = models.CharField(max_length=100)
     bulkoutturn = models.CharField(max_length=100, default="", blank=True)
-    mark = models.CharField(max_length=100, default="")
+    mark = models.ForeignKey(Farmer, to_field='mark', on_delete=models.SET_NULL, null=True, blank=True, related_name='coffees')
     type = models.CharField(max_length=100, default="")
     grade = models.CharField(max_length=50, default="")
     bags = models.IntegerField(null=True, blank=True, default=0)
@@ -137,7 +123,7 @@ class Coffee(models.Model):
     export_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     transport_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
-    Net_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
+    net_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     gross_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     certificate = models.CharField(max_length=100, null=True, blank=True, default="")
     status = models.ForeignKey(CoffeeStatus, on_delete=models.SET_NULL, null=True, blank=True)
@@ -147,15 +133,9 @@ class Coffee(models.Model):
     buyer = models.CharField(max_length=100, null=True, blank=True, default="")
     remarks = models.TextField(null=True, blank=True, default="")
     file = models.CharField(max_length=50, default="Master_Log.xlsx")
-    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="coffee_created_by") 
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="coffee_created_by")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.outturn
-
-
-class File(models.Model):
-    name = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)

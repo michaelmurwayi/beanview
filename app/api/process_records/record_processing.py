@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from ..models import Coffee, Mill, Warehouse, CoffeeStatus, File
+from ..models import Coffee, Mill, Warehouse, CoffeeStatus
 from ..coffee import read_file as read
 from ..coffee import clean_masterlog_df as clean
 from ..coffee import check_pockets as pockets
