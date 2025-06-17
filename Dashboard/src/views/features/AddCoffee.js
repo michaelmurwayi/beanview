@@ -96,7 +96,7 @@ const AddCoffee = (props) => {
       reader.onload = (e) => {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: "array" });
-        setSheetNames(workbook.SheetNames.slice(0, -3)); // Get all sheet names
+        setSheetNames(workbook.SheetNames.slice()); // Get all sheet names
         
       };
       reader.readAsArrayBuffer(selectedFile); // Read the file as an ArrayBuffer

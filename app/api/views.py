@@ -65,7 +65,9 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         sheets = data.get("sheetnames", "").split(",") if data.get("sheetnames") else []
 
         if files and sheets:
+            
             return process_uploaded_files(self, data, sheets)
+        
         return process_single_record(self, data)
 
     def update(self, request, *args, **kwargs):
@@ -277,7 +279,7 @@ def write_warehouse_location(ws, records):
     # Get warehouse names from DB
     warehouses = Warehouse.objects.filter(id__in=warehouse_ids).values_list("name", flat=True)
     warehouses = sorted({w.strip().upper() for w in warehouses if w})
-
+    
     # Format location string
     if not warehouses:
         location_text = "Located at (No warehouse info)"
@@ -293,7 +295,7 @@ def write_milled_by(ws, records, start_row=12, column_letter="A"):
     mill_ids = {record.get("mill") for record in records if record.get("mill")}
     
     # Query the Mill model for names and codes
-    mills = Mill.objects.filter(id__in=mill_ids).values_list("name", "location")
+    mills = Mill.objects.filter(id__in=mill_ids).values_list("name", "full_name")
 
     # Clean, deduplicate, and sort
     unique_mills = sorted({(name.strip(), code.strip()) for name, code in mills if name and code})

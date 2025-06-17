@@ -31,7 +31,7 @@ class DataCleaner:
         Returns:
             pd.DataFrame: The cleaned DataFrame with the 'Outturn' column cleaned.
         """
-        import ipdb;ipdb.set_trace()
+        
         if 'OUTTURN' in df.columns:
             df = df.copy()
             df['OUTTURN'] = df['OUTTURN'].str.strip()
