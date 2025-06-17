@@ -19,7 +19,7 @@ def read_xls_file(file, sheet_names):
                 continue  # Skip this sheet and proceed to the next one
 
             # Read the sheet starting from row 5 (index 4)
-            data_df[sheet] = pd.read_excel(file_path, sheet_name=sheet, skiprows=5)
+            data_df[sheet] = pd.read_excel(file_path, sheet_name=sheet)
             print(f"Sheet '{sheet}' loaded successfully.")
         except FileNotFoundError:
             print(f"File '{file_name}' not found.")
@@ -29,4 +29,5 @@ def read_xls_file(file, sheet_names):
         except Exception as e:
             print(f"Error loading sheet '{sheet}': {e}")
 
+    
     return data_df, file_name  # Return after processing all sheets

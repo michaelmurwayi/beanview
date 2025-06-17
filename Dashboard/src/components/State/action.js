@@ -116,59 +116,81 @@ export const post_coffee_records = (farmersRecord) => async (dispatch) => {
         dispatch({ type: 'POST_COFFEE_DATA_FAILURE', payload: { error: error.message } });
     }
 };
-
-export const update_coffee_record = (coffeeRecord) => async (dispatch) => {
+export const update_coffee_record = (coffeeRecords) => async (dispatch) => {
     try {
-        const api_url = `http://127.0.0.1:8000/api/coffee/${coffeeRecord.id}/`; // Assuming the record has an `id` field
+        console.log("we are here")
+        dispatch({ type: 'UPDATE_COFFEE_DATA_REQUEST' });
         
-        // Initialize FormData
-        const formData = new FormData();
-        // Check if coffeeRecord is a FormData instance
-        if (coffeeRecord instanceof FormData) {
-            for (const [key, value] of coffeeRecord.entries()) {
-                formData.append(key, value);
-                console.log(JSON.stringify(formData))
+        const excludedFields = ['id', 'created_at', 'updated_at'];
+        const updatedRecords = [];
+        const failedRecords = [];
+        
+        for (const record of coffeeRecords) {
+            console.log("Processing record:", record);
+            const isFormData = record instanceof FormData;
+    
+            const recordId = isFormData ? record.get('id') : record.id;
+    
+            if (!recordId) {
+            failedRecords.push({ error: 'Missing ID', record });
+            continue;
             }
-        } else {
-            // Add each key-value pair to FormData
-            Object.keys(coffeeRecord).forEach((key) => {
-                // If the value is an array or file, handle it accordingly
-                if (key === 'file' && coffeeRecord[key]) {
-                    formData.append(key, coffeeRecord[key][0]); // Assuming file is an array
+    
+            const api_url = `http://127.0.0.1:8000/api/coffee/${recordId}/`;
+            const formData = new FormData();
+    
+            if (isFormData) {
+            for (const [key, value] of record.entries()) {
+                if (excludedFields.includes(key)) continue;
+                if (value === 'null' || value === '') continue;
+                formData.append(key, value);
+            }
+            } else {
+            Object.keys(record).forEach((key) => {
+                if (excludedFields.includes(key)) return;
+    
+                const value = record[key];
+                if (value === '' || value === 'null') return;
+    
+                if (key === 'file' && value) {
+                formData.append(key, value[0]);
                 } else {
-                    formData.append(key, coffeeRecord[key]);
+                formData.append(key, value);
                 }
             });
-        }
-        
-        // Fetch configuration for PUT request (to update the record)
-        const fetchConfig = {
+            }
+            console.log("FormData for record:", Array.from(formData.entries()));
+            const response = await fetch(api_url, {
             method: 'PUT',
             body: formData,
-        };
-
-        // Dispatch request action
-        dispatch({ type: 'UPDATE_COFFEE_DATA_REQUEST' });
-
-        // Perform API request
-        const response = await fetch(api_url, fetchConfig);
-        
-        // Check for successful response
-        if (response.ok) {
-            const responseData = await response.json();
-            dispatch({ type: 'UPDATE_COFFEE_DATA_SUCCESS', payload: responseData });
-        } else {
-            // Handle non-OK responses
+            });
+    
+            if (response.ok) {
+            const data = await response.json();
+            updatedRecords.push(data);
+            } else {
             const errorData = await response.json();
-            const errorMessage = errorData.detail || 'Failed to update the record.';
-            dispatch({ type: 'UPDATE_COFFEE_DATA_FAILURE', payload: errorMessage });
+            failedRecords.push({ error: errorData.detail, record });
+            }
         }
-    } catch (error) {
-        // Catch unexpected errors and dispatch failure action
-        dispatch({ type: 'UPDATE_COFFEE_DATA_FAILURE', payload: { error: error.message } });
-    }
-};
-
+        console.log("Updated records:", updatedRecords);
+        if (failedRecords.length === 0) {
+            dispatch({ type: 'UPDATE_COFFEE_DATA_SUCCESS', payload: updatedRecords });
+        } else {
+            dispatch({
+            type: 'UPDATE_COFFEE_DATA_PARTIAL_FAILURE',
+            payload: { updated: updatedRecords, failed: failedRecords },
+            });
+        }
+        } catch (error) {
+        dispatch({
+            type: 'UPDATE_COFFEE_DATA_FAILURE',
+            payload: error.message || 'Unknown error occurred while updating multiple records.',
+        });
+        }
+  };
+  
+    
 export const delete_coffee_record = (id) => async (dispatch) => {
     try {
         const api_url = `http://127.0.0.1:8000/api/coffee/${id}/`;
@@ -419,3 +441,33 @@ export const delete_catalogue_record = (coffeeRecord) => async (dispatch) => {
         dispatch({ type: 'UPDATE_COFFEE_DATA_FAILURE', payload: { error: error.message } });
     }
 };
+
+export const submit_sale_summary = (summaryData) => async (dispatch) => {
+    const api_url = `http://127.0.0.1:8000/api/coffee/generate_summary_file/`;
+    try {
+      const response = await axios.post(api_url, summaryData);
+      dispatch({ type: "SUBMIT_SALE_SUMMARY_SUCCESS", payload: response.data });
+    } catch (error) {
+      dispatch({ type: "SUBMIT_SALE_SUMMARY_FAILURE", payload: error });
+    }
+  };
+
+export const generate_auction_file = (auctionData) => async (dispatch) => {
+    const api_url = `http://127.0.1:8000/api/catalogue/generate_auction_file/`;
+    try {
+        const response = await axios.post(api_url, auctionData);
+        dispatch({ type: "SUBMIT_AUCTION_FILE_SUCCESS", payload: response.data });
+    } catch (error) {
+        dispatch({ type: "SUBMIT_AUCTION_FILE_FAILURE", payload: error });
+    }
+};
+
+export const generate_catalogue_file = (catalogueData) => async (dispatch) => {
+    const api_url = `http://127.0.1:8000/api/catalogue/generate_catalogue_file/`;
+    try {
+        const response = await axios.post(api_url, catalogueData);
+        dispatch({ type: "SUBMIT_CATALOGUE_FILE_SUCCESS", payload: response.data });
+    } catch (error) {
+        dispatch({ type: "SUBMIT_CATALOGUE_FILE_FAILURE", payload: error });
+    }   
+}
