@@ -35,7 +35,7 @@ class FarmerSerializer(serializers.ModelSerializer):
 class CoffeeSerializer(serializers.ModelSerializer):
     farmer = FarmerSerializer(source='mark', read_only=True)
     mark = serializers.SlugRelatedField(slug_field='mark', queryset=Farmer.objects.all())
-    mill = serializers.StringRelatedField()
+    mill_id = serializers.StringRelatedField()
     warehouse = serializers.StringRelatedField()
     status = serializers.StringRelatedField()
     catalogue = serializers.StringRelatedField()
@@ -45,7 +45,7 @@ class CoffeeSerializer(serializers.ModelSerializer):
         model = Coffee
         fields = [
             'id', 'lot', 'outturn', 'bulkoutturn', 'mark', 'farmer', 'type', 'grade',
-            'bags', 'pockets', 'weight', 'price', 'sale', 'season', 'mill',
+            'bags', 'pockets', 'weight', 'price', 'sale', 'season', 'mill_id',
             'milling_charges', 'warehouse', 'warehouse_charges',
             'brokerage_charges', 'export_charges', 'transport_charges',
             'buyer', 'status', 'catalogue', 'catalogue_type', 'reserve',

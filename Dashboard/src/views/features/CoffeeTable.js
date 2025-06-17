@@ -146,7 +146,7 @@ const CoffeeRecords = ({
       {/* Generate Summary Button */}
       <div className="mb-3">
         <button className="btn btn-outline-success" onClick={handleGenerateSummary}>
-          Generate Sale Summary
+          Generate stock summary
         </button>
       </div>
 
@@ -238,7 +238,7 @@ const CoffeeRecords = ({
           <div className="modal-dialog modal-xl modal-dialog-scrollable" role="document">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Sale Summary Preview</h5>
+                <h5 className="modal-title">stock summary Preview</h5>
                 <button type="button" className="btn-close" onClick={() => setShowSummaryModal(false)}></button>
               </div>
               <div className="modal-body">
@@ -251,7 +251,9 @@ const CoffeeRecords = ({
                           <th>Outturn</th>
                           <th>Grade</th>
                           <th>Bags</th>
+                          <th>Pockets</th>
                           <th>Weight</th>
+                          <th>Status</th>
                           <th>Buyer</th>
                         </tr>
                       </thead>
@@ -261,7 +263,9 @@ const CoffeeRecords = ({
                             <td>{rec.outturn}</td>
                             <td>{rec.grade}</td>
                             <td>{rec.bags}</td>
+                            <td>{rec.pockets}</td>
                             <td>{rec.weight}</td>
+                            <td>{rec.status}</td>
                             <td>{rec.buyer}</td>
                           </tr>
                         ))}

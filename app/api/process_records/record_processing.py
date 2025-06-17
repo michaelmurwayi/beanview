@@ -159,15 +159,11 @@ def process_records(view, records):
              
         try:
 
-            # import ipdb; ipdb.set_trace()  # Set a breakpoint for debugging
-            record["MILL"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
+            record["MILL_ID"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
             record['TYPE'] = ""
             record["WAREHOUSE_ID"] = ""
-            # Set a breakpoint for debugging
             record["STATUS"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("STATUS")).pk
             
-            # Set a
-             # Set a breakpoint for debugging
             lowercased_record = {k.lower(): v for k, v in record.items()}
             serializer = view.get_serializer(data=lowercased_record)
             if serializer.is_valid(raise_exception=False):

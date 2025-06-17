@@ -151,7 +151,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def generate_summary_file(self, request, *args, **kwargs):
-        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'sale summary template.xlsx')
+        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock summary template.xlsx')
         START_ROW = 27
 
         try:
@@ -163,12 +163,12 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
             os.makedirs(base_dir, exist_ok=True)
 
-            # Collect all status IDs from all records
+            # Collect all status IDs
             all_status_ids = {
-                record.get('status_id')
+                record.get('status')
                 for summary in summaries
                 for record in summary.get('records', [])
-                if record.get('status_id') is not None
+                if record.get('status') is not None
             }
 
             status_map = {
@@ -185,9 +185,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 if not mark or not records:
                     continue  # skip invalid
 
-                total_weight = sum(float(r.get('weight') or 0) for r in records)
-                count = len(records)
-
                 mark_dir = os.path.join(base_dir, mark)
                 os.makedirs(mark_dir, exist_ok=True)
 
@@ -197,14 +194,13 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 wb = load_workbook(TEMPLATE_PATH)
                 ws = wb.active
 
-                # Write summary data
-               
+                # Set mark name in cell B6
                 ws['B6'] = mark
-               
+
                 for row_offset, record in enumerate(records, start=1):
                     row = START_ROW + row_offset
                     status_id = record.get('status')
-                    status_name = CoffeeStatus.objects.get(id=status_id).name
+                    status_name = status_map.get(status_id, "")
 
                     values = [
                         record.get('outturn'),
@@ -234,16 +230,18 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 wb.save(file_path)
                 generated_files.append({"mark": mark, "path": file_path})
 
-            return Response({"message": "Files generated", "files": generated_files}, status=200)
+            return Response({
+                "message": "Files generated",
+                "files": generated_files
+            }, status=status.HTTP_200_OK)
 
         except ValidationError as e:
             traceback.print_exc()
-            return Response({"error": str(e)}, status=400)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             traceback.print_exc()
-            return Response({"error": f"Internal server error: {str(e)}"}, status=500)
-
+            return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 def assign_lots(df, start_lot=7301):
     df = df.copy()
