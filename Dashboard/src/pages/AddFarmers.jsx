@@ -1,13 +1,51 @@
 import { useState } from 'react';
-import { Box, Tabs, Tab, Typography, Paper } from '@mui/material';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  Paper,
+  Container,
+  Button,
+} from '@mui/material';
 import Sidebar from '../components/sidebar/Sidebar';
+import CoffeeForm from '../components/farmerupload/UploadForm'; // Assuming this is your form
 
-const FormUpload = () => (
-  <Box p={2}>
-    <Typography variant="h6">Form Upload</Typography>
-    {/* Your form fields go here */}
-  </Box>
-);
+const FormUpload = () => {
+  const formData = useSelector((state) => state.coffee.CoffeeUploadFormData);
+  const dispatch = useDispatch();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    dispatch({
+      type: 'UPDATE_COFFEE_FORM_FIELD',
+      payload: { field: name, value },
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Form submitted with:', formData);
+    // Dispatch submit action here if needed
+  };
+
+  return (
+    <Box p={2}>
+      <Container sx={{ mt: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          Coffee Entry Form
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <CoffeeForm formData={formData} handleChange={handleChange} />
+          <Button type="submit" variant="contained" color="primary" sx={{ mt: 3 }}>
+            Submit
+          </Button>
+        </form>
+      </Container>
+    </Box>
+  );
+};
 
 const FileUpload = () => (
   <Box p={2}>

@@ -46,8 +46,26 @@ export const globalInitialState = {
               { name: "Sale Summary", link: "/payment/summary", iconKey: "file" }
             ]
           },
-
+        
+        
       ]
-    }
+    },
+    coffeeRecords: [],
+    loading: false,
+    error: null,
+    success: false,
+    CoffeeUploadFormData: {
+        outturnNumber: '',
+        markNumber: '',
+        certificate: '',
+        season: '',
+        grade: '',
+        bags: '',
+        pockets: '',
+        weight: '',
+        millerCode: '',
+        warehouse: '',
+        status: '',
+    },
   };
   
