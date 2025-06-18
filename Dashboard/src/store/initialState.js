@@ -11,7 +11,6 @@ export const globalInitialState = {
           dropdown: [
             { name: "Add Farmer", link: "/farmers/add", iconKey: "add" },
             { name: "Farmers Records", link: "/farmers", iconKey: "list" },
-            { name: "Stock Summaries", link: "/farmers/stock-summaries", iconKey: "file" }
           ]
         },
        {
@@ -22,9 +21,32 @@ export const globalInitialState = {
           dropdown: [
             { name: "Add Coffee", link: "/coffee/add", iconKey: "add" },
             { name: "View Coffee Records", link: "/coffee/view", iconKey: "list" },
-            { name: "Sale Summary", link: "/coffee/summary", iconKey: "file" }
+            { name: "Stock Summary", link: "/coffee/summary", iconKey: "file" }
           ]
         },
+        {
+            name: "Catalogue",
+            iconKey: "Catalogue",
+            emoji: "📘",
+            isActive: (pathname) => pathname.startsWith("/products"),
+            dropdown: [
+              { name: "Add Catalogue", link: "/Catalogue/add", iconKey: "add" },
+              { name: "View Catalogues", link: "/Catalogue/view", iconKey: "list" },
+              { name: "Sale Summary", link: "/Catalogue/summary", iconKey: "file" }
+            ]
+          },
+          {
+            name: "Payment",
+            iconKey: "payment",
+            emoji: "💰",
+            isActive: (pathname) => pathname.startsWith("/products"),
+            dropdown: [
+              { name: "Add payment", link: "/payment/add", iconKey: "add" },
+              { name: "View payments", link: "/payment/view", iconKey: "list" },
+              { name: "Sale Summary", link: "/payment/summary", iconKey: "file" }
+            ]
+          },
+
       ]
     }
   };
