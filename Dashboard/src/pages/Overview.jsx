@@ -1,16 +1,23 @@
-import Sidebar from "../components/sidebar/Sidebar";
+import React, { useState } from 'react';
+import { AppBar, Box, CssBaseline, IconButton, Toolbar, Typography } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import Sidebar from '../components/sidebar/Sidebar';
 
+const drawerWidth = 240;
 
 const Overview = () => {
-    return (
-        <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-4">
-            <h1 className="text-2xl font-bold mb-4">Overview</h1>
-            <p>This is the overview page.</p>
-        </div>
-        </div>
-    );
-    }
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  return (
+    <Box sx={{ display: 'flex' }}>
+        <CssBaseline />
+        <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
+    </Box>
+  );
+};
 
 export default Overview;
