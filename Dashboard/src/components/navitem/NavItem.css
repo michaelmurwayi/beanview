@@ -15,7 +15,7 @@
   }
   
   .sidebar-item.active {
-    background-color: #2e2e2e;
+    background-color: #121330;
     border-left: 4px solid #00e676;
     box-shadow: 0 0 10px rgba(0, 230, 118, 0.6);
   }

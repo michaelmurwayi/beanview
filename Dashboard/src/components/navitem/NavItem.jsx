@@ -79,7 +79,7 @@ const SidebarNavItem = ({ name, link, dropdown, collapsed = false, emoji, onExpa
             sx={{
               backgroundColor: "#f1eded",
               borderRadius: "20px",
-              boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.2)",
+              boxShadow: "inset 0 1px 3px #121330",
               border: "1px solid #ddd",
             }}
           >
@@ -93,7 +93,7 @@ const SidebarNavItem = ({ name, link, dropdown, collapsed = false, emoji, onExpa
                   sx={{
                     pl: 6,
                     py: 1,
-                    color: subItem.name.includes("Add") ? "green" : "black",
+                    color: subItem.name.includes("Add") ? "black" : "black",
                     backgroundColor: isSubActive ? "#e0e0e0" : "inherit",
                     borderRadius: "25px",
                     borderLeft: isSubActive ? "4px solid #00e676" : "4px solid transparent",
