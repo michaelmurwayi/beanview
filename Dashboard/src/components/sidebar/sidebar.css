@@ -1,0 +1,24 @@
+/* src/components/Sidebar.module.css */
+
+.sidebar {
+    width: 240px;
+    background-color: #1e1e2f;
+    height: 100vh;
+    padding: 1rem;
+    color: white;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .navItem {
+    margin: 1rem 0;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  
+  .navItem:hover {
+    background-color: #2e2e3f;
+    padding: 0.5rem;
+    border-radius: 4px;
+  }
+  
