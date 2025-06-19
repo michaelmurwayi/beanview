@@ -4,130 +4,201 @@ import {
   Grid,
   TextField,
   Typography,
+  Divider,
   Paper,
-  Divider
+  Button,
 } from '@mui/material';
 
-const CoffeeForm = ({ formData, handleChange }) => {
+const sectionTitleStyle = {
+  fontSize: '0.7rem',
+  fontWeight: 600,
+  color: '#B6D0E2',
+  textTransform: 'uppercase',
+  marginBottom: '1rem',
+};
+
+const inputFieldStyle = {
+  '& .MuiInputBase-root': {
+    backgroundColor: '#f9f9f9',
+    borderRadius: '8px',
+  },
+};
+
+const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
   return (
-    <Paper elevation={3} sx={{ p: 4, maxWidth: 900, mx: 'auto' }}>
-      <Typography variant="h6" gutterBottom>
-        Coffee Information
-      </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Outturn Number"
-            name="outturnNumber"
-            value={formData.outturnNumber}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Mark Number"
-            name="markNumber"
-            value={formData.markNumber}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Certificate"
-            name="certificate"
-            value={formData.certificate}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Season"
-            name="season"
-            value={formData.season}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Grade"
-            name="grade"
-            value={formData.grade}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Bags"
-            name="bags"
-            type="number"
-            value={formData.bags}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Pockets"
-            name="pockets"
-            type="number"
-            value={formData.pockets}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Weight (Kgs)"
-            name="weight"
-            type="number"
-            value={formData.weight}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-      </Grid>
+    <Box
+      display="flex"
+      justifyContent="center"
+      px={{ xs: 2, sm: 4 }}
+      width="100%"
+      sx={{ overflowX: 'hidden' }}
+    >
+      <Paper
+        elevation={2}
+        sx={{
+          p: 4,
+          width: '100%',
+          maxWidth: 900,
+          bgcolor: '#fff',
+          mt: 4,
+        }}
+      >
+        <Box display="flex" justifyContent="flex-end" mb={2}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            sx={{ textTransform: 'none', px: 4 }}
+            onClick={handleSubmit}
+          >
+            Submit
+          </Button>
+        </Box>
 
-      <Divider sx={{ my: 4 }} />
+        {/* Section: Personal Information */}
+        <Typography sx={sectionTitleStyle} >Farmer Information</Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Full Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="National ID"
+              name="nation_id"
+              value={formData.nation_id}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Mark"
+              name="mark"
+              value={formData.mark}
+              onChange={handleChange}
+              required
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Farmer Code"
+              name="code"
+              value={formData.code}
+              onChange={handleChange}
+              required
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+        </Grid>
 
-      <Typography variant="h6" gutterBottom>
-        Additional Information
-      </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Miller Code"
-            name="millerCode"
-            value={formData.millerCode}
-            onChange={handleChange}
-            fullWidth
-          />
+        <Divider sx={{ my: 4 }} />
+
+        {/* Section: Contact Information */}
+        <Typography sx={sectionTitleStyle}>Contact Information</Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Location"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Warehouse"
-            name="warehouse"
-            value={formData.warehouse}
-            onChange={handleChange}
-            fullWidth
-          />
+
+        <Divider sx={{ my: 4 }} />
+
+        {/* Section: Banking Information */}
+        <Typography sx={sectionTitleStyle}>Banking Information</Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Bank"
+              name="bank"
+              value={formData.bank}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Branch"
+              name="branch"
+              value={formData.branch}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Account Number"
+              name="account"
+              value={formData.account}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Currency"
+              name="currency"
+              value={formData.currency}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12}>
-          <TextField
-            label="Status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            fullWidth
-          />
-        </Grid>
-      </Grid>
-    </Paper>
+      </Paper>
+    </Box>
   );
 };
 
-export default CoffeeForm;
+export default FarmerForm;

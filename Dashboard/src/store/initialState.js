@@ -67,5 +67,19 @@ export const globalInitialState = {
         warehouse: '',
         status: '',
     },
+    FarmerUploadFormData: {
+        name: '',
+        nation_id: '',
+        mark: '',
+        code: '',
+        address: '',
+        phone: '',
+        email: '',
+        location: '',
+        bank: '',
+        branch: '',
+        account: '',
+        currency: '',
+    }
   };
   

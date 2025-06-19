@@ -11,17 +11,17 @@ import {
 } from '@mui/material';
 import Sidebar from '../components/sidebar/Sidebar';
 import CoffeeForm from '../components/farmerupload/UploadForm'; // Assuming this is your form
+import { updateFarmerFormField} from '../features/Farmer/FarmersSlice';
 
 const FormUpload = () => {
-  const formData = useSelector((state) => state.coffee.CoffeeUploadFormData);
+  const formData = useSelector((state) => state.farmer.FarmerUploadFormData);
+  console.log('Form Data:', formData);
   const dispatch = useDispatch();
 
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
-    dispatch({
-      type: 'UPDATE_COFFEE_FORM_FIELD',
-      payload: { field: name, value },
-    });
+    dispatch(updateFarmerFormField({ field: name, value }));
   };
 
   const handleSubmit = (e) => {
@@ -33,14 +33,9 @@ const FormUpload = () => {
   return (
     <Box p={2}>
       <Container sx={{ mt: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Coffee Entry Form
-        </Typography>
         <form onSubmit={handleSubmit}>
-          <CoffeeForm formData={formData} handleChange={handleChange} />
-          <Button type="submit" variant="contained" color="primary" sx={{ mt: 3 }}>
-            Submit
-          </Button>
+          <CoffeeForm formData={formData} handleChange={handleChange} handleSubmit={handleSubmit} />
+          {/* Submit button removed */}
         </form>
       </Container>
     </Box>
@@ -58,7 +53,7 @@ const UploadTabs = () => {
   const [tabIndex, setTabIndex] = useState(0);
 
   return (
-    <Box display="flex" height="100vh" width="100vw" overflow="hidden" m={0} p={0}>
+    <Box display="flex" height="100%" width="100%" sx={{ overflow: 'hidden auto' }} m={0} p={0}>
       {/* Sidebar */}
       <Box width="250px" bgcolor="#121330">
         <Sidebar />
