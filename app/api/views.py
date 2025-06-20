@@ -42,7 +42,7 @@ class FarmersViewSet(viewsets.ModelViewSet):
     serializer_class = FarmerSerializer
 
     def create(self, request):
-        data = request.data.dict()
+        data = request.data
         # Serialize the combined data
         
         serializer = self.get_serializer(data=data)

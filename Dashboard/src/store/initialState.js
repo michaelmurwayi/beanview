@@ -1,6 +1,7 @@
 // src/store/initialState.js
 
 export const globalInitialState = {
+    apiBaseUrl: 'http://127.0.0.1:8000/api',
     navigation: {
       items: [
         {
@@ -50,6 +51,7 @@ export const globalInitialState = {
         
       ]
     },
+
     coffeeRecords: [],
     loading: false,
     error: null,
@@ -80,6 +82,10 @@ export const globalInitialState = {
         branch: '',
         account: '',
         currency: '',
-    }
+    },
+    farmers: [],
+    loading: false,
+    error: null,
+    success: false,
   };
   

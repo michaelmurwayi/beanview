@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useEffect } from 'react';
 import {
   Box,
   Tabs,
@@ -8,15 +9,20 @@ import {
   Paper,
   Container,
   Button,
+  Alert,
 } from '@mui/material';
 import Sidebar from '../components/sidebar/Sidebar';
 import CoffeeForm from '../components/farmerupload/UploadForm'; // Assuming this is your form
-import { updateFarmerFormField} from '../features/Farmer/FarmersSlice';
+import { updateFarmerFormField} from '../store/slices/Farmers/farmerSlice'; // Adjust the import path as needed
+import { submitFarmer } from '../store/slices/Farmers/farmerActions';
 
 const FormUpload = () => {
   const formData = useSelector((state) => state.farmer.FarmerUploadFormData);
   console.log('Form Data:', formData);
+  const { error, success } = useSelector((state) => state.farmer);
+
   const dispatch = useDispatch();
+  
 
   
   const handleChange = (e) => {
@@ -28,7 +34,19 @@ const FormUpload = () => {
     e.preventDefault();
     console.log('Form submitted with:', formData);
     // Dispatch submit action here if needed
+    dispatch(submitFarmer(formData));
   };
+
+   // Clear error after 5s
+   useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        dispatch(postFarmerFailure(null));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success, dispatch]);
+
 
   return (
     <Box p={2}>
@@ -51,6 +69,7 @@ const FileUpload = () => (
 
 const UploadTabs = () => {
   const [tabIndex, setTabIndex] = useState(0);
+  const { error, success } = useSelector((state) => state.farmer);
 
   return (
     <Box display="flex" height="100%" width="100%" sx={{ overflow: 'hidden auto' }} m={0} p={0}>
@@ -61,6 +80,18 @@ const UploadTabs = () => {
 
       {/* Main Content */}
       <Box flex={1} display="flex" flexDirection="column">
+      {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Farmer submitted successfully!
+          </Alert>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Paper
           elevation={1}
           sx={{

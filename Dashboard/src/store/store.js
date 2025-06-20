@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import navigationReducer from '../features/Navigation/NavigationSlice';
 import coffeeReducer from '../features/Coffee/CoffeeSlice';
-import farmersReducer from '../features/Farmer/FarmersSlice';
+import farmersReducer from './slices/Farmers/farmerSlice';
 
 const store = configureStore({
   reducer: {
