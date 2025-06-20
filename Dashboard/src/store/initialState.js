@@ -11,7 +11,7 @@ export const globalInitialState = {
           isActive: (pathname) => pathname.startsWith("/farmers"),
           dropdown: [
             { name: "Add Farmer", link: "/farmers/add", iconKey: "add" },
-            { name: "Farmers Records", link: "/farmers", iconKey: "list" },
+            { name: "Farmers Records", link: "/farmers/view", iconKey: "list" },
           ]
         },
        {
