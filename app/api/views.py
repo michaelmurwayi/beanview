@@ -43,17 +43,26 @@ class FarmersViewSet(viewsets.ModelViewSet):
 
     def create(self, request):
         data = request.data
-        # Serialize the combined data
-        
         serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-
-        # Save the instance if valid
-        self.perform_create(serializer)
-        # Use the saved instance for headers
-        headers = self.get_success_headers(serializer.instance)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.instance)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+        except ValidationError as e:
+            return Response(
+                {"error": "Validation failed", "details": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": "An unexpected error occurred", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+     
 @method_decorator(csrf_exempt, name='dispatch')
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()

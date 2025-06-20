@@ -20,10 +20,16 @@ export const submitFarmer = () => async (dispatch, getState) => {
       });
   
       const data = await response.json();
-      dispatch(postFarmerSuccess(data));
+  
+      if (!response.ok) {
+        // response.ok is false for 4xx or 5xx
+        const errorMsg = data?.error || 'Failed to add farmer';
+        dispatch(postFarmerFailure(errorMsg));
+      } else {
+        dispatch(postFarmerSuccess(data));
+      }
     } catch (error) {
       dispatch(postFarmerFailure(error.message));
     }
   };
   
-

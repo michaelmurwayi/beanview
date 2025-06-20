@@ -41,6 +41,7 @@ const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
           maxWidth: 900,
           bgcolor: '#fff',
           mt: 4,
+          mb: 4,
         }}
       >
         <Box display="flex" justifyContent="flex-end" mb={2}>
@@ -110,6 +111,36 @@ const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <TextField
+              label="Location"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="County"
+              name="county"
+              value={formData.county}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Town"
+              name="town"
+              value={formData.town}
+              onChange={handleChange}
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
               label="Address"
               name="address"
               value={formData.address}
@@ -133,16 +164,6 @@ const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
               label="Email"
               name="email"
               value={formData.email}
-              onChange={handleChange}
-              fullWidth
-              sx={inputFieldStyle}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Location"
-              name="location"
-              value={formData.location}
               onChange={handleChange}
               fullWidth
               sx={inputFieldStyle}

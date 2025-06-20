@@ -78,6 +78,8 @@ export const globalInitialState = {
         phone: '',
         email: '',
         location: '',
+        county: '',
+        town: '',
         bank: '',
         branch: '',
         account: '',

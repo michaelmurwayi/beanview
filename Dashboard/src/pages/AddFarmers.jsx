@@ -60,12 +60,30 @@ const FormUpload = () => {
   );
 };
 
+
 const FileUpload = () => (
-  <Box p={2}>
-    <Typography variant="h6">File Upload</Typography>
-    {/* Your file input logic goes here */}
+  <Box p={2} display="flex" justifyContent="center" alignItems="center" height="100vh">
+    <Paper
+      elevation={3}
+      sx={{
+        p: 4,
+        bgcolor: '#f0f0f0',
+        borderRadius: 2,
+        textAlign: 'center',
+        maxWidth: 400,
+        width: '100%',
+      }}
+    >
+      <Typography variant="h6" gutterBottom>
+        File Upload
+      </Typography>
+      <Typography variant="body1" color="text.secondary">
+        🚧 This service is coming soon. Stay tuned!
+      </Typography>
+    </Paper>
   </Box>
 );
+
 
 const UploadTabs = () => {
   const [tabIndex, setTabIndex] = useState(0);
