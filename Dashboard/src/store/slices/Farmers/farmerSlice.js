@@ -27,6 +27,11 @@ const farmerSlice = createSlice({
       state.error = action.payload;
       state.success = false;
     },
+    fetchFarmersRequest: (state) => {
+      state.loading = true;
+      state.error = null;
+      state.farmers = [...state.farmers, action.payload]; // Keep existing farmers while fetching new ones
+    },
     fetchFarmersSuccess: (state, action) => {
       state.farmers = action.payload;
       state.loading = false;

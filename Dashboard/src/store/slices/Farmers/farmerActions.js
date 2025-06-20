@@ -32,4 +32,16 @@ export const submitFarmer = () => async (dispatch, getState) => {
       dispatch(postFarmerFailure(error.message));
     }
   };
+
+export const fetchFarmers = () => async (dispatch, getState) => {
+  const { apiBaseUrl } = getState().farmer;
+  dispatch(postFarmerRequest());
+
+  try {
+    const response = await axios.get(`${apiBaseUrl}/farmers/`);
+    dispatch(postFarmerSuccess(response.data));
+  } catch (error) {
+    dispatch(postFarmerFailure(error.message));
+  }
+}
   
