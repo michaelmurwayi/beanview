@@ -13,15 +13,17 @@ const ViewFarmers = () => {
   useEffect(() => {
     dispatch(fetchFarmers());
   }, [dispatch]);
-
-  // Dynamically generate columns from keys of first farmer
+  console.log('Farmers:', farmers);
+  // Extract columns from farmer object keys
   const columns =
-    farmers && farmers.length > 0
-      ? Object.keys(farmers[0]).map((key) => ({
-          field: key,
-          headerName: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        }))
-      : [];
+  Array.isArray(farmers) && farmers.length > 0
+    ? Object.keys(farmers[0]).map((key) => ({
+        field: key,
+        headerName: key
+          .replace(/_/g, ' ')                    // Replace underscores with spaces
+          .replace(/\b\w/g, (char) => char.toUpperCase()), // Capitalize each word
+      }))
+    : [];
 
   return (
     <Box sx={{ flexGrow: 1, height: '100vh', bgcolor: '#f4f6f8' }}>

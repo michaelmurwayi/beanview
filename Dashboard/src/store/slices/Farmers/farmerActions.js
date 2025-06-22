@@ -4,6 +4,9 @@ import {
   postFarmerRequest,
   postFarmerSuccess,
   postFarmerFailure,
+  fetchFarmersRequest,
+  fetchFarmersSuccess,
+  fetchFarmersFailure,
 } from './farmerSlice';
 
 export const submitFarmer = () => async (dispatch, getState) => {
@@ -35,13 +38,13 @@ export const submitFarmer = () => async (dispatch, getState) => {
 
 export const fetchFarmers = () => async (dispatch, getState) => {
   const { apiBaseUrl } = getState().farmer;
-  dispatch(postFarmerRequest());
+  dispatch(fetchFarmersRequest());
 
   try {
     const response = await axios.get(`${apiBaseUrl}/farmers/`);
-    dispatch(postFarmerSuccess(response.data));
+    dispatch(fetchFarmersSuccess(response.data));
   } catch (error) {
-    dispatch(postFarmerFailure(error.message));
+    dispatch(fetchFarmersFailure(error.message));
   }
 }
   

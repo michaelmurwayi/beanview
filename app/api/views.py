@@ -41,6 +41,11 @@ class FarmersViewSet(viewsets.ModelViewSet):
     queryset = Farmer.objects.all()
     serializer_class = FarmerSerializer
 
+    def list(self, request, *args, **kwargs):
+        farmers = Farmer.objects.all()
+        serializer = self.get_serializer(farmers, many=True)
+        return Response(serializer.data)  
+    
     def create(self, request):
         data = request.data
         serializer = self.get_serializer(data=data)

@@ -30,7 +30,8 @@ const farmerSlice = createSlice({
     fetchFarmersRequest: (state) => {
       state.loading = true;
       state.error = null;
-      state.farmers = [...state.farmers, action.payload]; // Keep existing farmers while fetching new ones
+      state.success = false;
+      
     },
     fetchFarmersSuccess: (state, action) => {
       state.farmers = action.payload;
@@ -55,6 +56,7 @@ export const {
   postFarmerRequest,
   postFarmerSuccess,
   postFarmerFailure,
+  fetchFarmersRequest,
   fetchFarmersSuccess,
   fetchFarmersFailure,
   clearFormStatus,
