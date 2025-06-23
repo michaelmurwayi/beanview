@@ -10,7 +10,7 @@ import {
   Row,
   Col,
 } from "reactstrap";
-import "./coffee.css";
+import './coffee.css';
 import { post_coffee_records } from "components/State/action";
 import { connect, useSelector } from "react-redux";
 import { ToastContainer, toast } from 'react-toastify';

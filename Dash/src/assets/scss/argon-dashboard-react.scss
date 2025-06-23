@@ -16,14 +16,16 @@
 
 */
 
-// Core
+// --- Bootstrap core functions MUST come first ---
+@import "~bootstrap/scss/functions";
 
+
+// --- Argon custom SCSS (your overrides/extensions) ---
 @import "argon-dashboard/custom/functions";
 @import "argon-dashboard/custom/variables";
 @import "argon-dashboard/custom/mixins";
 
-// bootstrap (4.6.0) components
-
+// --- Bootstrap 4.6 components ---
 @import "~bootstrap/scss/root";
 @import "~bootstrap/scss/reboot";
 @import "~bootstrap/scss/type";
@@ -57,18 +59,15 @@
 @import "~bootstrap/scss/utilities";
 @import "~bootstrap/scss/print";
 
-// Argon utilities and components
-
+// --- Argon utilities and components ---
 @import "argon-dashboard/custom/reboot";
 @import "argon-dashboard/custom/utilities";
 @import "argon-dashboard/custom/components";
 
-// Vendor (Plugins)
-
+// --- Vendor (plugins) ---
 @import "argon-dashboard/custom/vendors";
 
-// Docs components
-
+// --- Documentation styling (optional) ---
 @import "argon-dashboard/docs/variables";
 @import "argon-dashboard/docs/nav";
 @import "argon-dashboard/docs/clipboard-js";
@@ -78,5 +77,5 @@
 @import "argon-dashboard/docs/sidebar";
 @import "argon-dashboard/docs/footer";
 
-// React Differences
+// --- React-specific differences ---
 @import "react/react-differences";

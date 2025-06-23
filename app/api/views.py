@@ -27,6 +27,7 @@ import traceback
 from openpyxl.cell.cell import MergedCell
 import pandas as pd
 from copy import copy
+from openpyxl import Workbook
 
 
 
@@ -256,6 +257,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         except Exception as e:
             traceback.print_exc()
             return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 
 def assign_lots(df, start_lot=7301):
     df = df.copy()
@@ -452,6 +454,82 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 {"error": "Internal server error.", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    @action(detail=False, methods=['POST'])     
+    def generate_auction_file(self, request, *args, **kwargs):
+        try:
+            sale_number = request.data.get("sale")
+            records = request.data.get("records", [])
+
+            if not sale_number or not records:
+                raise ValidationError("Both 'sale' and 'records' are required and must not be empty.")
+
+            # Create directory for this sale
+            sale_dir = os.path.join(settings.MEDIA_ROOT, 'auctions', str(sale_number))
+            os.makedirs(sale_dir, exist_ok=True)
+
+            # Get all status IDs
+            status_ids = {record.get("status") for record in records if record.get("status") is not None}
+            status_map = {
+                status.id: status.name
+                for status in CoffeeStatus.objects.filter(id__in=status_ids)
+            }
+
+            # Prepare file path
+            filename = f"auction_{sale_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            file_path = os.path.join(sale_dir, filename)
+
+            # Create new workbook and worksheet
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Auction File"
+
+            # Header
+            headers = [
+                'Outturn', 'Bulk Outturn', 'Mark', 'Type', 'Grade', 'Bags',
+                'Pockets', 'Weight', 'Sale Number', 'Season', 'Certificate',
+                'Mill', 'Warehouse', 'Price', 'Buyer', 'Status'
+            ]
+            ws.append(headers)
+
+            for record in records:
+                status_id = record.get("status")
+                status_name = status_map.get(status_id, "")
+
+                values = [
+                    record.get("outturn"),
+                    record.get("bulkoutturn"),
+                    record.get("mark"),
+                    record.get("type"),
+                    record.get("grade"),
+                    record.get("bags"),
+                    record.get("pockets"),
+                    record.get("weight"),
+                    record.get("sale_number"),
+                    record.get("season"),
+                    record.get("certificate"),
+                    record.get("mill"),
+                    record.get("warehouse"),
+                    record.get("price"),
+                    record.get("buyer"),
+                    status_name,
+                ]
+                ws.append(values)
+
+            wb.save(file_path)
+
+            return Response({
+                "message": "Auction file generated",
+                "file": file_path
+            }, status=status.HTTP_200_OK)
+
+        except ValidationError as e:
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            traceback.print_exc()
+            return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 def is_less_than_24_hours_ago(target_date):
     # Get the current date and time
