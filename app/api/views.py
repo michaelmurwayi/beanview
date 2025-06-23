@@ -218,6 +218,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                     status_name = status_map.get(status_id, "")
 
                     values = [
+                        
                         record.get('outturn'),
                         record.get('bulkoutturn'),
                         record.get('mark'),
@@ -485,33 +486,30 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
             # Header
             headers = [
-                'Outturn', 'Bulk Outturn', 'Mark', 'Type', 'Grade', 'Bags',
+                'Lot', 'Mark', 'Grade', 'Bags',
                 'Pockets', 'Weight', 'Sale Number', 'Season', 'Certificate',
-                'Mill', 'Warehouse', 'Price', 'Buyer', 'Status'
+                'Agent Code','Remarks'
             ]
             ws.append(headers)
 
             for record in records:
                 status_id = record.get("status")
                 status_name = status_map.get(status_id, "")
-
+                Agent_Code = "049"
+                remarks = ""
+                
                 values = [
-                    record.get("outturn"),
-                    record.get("bulkoutturn"),
+                    record.get("lot"),
                     record.get("mark"),
-                    record.get("type"),
                     record.get("grade"),
                     record.get("bags"),
                     record.get("pockets"),
                     record.get("weight"),
-                    record.get("sale_number"),
+                    record.get("sale"),
                     record.get("season"),
                     record.get("certificate"),
-                    record.get("mill"),
-                    record.get("warehouse"),
-                    record.get("price"),
-                    record.get("buyer"),
-                    status_name,
+                    Agent_Code,
+                    remarks,
                 ]
                 ws.append(values)
 

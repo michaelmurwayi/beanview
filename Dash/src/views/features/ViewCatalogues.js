@@ -52,6 +52,7 @@ const Files = (props) => {
       if (!record.bulkoutturn) {
         const key = `no-bulkoutturn-${Math.random()}`;
         categorized[key] = {
+          lot: record.lot,
           mark: record.outturn + '/' + record.mark,
           outturn: record.outturn,
           bulkoutturn: record.bulkoutturn,
@@ -204,6 +205,8 @@ const Files = (props) => {
               <table className="table table-striped">
                 <thead>
                   <tr>
+                    <th>Lot</th>
+                    <th>Bulk Outturn</th>
                     <th>C_Outturn</th>
                     <th>Mark</th>
                     <th>Grade</th>
