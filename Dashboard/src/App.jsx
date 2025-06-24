@@ -1,7 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Overview from './pages/Overview'
+import Overview from './pages/Overview';
 import AddFarmers from './pages/AddFarmers';
 import ViewFarmers from './pages/ViewFarmers';
+
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
@@ -12,9 +15,11 @@ function App() {
         <Route path="/farmers/view" element={<ViewFarmers />} />
         {/* Add more routes as needed */}
       </Routes>
+
+      {/* Global toast container */}
+      <ToastContainer position="top-right" autoClose={3000} />
     </Router>
   );
 }
-
 
 export default App;

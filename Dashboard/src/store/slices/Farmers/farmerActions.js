@@ -11,6 +11,8 @@ import {
   updateFarmerSuccess,
   updateFarmerFailure,
 } from './farmerSlice';
+import { createAsyncThunk } from '@reduxjs/toolkit';
+
 
 export const submitFarmer = () => async (dispatch, getState) => {
     dispatch(postFarmerRequest());
@@ -67,18 +69,18 @@ export const deleteFarmer = (id) => async (dispatch, getState) => {
   }
 }
 
-export const updateFarmer = (farmer) => async (dispatch, getState) => {
-  const {apiBaseUrl}  = getState().farmer;
-  console.log('Updating farmer with ID:', farmer);
-  try {
-    const { id, ...payload } = farmer;
-    console.log('Updating farmer with payload:', payload), id;
-    const response = await axios.put(`${apiBaseUrl}/farmers/${id}/`, payload);
-    dispatch(updateFarmerRequest(response.data));
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
-    dispatch(updateFarmerSuccess(response.data));
-  } catch (error) {
-    dispatch(updateFarmerFailure(error.response?.data || error.message));
+export const updateFarmer = createAsyncThunk(
+  'farmers/update',
+  async (farmer, { rejectWithValue }) => {
+    try {
+      const { id, ...payload } = farmer;
+      const response = await axios.put(`${apiBaseUrl}/farmers/${id}/`, payload);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
-};
+);
   

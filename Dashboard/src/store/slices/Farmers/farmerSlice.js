@@ -5,13 +5,18 @@ const farmerSlice = createSlice({
   name: 'farmers',
   initialState: globalInitialState,
   reducers: {
+    // Form field update
     updateFarmerFormField: (state, action) => {
       const { field, value } = action.payload;
       state.FarmerUploadFormData[field] = value;
     },
+
+    // Reset form to initial
     resetFarmerForm: (state) => {
       state.FarmerUploadFormData = { ...globalInitialState.FarmerUploadFormData };
     },
+
+    // POST farmer
     postFarmerRequest: (state) => {
       state.loading = true;
       state.error = null;
@@ -27,11 +32,12 @@ const farmerSlice = createSlice({
       state.error = action.payload;
       state.success = false;
     },
+
+    // FETCH farmers
     fetchFarmersRequest: (state) => {
       state.loading = true;
       state.error = null;
       state.success = false;
-      
     },
     fetchFarmersSuccess: (state, action) => {
       state.farmers = action.payload;
@@ -43,11 +49,8 @@ const farmerSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-    clearFormStatus: (state) => {
-      state.error = null;
-      state.success = false;
-    },
-  },
+
+    // UPDATE farmer
     updateFarmerRequest: (state) => {
       state.loading = true;
       state.error = null;
@@ -66,6 +69,12 @@ const farmerSlice = createSlice({
       state.success = false;
     },
 
+    // Utility
+    clearFormStatus: (state) => {
+      state.error = null;
+      state.success = false;
+    },
+  },
 });
 
 export const {
@@ -77,10 +86,10 @@ export const {
   fetchFarmersRequest,
   fetchFarmersSuccess,
   fetchFarmersFailure,
-  clearFormStatus,
   updateFarmerRequest,
   updateFarmerSuccess,
   updateFarmerFailure,
+  clearFormStatus,
 } = farmerSlice.actions;
 
 export default farmerSlice.reducer;
