@@ -47,4 +47,25 @@ export const fetchFarmers = () => async (dispatch, getState) => {
     dispatch(fetchFarmersFailure(error.message));
   }
 }
+
+export const deleteFarmer = (id) => async (dispatch, getState) => {
+  const { apiBaseUrl } = getState().farmer;
+
+  try {
+    const response = await axios.delete(`${apiBaseUrl}/farmers/${id}/`);
+    if (response.status === 204) { // No content means successful deletion
+      dispatch(fetchFarmers()); // Refresh the list after deletion
+    } else {
+      throw new Error('Failed to delete farmer');
+    }
+  } catch (error) {
+    console.error('Error deleting farmer:', error);
+    // Handle error appropriately, e.g., show a notification
+  }
+}
+
+
+export const updateFarmer = (data) => async (dispatch, getState) => {}
+
+
   

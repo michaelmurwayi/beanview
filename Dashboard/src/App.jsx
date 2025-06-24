@@ -7,7 +7,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/overview" element={<Overview />} />
+        <Route path="/" element={<Overview />} />
         <Route path="/farmers/add" element={<AddFarmers />} />
         <Route path="/farmers/view" element={<ViewFarmers />} />
         {/* Add more routes as needed */}
