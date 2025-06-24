@@ -33,24 +33,24 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-
 class Farmer(models.Model):
+    id = models.AutoField(primary_key=True)  # ✅ Use AutoField for primary key
     name = models.CharField(max_length=255)
     national_id = models.CharField(max_length=10, default="", null=True, blank=True)
-    code  = models.CharField(max_length=100, unique=True, primary_key=True)
+    code  = models.CharField(max_length=100, unique=True)  # ✅ just unique, not primary
     mark = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    address = models.CharField(max_length=255 , blank=True, null=True)
-    phonenumber = models.CharField(max_length=15 , default="", blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    phonenumber = models.CharField(max_length=15, default="", blank=True, null=True)
     email = models.EmailField(default="", blank=True, null=True)
-    county = models.CharField(max_length=100 , blank=True, null=True)
-    town = models.CharField(max_length=100 , blank=True, null=True)
+    county = models.CharField(max_length=100, blank=True, null=True)
+    town = models.CharField(max_length=100, blank=True, null=True)
     bank = models.CharField(max_length=100, blank=True, null=True, default="")
     branch = models.CharField(max_length=100, blank=True, null=True)
-    account = models.CharField(max_length=20 , blank=True, null=True)
-    currency = models.CharField(max_length=3 , default='KES', blank=True, null=True)
+    account = models.CharField(max_length=20, blank=True, null=True)
+    currency = models.CharField(max_length=3, default='KES', blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return self.name, self
 
 class Buyer(models.Model):
     name = models.CharField(max_length=255)

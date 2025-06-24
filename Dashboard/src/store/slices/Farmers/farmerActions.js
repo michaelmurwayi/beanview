@@ -7,6 +7,9 @@ import {
   fetchFarmersRequest,
   fetchFarmersSuccess,
   fetchFarmersFailure,
+  updateFarmerRequest,
+  updateFarmerSuccess,
+  updateFarmerFailure,
 } from './farmerSlice';
 
 export const submitFarmer = () => async (dispatch, getState) => {
@@ -64,8 +67,18 @@ export const deleteFarmer = (id) => async (dispatch, getState) => {
   }
 }
 
+export const updateFarmer = (farmer) => async (dispatch, getState) => {
+  const {apiBaseUrl}  = getState().farmer;
+  console.log('Updating farmer with ID:', farmer);
+  try {
+    const { id, ...payload } = farmer;
+    console.log('Updating farmer with payload:', payload), id;
+    const response = await axios.put(`${apiBaseUrl}/farmers/${id}/`, payload);
+    dispatch(updateFarmerRequest(response.data));
 
-export const updateFarmer = (data) => async (dispatch, getState) => {}
-
-
+    dispatch(updateFarmerSuccess(response.data));
+  } catch (error) {
+    dispatch(updateFarmerFailure(error.response?.data || error.message));
+  }
+};
   

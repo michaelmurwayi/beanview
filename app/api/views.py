@@ -45,6 +45,7 @@ class FarmersViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         farmers = Farmer.objects.all()
         serializer = self.get_serializer(farmers, many=True)
+        
         return Response(serializer.data)  
     
     def create(self, request):

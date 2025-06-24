@@ -48,6 +48,24 @@ const farmerSlice = createSlice({
       state.success = false;
     },
   },
+    updateFarmerRequest: (state) => {
+      state.loading = true;
+      state.error = null;
+      state.success = false;
+    },
+    updateFarmerSuccess: (state, action) => {
+      state.loading = false;
+      state.success = true;
+      state.farmers = state.farmers.map((farmer) =>
+        farmer.id === action.payload.id ? action.payload : farmer
+      );
+    },
+    updateFarmerFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+      state.success = false;
+    },
+
 });
 
 export const {
@@ -60,6 +78,9 @@ export const {
   fetchFarmersSuccess,
   fetchFarmersFailure,
   clearFormStatus,
+  updateFarmerRequest,
+  updateFarmerSuccess,
+  updateFarmerFailure,
 } = farmerSlice.actions;
 
 export default farmerSlice.reducer;

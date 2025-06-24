@@ -11,8 +11,9 @@ import {
 } from '@mui/material';
 import Sidebar from '../components/sidebar/Sidebar';
 import Table from '../components/table/Table'; // ← rename here if needed
-import { fetchFarmers, deleteFarmer } from '../store/slices/Farmers/farmerActions';
+import { fetchFarmers, deleteFarmer, updateFarmer } from '../store/slices/Farmers/farmerActions';
 import { useDispatch, useSelector } from 'react-redux';
+
 
 const ViewFarmers = () => {
   const dispatch = useDispatch();
@@ -36,7 +37,7 @@ const ViewFarmers = () => {
   };
 
   const handleUpdate = () => {
-    updateFarmer([selectedRecord]);
+    dispatch(updateFarmer(selectedRecord));
     setShowEditModal(false);
     dispatch(fetchFarmers());
   };
@@ -102,24 +103,38 @@ const ViewFarmers = () => {
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onClose={() => setShowEditModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Farmer Record</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: "#121330", color:"white" }}>Edit Farmer Record</DialogTitle>
         <DialogContent dividers>
           {Object.entries(selectedRecord).map(([key, value]) => (
-            <TextField
-              key={key}
-              label={key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-              name={key}
-              value={value}
-              onChange={handleEditChange}
-              fullWidth
-              margin="dense"
-              size="small"
-              disabled={key === 'id'} // prevent editing primary key
-            />
+          <TextField
+            key={key}
+            label={key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+            name={key}
+            value={value}
+            onChange={handleEditChange}
+            fullWidth
+            margin="dense"
+            size="small"
+            sx={{
+              mb: 2,
+              '& input': {
+                fontSize: '0.75rem',         // 👈 font size
+                color: 'grey',            // 👈 font color (deep blue)
+              },
+              '& label': {
+                fontSize: '0.7rem',
+                color: '#121330',            // 👈 label color (blue-grey)
+              },
+              '& .MuiInputBase-root': {
+                backgroundColor: '#f9f9f9',  // 👈 optional: input background
+              }
+            }}
+            disabled={key === 'id'} // prevent editing primary key
+          />
           ))}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowEditModal(false)}>Cancel</Button>
+          <Button onClick={() => setShowEditModal(false)} sx={{ color: "red" }}>Cancel</Button>
           <Button onClick={handleUpdate} variant="contained" color="primary">
             Update
           </Button>
