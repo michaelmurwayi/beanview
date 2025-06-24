@@ -1,94 +1,108 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Table as MuiTable,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Typography,
-  Box,
-  CircularProgress,
+  Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, Paper, Typography, Box, TablePagination
 } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
-const formatCellValue = (value) => {
-  if (value === null || value === undefined) return '--';
-  if (typeof value === 'object') return JSON.stringify(value); // Safely show objects
-  return String(value); // Ensures it's renderable
-};
-
-const Table = ({ data = [], columns = [], loading, error }) => {
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={3}>
-        <Typography color="error" variant="h6">
-          ❌ Failed to load data
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {error}
-        </Typography>
-      </Box>
-    );
-  }
-
+const TableDisplay = ({ data = [], columns = [], loading = false, error = null }) => {
   const hasData = Array.isArray(data) && data.length > 0;
 
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 70;
+
+  const handleChangePage = (_, newPage) => {
+    setPage(newPage);
+  };
+
   return (
-    <TableContainer component={Paper} elevation={2} sx={{ height: '100%', p: 2 }}>
-      {hasData ? (
-        <MuiTable>
-          <TableHead>
-            <TableRow>
-              {columns.map((col) => (
-                <TableCell key={col.field} sx={{ fontWeight: 'bold', backgroundColor: '#f1f5f9' }}>
-                  {col.headerName}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.map((row, idx) => (
-              <TableRow key={idx}>
-                {columns.map((col) => (
-                  <TableCell key={col.field}>
-                    {formatCellValue(row[col.field])}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </MuiTable>
+    <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden', m: 0, p: 0 }}>
+      {loading ? (
+        <Typography align="center" py={4}>Loading data...</Typography>
+      ) : error ? (
+        <Typography align="center" color="error" py={4}>
+          Failed to load data: {error}
+        </Typography>
+      ) : hasData ? (
+        <>
+          <TableContainer sx={{ overflowX: 'auto', maxHeight: '600px' }}>
+            <Table stickyHeader sx={{ minWidth: 1000 }}>
+              <TableHead>
+                <TableRow>
+                  {columns.map((col) => (
+                    <TableCell
+                      key={col.field}
+                      sx={{
+                        fontWeight: 'bold',
+                        fontSize: '0.75rem',
+                        backgroundColor: '#f0f0f0',
+                        color: '#333',
+                        padding: '6px',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {col.headerName}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row, idx) => (
+                    <TableRow
+                      key={idx}
+                      hover
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: '#ACCAFD',
+                          cursor: 'pointer',
+                        },
+                      }}
+                    >
+                      {columns.map((col) => (
+                        <TableCell
+                          key={col.field}
+                          sx={{ fontSize: '0.65rem', padding: '6px', whiteSpace: 'nowrap' }}
+                        >
+                          {row[col.field] ?? '--'}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            component="div"
+            count={data.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[]}
+          />
+        </>
       ) : (
         <Box
-          height="100%"
           display="flex"
+          flexDirection="column"
           alignItems="center"
           justifyContent="center"
-          textAlign="center"
-          flexDirection="column"
-          sx={{ bgcolor: '#f5f5f5', borderRadius: 2, p: 4 }}
+          height="300px"
+          width="100%"
+          m={0}
         >
           <InfoOutlinedIcon sx={{ fontSize: 48, color: '#999' }} />
-          <Typography variant="h6" color="textSecondary" mt={1}>
+          <Typography variant="h6" mt={2} color="textSecondary">
             No information to display
           </Typography>
           <Typography variant="body2" color="text.secondary" maxWidth={400}>
-            🤷‍♂️ It seems there’s currently no data available. Please check again later or contact support.
+            🤷‍♂️ It seems there’s currently no data available. Please contact the system administrator or try again later.
           </Typography>
         </Box>
       )}
-    </TableContainer>
+    </Paper>
   );
 };
 
-export default Table;
+export default TableDisplay;
