@@ -26,7 +26,7 @@ class FarmerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Farmer
         fields = [
-            'id','code', 'name', 'national_id', 'mark', 'address',
+            'id','code', 'name', 'mark', 'address',
             'phonenumber', 'email', 'county', 'town',
             'bank', 'branch', 'account', 'currency'
         ]

@@ -36,7 +36,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Farmer(models.Model):
     id = models.AutoField(primary_key=True)  # ✅ Use AutoField for primary key
     name = models.CharField(max_length=255)
-    national_id = models.CharField(max_length=10, default="", null=True, blank=True)
     code  = models.CharField(max_length=100, unique=True)  # ✅ just unique, not primary
     mark = models.CharField(max_length=100, unique=True, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)

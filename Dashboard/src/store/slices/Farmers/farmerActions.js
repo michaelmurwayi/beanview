@@ -53,21 +53,22 @@ export const fetchFarmers = () => async (dispatch, getState) => {
   }
 }
 
-export const deleteFarmer = (id) => async (dispatch, getState) => {
-  const { apiBaseUrl } = getState().farmer;
+export const deleteFarmer = (id) => async (dispatch) => {
+  dispatch(fetchFarmersRequest());
 
   try {
-    const response = await axios.delete(`${apiBaseUrl}/farmers/${id}/`);
-    if (response.status === 204) { // No content means successful deletion
-      dispatch(fetchFarmers()); // Refresh the list after deletion
-    } else {
-      throw new Error('Failed to delete farmer');
-    }
+    await axios.delete(`${apiBaseUrl}/farmers/${id}/`);
+    
+    // Option 1: Re-fetch the full list after deletion
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/farmers/`);
+    dispatch(fetchFarmersSuccess(response.data));
+
+    // Option 2: Or remove locally without refetching (requires additional reducer)
+    // dispatch(deleteFarmerSuccess(id));
   } catch (error) {
-    console.error('Error deleting farmer:', error);
-    // Handle error appropriately, e.g., show a notification
+    dispatch(fetchFarmersFailure(error.response?.data || error.message));
   }
-}
+};
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 

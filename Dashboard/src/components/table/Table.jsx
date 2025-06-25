@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, Box, TablePagination, IconButton
+  TableRow, Paper, Typography, Box, TablePagination, IconButton, TextField
 } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import EditIcon from '@mui/icons-material/Edit';
@@ -15,13 +15,18 @@ const TableDisplay = ({
   onEdit = () => {},
   onDelete = () => {}
 }) => {
-  const hasData = Array.isArray(data) && data.length > 0;
   const [page, setPage] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
   const rowsPerPage = 65;
 
   const handleChangePage = (_, newPage) => {
     setPage(newPage);
   };
+
+  // Filter data by 'mark'
+  const filteredData = data.filter((row) =>
+    row.mark?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Add Actions column
   const extendedColumns = [
@@ -33,8 +38,24 @@ const TableDisplay = ({
     }
   ];
 
+  const hasData = Array.isArray(filteredData) && filteredData.length > 0;
+
   return (
     <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden', m: 0, p: 0 }}>
+      <Box sx={{ p: 2 }}>
+        <TextField
+          label="Search by Mark"
+          variant="outlined"
+          size="small"
+          fullWidth
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPage(0); // Reset to first page on search
+          }}
+        />
+      </Box>
+
       {loading ? (
         <Typography align="center" py={4}>Loading data...</Typography>
       ) : error ? (
@@ -48,9 +69,7 @@ const TableDisplay = ({
               overflow: 'auto',
               maxHeight: '100%',
               scrollbarWidth: 'none',
-              '&::-webkit-scrollbar': {
-                display: 'none',
-              },
+              '&::-webkit-scrollbar': { display: 'none' },
             }}
           >
             <Table stickyHeader sx={{ minWidth: 1000 }}>
@@ -62,8 +81,8 @@ const TableDisplay = ({
                       sx={{
                         fontWeight: 'bold',
                         fontSize: '0.75rem',
-                        backgroundColor: '#f0f0f0',
-                        color: '#333',
+                        backgroundColor: '#121330',
+                        color: 'white',
                         padding: '6px',
                         whiteSpace: 'nowrap',
                       }}
@@ -74,7 +93,7 @@ const TableDisplay = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data
+                {filteredData
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row, idx) => (
                     <TableRow
@@ -119,7 +138,7 @@ const TableDisplay = ({
           </TableContainer>
           <TablePagination
             component="div"
-            count={data.length}
+            count={filteredData.length}
             page={page}
             onPageChange={handleChangePage}
             rowsPerPage={rowsPerPage}
