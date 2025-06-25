@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Overview from './pages/Overview';
 import AddFarmers from './pages/AddFarmers';
 import ViewFarmers from './pages/ViewFarmers';
+import AddCoffee from './pages/AddCoffee';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
