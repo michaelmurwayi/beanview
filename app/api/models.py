@@ -49,7 +49,7 @@ class Farmer(models.Model):
     currency = models.CharField(max_length=3, default='KES', blank=True, null=True)
 
     def __str__(self):
-        return self.name, self
+        return self.name
 
 class Buyer(models.Model):
     name = models.CharField(max_length=255)

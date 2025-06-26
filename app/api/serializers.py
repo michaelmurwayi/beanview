@@ -43,15 +43,7 @@ class CoffeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Coffee
-        fields = [
-            'id', 'lot', 'outturn', 'bulkoutturn', 'mark', 'farmer', 'type', 'grade',
-            'bags', 'pockets', 'weight', 'price', 'sale', 'season', 'mill_id',
-            'milling_charges', 'warehouse', 'warehouse_charges',
-            'brokerage_charges', 'export_charges', 'transport_charges',
-            'buyer', 'status', 'catalogue', 'catalogue_type', 'reserve',
-            'file', 'certificate', 'remarks', 'created_by',
-            'created_at', 'updated_at'
-        ]
+        fields = '__all__'
         extra_kwargs = {
             'catalogue': {'required': False, 'allow_null': True},
             'reserve': {'required': False},

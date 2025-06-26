@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Grid,
   Box,
   Dialog,
   DialogTitle,
@@ -9,18 +10,15 @@ import {
   Button,
 } from '@mui/material';
 import Sidebar from '../components/sidebar/Sidebar';
-import Table from '../components/table/Table';
-import {
-  fetchFarmers,
-  deleteFarmer,
-  updateFarmer,
-} from '../store/slices/Farmers/farmerActions';
+import Table from '../components/table/Table'; // ← rename here if needed
+import { fetchFarmers, deleteFarmer, updateFarmer } from '../store/slices/Farmers/farmerActions';
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
+
 
 const ViewFarmers = () => {
   const dispatch = useDispatch();
   const { farmers, loading, error } = useSelector((state) => state.farmer);
+  console.log('Farmers:', farmers);
 
   const [selectedRecord, setSelectedRecord] = useState({});
   const [showEditModal, setShowEditModal] = useState(false);
@@ -28,7 +26,7 @@ const ViewFarmers = () => {
   useEffect(() => {
     dispatch(fetchFarmers());
   }, [dispatch]);
-
+  console.log('Farmers:', farmers);
   const handleEditClick = (record) => {
     setSelectedRecord({ ...record });
     setShowEditModal(true);
@@ -39,36 +37,17 @@ const ViewFarmers = () => {
     setSelectedRecord((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleUpdate = async () => {
-    const updatePromise = new Promise(async (resolve, reject) => {
-      try {
-        await dispatch(updateFarmer(selectedRecord));
-        resolve();
-      } catch (err) {
-        reject(err);
-      }
-    });
-
-    toast.promise(updatePromise, {
-      pending: 'Updating farmer...',
-      success: 'Farmer updated successfully!',
-      error: 'Failed to update farmer.',
-    });
-
-    try {
-      await updatePromise;
-      setShowEditModal(false);
-      dispatch(fetchFarmers());
-    } catch (err) {
-      // Toast will already show error
-    }
+  const handleUpdate = () => {
+    console.log('Updating record:', selectedRecord);
+    updateFarmer([selectedRecord]);
+    setShowEditModal(false);
+    dispatch(fetchFarmers());
   };
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
-      dispatch(deleteFarmer(id));
+      deleteFarmer(id);
       dispatch(fetchFarmers());
-      toast.success('Farmer deleted successfully!');
     }
   };
 
@@ -76,9 +55,7 @@ const ViewFarmers = () => {
     Array.isArray(farmers) && farmers.length > 0
       ? Object.keys(farmers[0]).map((key) => ({
           field: key,
-          headerName: key
-            .replace(/_/g, ' ')
-            .replace(/\b\w/g, (char) => char.toUpperCase()),
+          headerName: key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
         }))
       : [];
 
@@ -128,42 +105,38 @@ const ViewFarmers = () => {
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onClose={() => setShowEditModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ backgroundColor: '#121330', color: 'white' }}>
-          Edit Farmer Record
-        </DialogTitle>
+        <DialogTitle sx={{ backgroundColor: "#121330", color:"white" }}>Edit Farmer Record</DialogTitle>
         <DialogContent dividers>
           {Object.entries(selectedRecord).map(([key, value]) => (
-            <TextField
-              key={key}
-              label={key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-              name={key}
-              value={value}
-              onChange={handleEditChange}
-              fullWidth
-              margin="dense"
-              size="small"
-              sx={{
-                mb: 2,
-                '& input': {
-                  fontSize: '0.75rem',
-                  color: 'grey',
-                },
-                '& label': {
-                  fontSize: '0.7rem',
-                  color: '#121330',
-                },
-                '& .MuiInputBase-root': {
-                  backgroundColor: '#f9f9f9',
-                },
-              }}
-              disabled={key === 'id'}
-            />
+          <TextField
+            key={key}
+            label={key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+            name={key}
+            value={value}
+            onChange={handleEditChange}
+            fullWidth
+            margin="dense"
+            size="small"
+            sx={{
+              mb: 2,
+              '& input': {
+                fontSize: '0.75rem',         // 👈 font size
+                color: 'grey',            // 👈 font color (deep blue)
+              },
+              '& label': {
+                fontSize: '0.7rem',
+                color: '#121330',            // 👈 label color (blue-grey)
+              },
+              '& .MuiInputBase-root': {
+                backgroundColor: '#f9f9f9',  // 👈 optional: input background
+              }
+            }}
+            disabled={key === 'id'} // prevent editing primary key
+          />
           ))}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowEditModal(false)} sx={{ color: 'red' }}>
-            Cancel
-          </Button>
+          <Button onClick={() => setShowEditModal(false)} sx={{ color: "red" }}>Cancel</Button>
           <Button onClick={handleUpdate} variant="contained" color="primary">
             Update
           </Button>

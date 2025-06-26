@@ -2,8 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 import { globalInitialState } from '../../initialState';
 
 const farmerSlice = createSlice({
-  name: 'farmers',
-  initialState: globalInitialState,
+  name: 'farmer',
+  initialState: globalInitialState.farmer,
   reducers: {
     // Form field update
     updateFarmerFormField: (state, action) => {

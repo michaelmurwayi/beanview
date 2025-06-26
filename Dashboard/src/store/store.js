@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import navigationReducer from '../features/Navigation/NavigationSlice';
-import coffeeReducer from '../features/Coffee/CoffeeSlice';
+import coffeeReducer from './slices/Coffee/coffeeSlice';
 import farmersReducer from './slices/Farmers/farmerSlice';
 
 const store = configureStore({

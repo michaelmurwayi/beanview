@@ -22,7 +22,7 @@ const TableDisplay = ({
   const handleChangePage = (_, newPage) => {
     setPage(newPage);
   };
-
+  console.log('Data:', data);
   // Filter data by 'mark'
   const filteredData = data.filter((row) =>
     row.mark?.toLowerCase().includes(searchTerm.toLowerCase())

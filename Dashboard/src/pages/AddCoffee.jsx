@@ -1,102 +1,139 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Paper,
-  Grid,
+  Box, Tabs, Tab, Typography, Paper, Container, Button, Alert, TextField
 } from '@mui/material';
 import Sidebar from '../components/sidebar/Sidebar';
-import { useDispatch } from 'react-redux';
-import { addCoffeeRecord } from '../store/slices/Coffee/coffeeActions';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import { submitCoffee, fetchCoffee } from '../store/slices/Coffee/coffeeActions';
+import CoffeeUploadForm from '../components/coffeeupload/UploadForm'; // Adjust the import path as needed
 
-const AddCoffee = () => {
+const initialCoffeeForm = {
+  outturn: '', bulkoutturn: '', mark: '', type: '', grade: '', bags: 0,
+  pockets: 0.0, weight: '', sale: '', season: '2024/2025', mill: '', milling_charges: 0.0,
+  warehouse: '', warehouse_charges: 0.0, brokerage_charges: 0.0, export_charges: 0.0,
+  transport_charges: 0.0, price: 0.0, net_value: 0.0, gross_value: 0.0, certificate: '',
+  status: '', reserve: 0, buyer: '', remarks: ''
+};
+
+const FormUpload = () => {
+  const [formData, setFormData] = useState(initialCoffeeForm);
   const dispatch = useDispatch();
-
-  const [formData, setFormData] = useState({
-    mark: '',
-    grade: '',
-    weight: '',
-    season: '',
-    mill: '',
-    warehouse: '',
-    price: '',
-    buyer: '',
-  });
+  const { success, error } = useSelector((state) => state.coffee);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: isNaN(value) || value === '' ? value : Number(value)
+    }));
   };
 
-  const handleSubmit = async () => {
-    try {
-      const response = await dispatch(addCoffeeRecord(formData));
-      if (response?.type.includes('Success')) {
-        toast.success('Coffee record added successfully!');
-        setFormData({
-          mark: '', grade: '', weight: '', season: '',
-          mill: '', warehouse: '', price: '', buyer: ''
-        });
-      } else {
-        toast.error('Failed to add coffee record.');
-      }
-    } catch (error) {
-      toast.error('An error occurred while saving.');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const resultAction = await dispatch(submitCoffee(formData));
+    if (resultAction.type.includes('fulfilled')) {
+      toast.success('Coffee submitted!');
+      setFormData(initialCoffeeForm);
+      dispatch(fetchCoffee());
+    } else {
+      toast.error('Submit failed');
     }
   };
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f4f6f8' }}>
-      <Box
-        sx={{
-          width: { xs: '100%', sm: '30%', md: '25%', lg: '18%' },
-          maxWidth: 280,
-          bgcolor: '#121330',
-          height: '100%',
-        }}
-      >
+    <Container sx={{ mt: 4 }}>
+      {success && <Alert severity="success">Coffee submitted successfully</Alert>}
+      {error && <Alert severity="error">{error}</Alert>}
+      <CoffeeUploadForm
+        formData={formData}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+    />
+    </Container>
+  );
+};
+
+const FileUpload = () => (
+  <Box p={2} display="flex" justifyContent="center" alignItems="center" height="100vh">
+    <Paper
+      elevation={3}
+      sx={{
+        p: 4,
+        bgcolor: '#f0f0f0',
+        borderRadius: 2,
+        textAlign: 'center',
+        maxWidth: 400,
+        width: '100%',
+      }}
+    >
+      <Typography variant="h6" gutterBottom>
+        File Upload
+      </Typography>
+      <Typography variant="body1" color="text.secondary">
+        🚧 This feature is coming soon.
+      </Typography>
+    </Paper>
+  </Box>
+);
+
+const UploadCoffeeTabs = () => {
+  const [tabIndex, setTabIndex] = useState(0);
+
+  return (
+    <Box display="flex" height="100%" width="100%" sx={{ overflow: 'hidden auto' }}>
+      {/* Sidebar */}
+      <Box width="250px" bgcolor="#121330">
         <Sidebar />
       </Box>
 
-      <Box
-        sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          p: 3,
-        }}
-      >
-        <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Add Coffee Record
-          </Typography>
-          <Grid container spacing={2}>
-            {Object.entries(formData).map(([key, value]) => (
-              <Grid item xs={12} sm={6} md={4} key={key}>
-                <TextField
-                  label={key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                  name={key}
-                  value={value}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                  sx={{
-                    '& input': { fontSize: '0.75rem', color: '#333' },
-                    '& label': { fontSize: '0.7rem' },
-                  }}
-                />
-              </Grid>
-            ))}
-          </Grid>
+      {/* Main Content */}
+      <Box flex={1} display="flex" flexDirection="column">
+        <Paper
+          elevation={1}
+          sx={{
+            height: '100%',
+            width: '100%',
+            borderRadius: 0,
+            backgroundColor: '#f9f9fb',
+          }}
+        >
+          <Tabs
+            value={tabIndex}
+            onChange={(e, newIndex) => setTabIndex(newIndex)}
+            variant="fullWidth"
+            sx={{
+              backgroundColor: '#ffffff',
+              borderBottom: '1px solid #e0e0e0',
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 500,
+                fontSize: '1rem',
+                borderRadius: '8px 8px 0 0',
+                mx: 0.5,
+                color: '#555',
+                '&:hover': {
+                  backgroundColor: '#f0f0f5',
+                },
+              },
+              '& .Mui-selected': {
+                backgroundColor: '#e7f0fa',
+                color: '#1976d2',
+              },
+              '& .MuiTabs-indicator': {
+                height: 3,
+                backgroundColor: '#90caf9',
+                borderRadius: 2,
+              },
+            }}
+          >
+            <Tab label="Form Upload" />
+            <Tab label="File Upload" />
+          </Tabs>
 
-          <Box mt={3} display="flex" justifyContent="flex-end">
-            <Button onClick={handleSubmit} variant="contained" color="primary">
-              Save Record
-            </Button>
+          <Box p={2}>
+            {tabIndex === 0 && <FormUpload />}
+            {tabIndex === 1 && <FileUpload />}
           </Box>
         </Paper>
       </Box>
@@ -104,4 +141,4 @@ const AddCoffee = () => {
   );
 };
 
-export default AddCoffee;
+export default UploadCoffeeTabs;

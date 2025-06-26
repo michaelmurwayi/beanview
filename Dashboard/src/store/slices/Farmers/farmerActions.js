@@ -42,11 +42,12 @@ export const submitFarmer = () => async (dispatch, getState) => {
   };
 
 export const fetchFarmers = () => async (dispatch, getState) => {
-  const { apiBaseUrl } = getState().farmer;
+  const  apiBaseUrl  = "http://localhost:8000/api"; // Use your actual API base URL here
   dispatch(fetchFarmersRequest());
 
   try {
     const response = await axios.get(`${apiBaseUrl}/farmers/`);
+    // console.log('Fetched Farmers:', response.data);
     dispatch(fetchFarmersSuccess(response.data));
   } catch (error) {
     dispatch(fetchFarmersFailure(error.message));
