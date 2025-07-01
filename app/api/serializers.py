@@ -57,7 +57,7 @@ class CoffeeSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
+  
 class CatalogueSerializer(serializers.ModelSerializer):
     buyer = serializers.StringRelatedField()
 

@@ -8,25 +8,19 @@ import { toast } from 'react-toastify';
 import { submitCoffee, fetchCoffee } from '../store/slices/Coffee/coffeeActions';
 import CoffeeUploadForm from '../components/coffeeupload/UploadForm'; // Adjust the import path as needed
 
-const initialCoffeeForm = {
-  outturn: '', bulkoutturn: '', mark: '', type: '', grade: '', bags: 0,
-  pockets: 0.0, weight: '', sale: '', season: '2024/2025', mill: '', milling_charges: 0.0,
-  warehouse: '', warehouse_charges: 0.0, brokerage_charges: 0.0, export_charges: 0.0,
-  transport_charges: 0.0, price: 0.0, net_value: 0.0, gross_value: 0.0, certificate: '',
-  status: '', reserve: 0, buyer: '', remarks: ''
-};
+
 
 const FormUpload = () => {
-  const [formData, setFormData] = useState(initialCoffeeForm);
+  const formData = useSelector((state) => state.coffee.CoffeeUploadFormData);
   const dispatch = useDispatch();
   const { success, error } = useSelector((state) => state.coffee);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: isNaN(value) || value === '' ? value : Number(value)
-    }));
+    dispatch({
+      type: 'coffee/updateCoffeeFormField',
+      payload: { field: name, value }
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -34,7 +28,7 @@ const FormUpload = () => {
     const resultAction = await dispatch(submitCoffee(formData));
     if (resultAction.type.includes('fulfilled')) {
       toast.success('Coffee submitted!');
-      setFormData(initialCoffeeForm);
+      dispatch({ type: 'coffee/resetCoffeeForm' });
       dispatch(fetchCoffee());
     } else {
       toast.error('Submit failed');

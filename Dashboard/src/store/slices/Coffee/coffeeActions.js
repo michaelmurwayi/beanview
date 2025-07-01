@@ -18,7 +18,18 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/a
 /** Submit new coffee record */
 export const submitCoffee = () => async (dispatch, getState) => {
   dispatch(postCoffeeRequest());
+
   const { CoffeeUploadFormData } = getState().coffee;
+
+  // Make a copy to avoid mutating state
+  const formData = { ...CoffeeUploadFormData };
+
+  // Capitalize and trim the mark field
+  if (formData.mark) {
+    formData.mark = formData.mark.trim().toUpperCase();
+  }
+
+  console.log('Submitting Coffee Data:', formData);
 
   try {
     const response = await fetch(`${apiBaseUrl}/coffee/`, {
@@ -26,7 +37,7 @@ export const submitCoffee = () => async (dispatch, getState) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(CoffeeUploadFormData),
+      body: JSON.stringify(formData),
     });
 
     const data = await response.json();

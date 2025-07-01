@@ -59,7 +59,7 @@ const CoffeeUploadForm = ({ formData, handleChange, handleSubmit }) => {
         {/* Section: Basic Details */}
         <Typography sx={sectionTitleStyle}>Basic Coffee Details</Typography>
         <Grid container spacing={3}>
-          {['lot', 'outturn', 'bulkoutturn', 'mark', 'type', 'grade', 'bags', 'pockets', 'weight', 'sale', 'season', 'mill'].map((field) => (
+          {['outturn', 'bulkoutturn', 'mark', 'type', 'grade', 'bags', 'pockets', 'weight', 'sale', 'season', 'mill'].map((field) => (
             <Grid item xs={12} sm={6} key={field}>
               <TextField
                 label={field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -116,7 +116,7 @@ const CoffeeUploadForm = ({ formData, handleChange, handleSubmit }) => {
         {/* Section: Logistics & Remarks */}
         <Typography sx={sectionTitleStyle}>Logistics & Remarks</Typography>
         <Grid container spacing={3}>
-          {['certificate', 'status', 'catalogue', 'catalogue_type', 'buyer', 'remarks'].map((field) => (
+          {['certificate', 'status', 'buyer', 'remarks'].map((field) => (
             <Grid item xs={12} sm={6} key={field}>
               <TextField
                 label={field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}

@@ -186,7 +186,10 @@ def process_records(view, records):
     return Response(clean_for_json(response_data),status=status.HTTP_201_CREATED if created_records else status.HTTP_400_BAD_REQUEST,headers=headers or {})
 def process_single_record(view, data):
     failed_records = []
+    mill = Mill.objects.filter(name=data["mill"]).values_list("id", flat=True).first()
+    data["mill"] = mill
     serializer = view.get_serializer(data=data)
+    # Set a breakpoint for debugging
     if serializer.is_valid(raise_exception=True):
         view.perform_create(serializer)
         created_records = [serializer.data]

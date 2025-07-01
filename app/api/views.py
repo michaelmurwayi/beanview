@@ -76,6 +76,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     serializer_class = CoffeeSerializer
 
     def create(self, request, *args, **kwargs):
+        
         data = request.data.dict() if hasattr(request.data, 'dict') else request.data
         files = request.FILES
         sheets = data.get("sheetnames", "").split(",") if data.get("sheetnames") else []
@@ -85,7 +86,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             return process_uploaded_files(self, data, sheets)
         
         return process_single_record(self, data)
-
+        
     def update(self, request, *args, **kwargs):
         """Handle the PUT method for updating a Coffee record."""
         

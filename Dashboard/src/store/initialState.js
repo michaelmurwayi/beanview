@@ -80,7 +80,6 @@ export const globalInitialState = {
     error: null,
     success: false,
     CoffeeUploadFormData: {
-      lot: '',
       outturn: '',
       bulkoutturn: '',
       mark: '',
