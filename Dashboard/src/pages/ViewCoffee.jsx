@@ -10,23 +10,21 @@ import {
   Button,
 } from '@mui/material';
 import Sidebar from '../components/sidebar/Sidebar';
-import Table from '../components/table/Table'; // ← rename here if needed
+import Table from '../components/table/CoffeeTable';
 import { fetchFarmers, deleteFarmer, updateFarmer } from '../store/slices/Farmers/farmerActions';
+import { fetchCoffee, updateCoffee, deleteCoffee } from '../store/slices/Coffee/coffeeActions';
 import { useDispatch, useSelector } from 'react-redux';
-
 
 const ViewCoffee = () => {
   const dispatch = useDispatch();
-  const { farmers, loading, error } = useSelector((state) => state.farmer);
-  console.log('Farmers:', farmers);
-
+  const { coffeeRecords: coffee, loading, error } = useSelector((state) => state.coffee);
   const [selectedRecord, setSelectedRecord] = useState({});
   const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchFarmers());
+    dispatch(fetchCoffee());
   }, [dispatch]);
-  console.log('Farmers:', farmers);
+
   const handleEditClick = (record) => {
     setSelectedRecord({ ...record });
     setShowEditModal(true);
@@ -39,26 +37,20 @@ const ViewCoffee = () => {
 
   const handleUpdate = () => {
     console.log('Updating record:', selectedRecord);
-    updateFarmer([selectedRecord]);
+    dispatch(updateCoffee([selectedRecord])); // ✅ dispatch the thunk
     setShowEditModal(false);
-    dispatch(fetchFarmers());
+    dispatch(fetchCoffee()); // Refresh if needed, or use fetchCoffee if relevant
   };
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
-      deleteFarmer(id);
+      dispatch(deleteFarmer(id)); // ✅ dispatch the thunk
       dispatch(fetchFarmers());
     }
   };
 
-  const columns =
-    Array.isArray(farmers) && farmers.length > 0
-      ? Object.keys(farmers[0]).map((key) => ({
-          field: key,
-          headerName: key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
-        }))
-      : [];
-
+  const columns = [{field: 'outturn', headerName: 'Outturn'}, {field:'bulkoutturn', headerName:'Bulkoutturn'}, {field: 'grade', headerName: 'Grade'},{field: 'type', headerName: 'Type'},{field:'bags',headerName:'Bags'},{field:'pockets',headerName:'Pockets'},{field:'warehouse', headerName:'Warehouse'},{field:'mill', headerName:'Mill'},{field:'sale', headerName:'Sale'}, {field:'status_id', headerName:'Status'}];
+    console.log('Columns:', columns);
   return (
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f4f6f8' }}>
       {/* Sidebar */}
@@ -90,10 +82,11 @@ const ViewCoffee = () => {
             bgcolor: '#fff',
             borderRadius: 1,
             boxShadow: 1,
+            mt: 2,
           }}
         >
           <Table
-            data={farmers}
+            data={coffee}
             columns={columns}
             loading={loading}
             error={error}
@@ -105,38 +98,42 @@ const ViewCoffee = () => {
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onClose={() => setShowEditModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ backgroundColor: "#121330", color:"white" }}>Edit Farmer Record</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: "#121330", color: "white" }}>
+          Edit Coffee Record
+        </DialogTitle>
         <DialogContent dividers>
           {Object.entries(selectedRecord).map(([key, value]) => (
-          <TextField
-            key={key}
-            label={key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-            name={key}
-            value={value}
-            onChange={handleEditChange}
-            fullWidth
-            margin="dense"
-            size="small"
-            sx={{
-              mb: 2,
-              '& input': {
-                fontSize: '0.75rem',         // 👈 font size
-                color: 'grey',            // 👈 font color (deep blue)
-              },
-              '& label': {
-                fontSize: '0.7rem',
-                color: '#121330',            // 👈 label color (blue-grey)
-              },
-              '& .MuiInputBase-root': {
-                backgroundColor: '#f9f9f9',  // 👈 optional: input background
-              }
-            }}
-            disabled={key === 'id'} // prevent editing primary key
-          />
+            <TextField
+              key={key}
+              label={key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+              name={key}
+              value={value}
+              onChange={handleEditChange}
+              fullWidth
+              margin="dense"
+              size="small"
+              sx={{
+                mb: 2,
+                '& input': {
+                  fontSize: '0.75rem',
+                  color: 'grey',
+                },
+                '& label': {
+                  fontSize: '0.7rem',
+                  color: '#121330',
+                },
+                '& .MuiInputBase-root': {
+                  backgroundColor: '#f9f9f9',
+                },
+              }}
+              disabled={['id', '', 'certificate', 'created_at', 'created_by', 'file', 'farmer'].includes(key)}
+            />
           ))}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowEditModal(false)} sx={{ color: "red" }}>Cancel</Button>
+          <Button onClick={() => setShowEditModal(false)} sx={{ color: "red" }}>
+            Cancel
+          </Button>
           <Button onClick={handleUpdate} variant="contained" color="primary">
             Update
           </Button>
