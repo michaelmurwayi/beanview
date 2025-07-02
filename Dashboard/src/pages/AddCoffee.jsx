@@ -74,7 +74,7 @@ const FileUpload = () => {
         width: '100%',
       }}
     >
-    <UploadFile onFileSelect={handleFileSelect} /> {/* Updated to use handleFileSelect */}
+    <UploadFile sheetNames={['Sheet1', 'Sheet2']} selectedSheet="Sheet1" onFileSelect={handleFileSelect} /> {/* Updated to use handleFileSelect */}
     </Paper>
   </Box>
 )};

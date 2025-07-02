@@ -6,29 +6,58 @@ import {
   Paper,
   IconButton,
   Stack,
+  Alert,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
+import {importCoffeeFile}  from '../../store/slices/Coffee/coffeeActions'; // Adjust path as needed
 
-const FileUpload = ({ onFileSelect = () => {}, onConfirmUpload = () => {} }) => {
+const FileUpload = ({ sheetNames = [], selectedSheet = 'all' }) => {
+  const dispatch = useDispatch();
   const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) {
       setFile(selected);
-      onFileSelect(selected);
     }
   };
 
   const handleRemove = () => {
     setFile(null);
-    onFileSelect(null);
   };
 
-  const handleConfirmUpload = () => {
-    if (file) {
-      onConfirmUpload(file);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!file) {
+      toast.warn("⚠️ No file selected.");
+      return;
+    }
+
+    const dataToSend = new FormData();
+    dataToSend.append('file', file);
+    dataToSend.append('filename', file.name);
+
+    if (selectedSheet === 'all') {
+      dataToSend.append('sheetnames', sheetNames.join(','));
+    } else {
+      dataToSend.append('sheetnames', selectedSheet);
+    }
+
+    try {
+      setUploading(true);
+      await dispatch(importCoffeeFile(dataToSend));
+      toast.success('✅ File uploaded successfully');
+      setFile(null);
+    } catch (error) {
+      console.error(error);
+      toast.error('❌ Upload failed');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -86,10 +115,11 @@ const FileUpload = ({ onFileSelect = () => {}, onConfirmUpload = () => {} }) => 
             variant="contained"
             color="primary"
             fullWidth
-            onClick={handleConfirmUpload}
+            onClick={handleSubmit}
+            disabled={uploading}
             sx={{ textTransform: 'none' }}
           >
-            Upload File
+            {uploading ? 'Uploading...' : 'Upload File'}
           </Button>
         </Box>
       )}

@@ -96,3 +96,23 @@ export const updateCoffee = createAsyncThunk(
     }
   }
 );
+
+export const importCoffeeFile = createAsyncThunk(
+  'coffee/importFile',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${apiBaseUrl}/coffee`, // change path if needed
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
