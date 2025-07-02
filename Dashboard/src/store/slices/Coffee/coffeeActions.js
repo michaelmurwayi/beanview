@@ -88,6 +88,7 @@ export const updateCoffee = createAsyncThunk(
   async (record, { rejectWithValue }) => {
     try {
       const { id, ...payload } = record;
+      console.log('Updating Coffee Record:', id);
       const response = await axios.put(`${apiBaseUrl}/coffee/${id}/`, payload);
       return response.data;
     } catch (error) {

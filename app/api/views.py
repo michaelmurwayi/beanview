@@ -93,7 +93,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         # PUT should usually update entire resource, so partial=False
         serializer = self.get_serializer(instance, data=request.data, partial=True)
-        
+        import ipdb; ipdb.set_trace()
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -41,6 +41,10 @@ class CoffeeSerializer(serializers.ModelSerializer):
     catalogue = serializers.StringRelatedField()
     created_by = serializers.StringRelatedField()
 
+
+    # Optional direct field control
+    lot = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = Coffee
         fields = '__all__'

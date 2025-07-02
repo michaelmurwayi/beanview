@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Grid,
@@ -7,6 +7,8 @@ import {
   Divider,
   Paper,
   Button,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 
 const sectionTitleStyle = {
@@ -25,6 +27,34 @@ const inputFieldStyle = {
 };
 
 const CoffeeUploadForm = ({ formData, handleChange, handleSubmit }) => {
+  const [feedback, setFeedback] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await handleSubmit(); // ensure handleSubmit is a Promise-returning function
+      setFeedback({
+        open: true,
+        message: 'Coffee record updated successfully.',
+        severity: 'success',
+      });
+    } catch (err) {
+      setFeedback({
+        open: true,
+        message: 'Failed to update coffee record.',
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleClose = () => {
+    setFeedback((prev) => ({ ...prev, open: false }));
+  };
+
   return (
     <Box
       display="flex"
@@ -50,7 +80,7 @@ const CoffeeUploadForm = ({ formData, handleChange, handleSubmit }) => {
             variant="contained"
             color="primary"
             sx={{ textTransform: 'none', px: 4 }}
-            onClick={handleSubmit}
+            onClick={handleFormSubmit}
           >
             Submit
           </Button>
@@ -59,12 +89,15 @@ const CoffeeUploadForm = ({ formData, handleChange, handleSubmit }) => {
         {/* Section: Basic Details */}
         <Typography sx={sectionTitleStyle}>Basic Coffee Details</Typography>
         <Grid container spacing={3}>
-          {['outturn', 'bulkoutturn', 'mark', 'type', 'grade', 'bags', 'pockets', 'weight', 'sale', 'season', 'mill'].map((field) => (
+          {[
+            'outturn', 'bulkoutturn', 'mark', 'type', 'grade',
+            'bags', 'pockets', 'weight', 'sale', 'season', 'mill',
+          ].map((field) => (
             <Grid item xs={12} sm={6} key={field}>
               <TextField
                 label={field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                 name={field}
-                value={formData[field]}
+                value={formData[field] || ''}
                 onChange={handleChange}
                 fullWidth
                 sx={inputFieldStyle}
@@ -78,12 +111,15 @@ const CoffeeUploadForm = ({ formData, handleChange, handleSubmit }) => {
         {/* Section: Charges */}
         <Typography sx={sectionTitleStyle}>Charges</Typography>
         <Grid container spacing={3}>
-          {['milling_charges', 'warehouse_charges', 'brokerage_charges', 'export_charges', 'transport_charges'].map((field) => (
+          {[
+            'milling_charges', 'warehouse_charges',
+            'brokerage_charges', 'export_charges', 'transport_charges',
+          ].map((field) => (
             <Grid item xs={12} sm={6} key={field}>
               <TextField
                 label={field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                 name={field}
-                value={formData[field]}
+                value={formData[field] || ''}
                 onChange={handleChange}
                 fullWidth
                 sx={inputFieldStyle}
@@ -102,7 +138,7 @@ const CoffeeUploadForm = ({ formData, handleChange, handleSubmit }) => {
               <TextField
                 label={field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                 name={field}
-                value={formData[field]}
+                value={formData[field] || ''}
                 onChange={handleChange}
                 fullWidth
                 sx={inputFieldStyle}
@@ -121,7 +157,7 @@ const CoffeeUploadForm = ({ formData, handleChange, handleSubmit }) => {
               <TextField
                 label={field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                 name={field}
-                value={formData[field]}
+                value={formData[field] || ''}
                 onChange={handleChange}
                 fullWidth
                 sx={inputFieldStyle}
@@ -129,6 +165,22 @@ const CoffeeUploadForm = ({ formData, handleChange, handleSubmit }) => {
             </Grid>
           ))}
         </Grid>
+
+        {/* Snackbar Feedback */}
+        <Snackbar
+          open={feedback.open}
+          autoHideDuration={4000}
+          onClose={handleClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={handleClose}
+            severity={feedback.severity}
+            sx={{ width: '100%' }}
+          >
+            {feedback.message}
+          </Alert>
+        </Snackbar>
       </Paper>
     </Box>
   );
