@@ -7,20 +7,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { submitCoffee, fetchCoffee } from '../store/slices/Coffee/coffeeActions';
 import CoffeeUploadForm from '../components/coffeeupload/UploadForm'; // Adjust the import path as needed
-
+import { globalInitialState } from '../store/initialState';
+import UploadFile from '../components/coffeeupload/UploadFile'; // Adjust the import path as needed
 
 
 const FormUpload = () => {
-  const formData = useSelector((state) => state.coffee.CoffeeUploadFormData);
+  const [formData, setFormData] = useState(globalInitialState.coffee.CoffeeUploadFormData);
+
   const dispatch = useDispatch();
   const { success, error } = useSelector((state) => state.coffee);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    dispatch({
-      type: 'coffee/updateCoffeeFormField',
-      payload: { field: name, value }
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: isNaN(value) || value === '' ? value : Number(value)
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -28,7 +30,7 @@ const FormUpload = () => {
     const resultAction = await dispatch(submitCoffee(formData));
     if (resultAction.type.includes('fulfilled')) {
       toast.success('Coffee submitted!');
-      dispatch({ type: 'coffee/resetCoffeeForm' });
+      setFormData(initialCoffeeForm);
       dispatch(fetchCoffee());
     } else {
       toast.error('Submit failed');
@@ -48,8 +50,19 @@ const FormUpload = () => {
   );
 };
 
-const FileUpload = () => (
+const FileUpload = () => {
+  const dispatch = useDispatch();
+  const { success, error } = useSelector((state) => state.coffee);
+  const handleFileSelect = (file) => {
+    setSelectedFile(file);
+    console.log('Selected file:', file);
+    // Dispatch processing logic here if needed
+  };
+  
+  return (
   <Box p={2} display="flex" justifyContent="center" alignItems="center" height="100vh">
+    {success && <Alert severity="success">Coffee submitted successfully</Alert>}
+    {error && <Alert severity="error">{error}</Alert>}
     <Paper
       elevation={3}
       sx={{
@@ -61,15 +74,11 @@ const FileUpload = () => (
         width: '100%',
       }}
     >
-      <Typography variant="h6" gutterBottom>
-        File Upload
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        🚧 This feature is coming soon.
-      </Typography>
+    <UploadFile onFileSelect={handleFileSelect} /> {/* Updated to use handleFileSelect */}
     </Paper>
   </Box>
-);
+)};
+
 
 const UploadCoffeeTabs = () => {
   const [tabIndex, setTabIndex] = useState(0);
