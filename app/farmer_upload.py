@@ -62,7 +62,6 @@ def ImportFarmers(file_path):
                     code=cleaned_data['code'],
                     defaults={
                         'name': cleaned_data.get('name'),
-                        'national_id': cleaned_data.get('national_id'),
                         'mark': cleaned_data.get('mark'),
                         'address': cleaned_data.get('address'),
                         'phonenumber': cleaned_data.get('phonenumber'),

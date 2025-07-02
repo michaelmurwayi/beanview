@@ -102,7 +102,7 @@ export const importCoffeeFile = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${apiBaseUrl}/coffee`, // change path if needed
+        `${apiBaseUrl}/coffee/`, // change path if needed
         formData,
         {
           headers: {

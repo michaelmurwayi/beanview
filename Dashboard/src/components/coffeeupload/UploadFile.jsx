@@ -6,13 +6,13 @@ import {
   Paper,
   IconButton,
   Stack,
-  Alert,
+  CircularProgress,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import {importCoffeeFile}  from '../../store/slices/Coffee/coffeeActions'; // Adjust path as needed
+import { importCoffeeFile } from '../../store/slices/Coffee/coffeeActions'; // Adjust path
 
 const FileUpload = ({ sheetNames = [], selectedSheet = 'all' }) => {
   const dispatch = useDispatch();
@@ -34,7 +34,7 @@ const FileUpload = ({ sheetNames = [], selectedSheet = 'all' }) => {
     e.preventDefault();
 
     if (!file) {
-      toast.warn("⚠️ No file selected.");
+      toast.warn('⚠️ No file selected.');
       return;
     }
 
@@ -50,7 +50,7 @@ const FileUpload = ({ sheetNames = [], selectedSheet = 'all' }) => {
 
     try {
       setUploading(true);
-      await dispatch(importCoffeeFile(dataToSend));
+      await dispatch(importCoffeeFile(dataToSend)).unwrap();
       toast.success('✅ File uploaded successfully');
       setFile(null);
     } catch (error) {
@@ -63,15 +63,16 @@ const FileUpload = ({ sheetNames = [], selectedSheet = 'all' }) => {
 
   return (
     <Paper
-      elevation={2}
+      elevation={3}
       sx={{
         p: 3,
         textAlign: 'center',
-        border: '2px solid #90caf9',
+        border: '2px dashed #90caf9',
         bgcolor: '#f9f9f9',
         borderRadius: 2,
         maxWidth: 500,
         margin: '0 auto',
+        mt: 4,
       }}
     >
       <input
@@ -81,9 +82,10 @@ const FileUpload = ({ sheetNames = [], selectedSheet = 'all' }) => {
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
+
       {!file ? (
         <label htmlFor="file-upload">
-          <Stack alignItems="center" spacing={1}>
+          <Stack alignItems="center" spacing={2}>
             <CloudUploadIcon color="primary" fontSize="large" />
             <Typography variant="body2" color="textSecondary">
               Drag & drop or click to select a file
@@ -99,7 +101,12 @@ const FileUpload = ({ sheetNames = [], selectedSheet = 'all' }) => {
         </label>
       ) : (
         <Box>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
+          >
             <Box textAlign="left">
               <Typography fontWeight={600}>{file.name}</Typography>
               <Typography variant="caption" color="textSecondary">
@@ -118,6 +125,7 @@ const FileUpload = ({ sheetNames = [], selectedSheet = 'all' }) => {
             onClick={handleSubmit}
             disabled={uploading}
             sx={{ textTransform: 'none' }}
+            startIcon={uploading && <CircularProgress size={18} />}
           >
             {uploading ? 'Uploading...' : 'Upload File'}
           </Button>

@@ -158,8 +158,9 @@ def process_records(view, records):
 
              
         try:
-
-            record["MILL_ID"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
+            # import ipdb; ipdb.set_trace()  # Set a breakpoint for debugging
+            Mill_id = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).id
+            record["MILL"] = Mill_id
             record['TYPE'] = ""
             record["WAREHOUSE_ID"] = ""
             record["STATUS"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("STATUS")).pk
