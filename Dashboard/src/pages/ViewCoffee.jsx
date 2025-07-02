@@ -73,12 +73,27 @@ const ViewCoffee = () => {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
-      dispatch(deleteFarmer(id));
-      dispatch(fetchFarmers());
+      try {
+        await dispatch(deleteCoffee(id)).unwrap(); // ensure thunk throws on error
+        setFeedback({
+          open: true,
+          message: 'Record deleted successfully.',
+          severity: 'success',
+        });
+        dispatch(fetchCoffee());
+      } catch (error) {
+        console.error('Delete failed:', error);
+        setFeedback({
+          open: true,
+          message: 'Failed to delete record.',
+          severity: 'error',
+        });
+      }
     }
   };
+  
 
   const columns = [
     { field: 'outturn', headerName: 'Outturn' },
@@ -90,7 +105,10 @@ const ViewCoffee = () => {
     { field: 'warehouse', headerName: 'Warehouse' },
     { field: 'mill', headerName: 'Mill' },
     { field: 'sale', headerName: 'Sale' },
+    { field: 'price', headerName: 'Price' },
+    { field: 'season', headerName: 'Season' },
     { field: 'status_id', headerName: 'Status' },
+    {field: 'buyer', headerName: 'Buyer'},
   ];
 
   return (
