@@ -20,11 +20,8 @@ import {
   updateCoffee,
   deleteCoffee,
 } from '../store/slices/Coffee/coffeeActions';
-import {
-  fetchFarmers,
-  deleteFarmer,
-} from '../store/slices/Farmers/farmerActions';
 import { useDispatch, useSelector } from 'react-redux';
+import Summary from '../components/summary/Summary'; // Adjust the import path as needed
 
 const ViewCoffee = () => {
   const dispatch = useDispatch();
@@ -114,6 +111,7 @@ const ViewCoffee = () => {
       </Box>
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', p: 2 }}>
+        <Summary data={filteredData} />
         <Paper sx={{ p: 2, mb: 2, backgroundColor: '#fff', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
           {['grade', 'mark', 'status_id', 'outturn'].map((key) => (
             <TextField
