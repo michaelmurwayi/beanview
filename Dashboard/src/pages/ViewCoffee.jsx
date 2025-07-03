@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
-  Grid,
   Box,
   Dialog,
   DialogTitle,
@@ -21,7 +20,8 @@ import {
   deleteCoffee,
 } from '../store/slices/Coffee/coffeeActions';
 import { useDispatch, useSelector } from 'react-redux';
-import Summary from '../components/summary/Summary'; // Adjust the import path as needed
+import Summary from '../components/summary/Summary';
+import StockSummaryModal from '../components/summary/SummaryModal';
 
 const ViewCoffee = () => {
   const dispatch = useDispatch();
@@ -29,12 +29,13 @@ const ViewCoffee = () => {
   const [selectedRecord, setSelectedRecord] = useState({});
   const [showEditModal, setShowEditModal] = useState(false);
   const [feedback, setFeedback] = useState({ open: false, message: '', severity: 'success' });
-
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [filters, setFilters] = useState({ grade: '', mark: '', status_id: '', outturn: '' });
 
   useEffect(() => {
     dispatch(fetchCoffee());
   }, [dispatch]);
+  
 
   const handleEditClick = (record) => {
     setSelectedRecord({ ...record });
@@ -78,14 +79,26 @@ const ViewCoffee = () => {
     setFilters({ grade: '', mark: '', status_id: '', outturn: '' });
   };
 
-  const filteredData = coffee.filter((row) => {
-    return (
-      (filters.grade === '' || row.grade === filters.grade) &&
-      (filters.mark === '' || row.mark === filters.mark) &&
-      (filters.status_id === '' || row.status_id === filters.status_id) &&
-      (filters.outturn === '' || row.outturn === filters.outturn)
-    );
-  });
+  const filteredData = useMemo(() => {
+    return coffee.filter((row) => {
+      return (
+        (filters.grade === '' || row.grade === filters.grade) &&
+        (filters.mark === '' || row.mark === filters.mark) &&
+        (filters.status_id === '' || row.status_id === filters.status_id) &&
+        (filters.outturn === '' || row.outturn === filters.outturn)
+      );
+    });
+  }, [coffee, filters]);
+
+  const summaryGroups = useMemo(() => {
+    const grouped = {};
+    filteredData.forEach((rec) => {
+      const mark = rec.mark || 'Unmarked';
+      if (!grouped[mark]) grouped[mark] = [];
+      grouped[mark].push(rec);
+    });
+    return grouped;
+  }, [filteredData]);
 
   const columns = [
     { field: 'mark', headerName: 'Mark' },
@@ -112,22 +125,67 @@ const ViewCoffee = () => {
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', p: 2 }}>
         <Summary data={filteredData} />
-        <Paper sx={{ p: 2, mb: 2, backgroundColor: '#fff', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-          {['grade', 'mark', 'status_id', 'outturn'].map((key) => (
-            <TextField
-              key={key}
-              name={key}
-              label={key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' ')}
-              value={filters[key]}
-              onChange={handleFilterChange}
-              size="small"
-              sx={{ minWidth: 150, '& input': { fontSize: '0.7rem' }, '& label': { fontSize: '0.7rem' } }}
-            />
-          ))}
-          <Button variant="outlined" onClick={resetFilters} size="small" sx={{ fontSize: '0.7rem' }}>
+
+        <Paper
+          sx={{
+            p: 2,
+            mb: 2,
+            backgroundColor: '#fff',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+          }}
+        >
+          {[
+            { key: 'grade', label: 'Grade' },
+            { key: 'mark', label: 'Mark' },
+            { key: 'status_id', label: 'Status' },
+          ].map(({ key, label }) => {
+            const uniqueOptions = [...new Set(coffee.map((item) => item[key]).filter(Boolean))];
+            return (
+              <TextField
+                select
+                key={key}
+                name={key}
+                label={label}
+                value={filters[key]}
+                onChange={handleFilterChange}
+                size="small"
+                sx={{
+                  minWidth: 150,
+                  '& .MuiInputBase-input': { fontSize: '0.7rem' },
+                  '& label': { fontSize: '0.7rem' },
+                }}
+              >
+                <MenuItem value="">All</MenuItem>
+                {uniqueOptions.map((option) => (
+                  <MenuItem key={option} value={option} sx={{ fontSize: '0.7rem' }}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </TextField>
+            );
+          })}
+
+          <TextField
+            name="outturn"
+            label="Outturn"
+            value={filters.outturn}
+            onChange={handleFilterChange}
+            size="small"
+            sx={{
+              minWidth: 150,
+              '& input': { fontSize: '0.7rem' },
+              '& label': { fontSize: '0.7rem' },
+            }}
+          />
+
+          <Button variant="outlined" onClick={resetFilters} size="small" sx={{ fontSize: '0.7rem', backgroundColor: '#f0f0f0', color: '#121330' }}>
             Reset
           </Button>
-          <Button variant="contained" color="secondary" size="small" sx={{ fontSize: '0.7rem' }}>
+          <Button variant="contained" onClick={() => setShowSummaryModal(true)} size="small" sx={{ fontSize: '0.7rem', backgroundColor: '#121331', color: 'white' }}>
             Generate Stock Summary
           </Button>
         </Paper>
@@ -157,16 +215,27 @@ const ViewCoffee = () => {
               fullWidth
               margin="dense"
               size="small"
-              sx={{ mb: 2, '& input': { fontSize: '0.75rem', color: 'grey' }, '& label': { fontSize: '0.7rem', color: '#121330' }, '& .MuiInputBase-root': { backgroundColor: '#f9f9f9' } }}
+              sx={{
+                mb: 2,
+                '& input': { fontSize: '0.75rem', color: 'grey' },
+                '& label': { fontSize: '0.7rem', color: '#121330' },
+                '& .MuiInputBase-root': { backgroundColor: '#f9f9f9' },
+              }}
               disabled={['id', '', 'certificate', 'created_at', 'created_by', 'file', 'farmer'].includes(key)}
             />
           ))}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowEditModal(false)} sx={{ color: 'red' }}>Cancel</Button>
-          <Button onClick={handleUpdate} variant="contained" color="primary">Update</Button>
+          <Button onClick={() => setShowEditModal(false)} sx={{ color: 'red' }}>
+            Cancel
+          </Button>
+          <Button onClick={handleUpdate} variant="contained" color="primary">
+            Update
+          </Button>
         </DialogActions>
       </Dialog>
+
+      <StockSummaryModal open={showSummaryModal} onClose={() => setShowSummaryModal(false)} groupedData={summaryGroups} />
 
       <Snackbar
         open={feedback.open}
