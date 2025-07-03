@@ -60,24 +60,42 @@ import {
                   <TableHead>
                     <TableRow>
                       <TableCell>Outturn</TableCell>
+                      <TableCell>Bulkoutturn</TableCell>
+                      <TableCell>Mark</TableCell>
+                      <TableCell>Type</TableCell>
                       <TableCell>Grade</TableCell>
                       <TableCell>Bags</TableCell>
                       <TableCell>Pockets</TableCell>
                       <TableCell>Weight</TableCell>
-                      <TableCell>Status</TableCell>
+                      <TableCell>Sale</TableCell>
+                      <TableCell>Season</TableCell>
+                      <TableCell>Certificate</TableCell>
+                      <TableCell>Mill</TableCell>
+                      <TableCell>Warehouse</TableCell>
+                      <TableCell>Price</TableCell>
                       <TableCell>Buyer</TableCell>
+                      <TableCell>Status</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {records.map((rec) => (
                       <TableRow key={rec.id}>
                         <TableCell>{rec.outturn}</TableCell>
+                        <TableCell>{rec.bulkoutturn}</TableCell>
+                        <TableCell>{rec.mark}</TableCell>
+                        <TableCell>{rec.type}</TableCell>
                         <TableCell>{rec.grade}</TableCell>
                         <TableCell>{rec.bags}</TableCell>
                         <TableCell>{rec.pockets}</TableCell>
                         <TableCell>{rec.weight}</TableCell>
-                        <TableCell>{rec.status}</TableCell>
+                        <TableCell>{rec.sale}</TableCell>
+                        <TableCell>{rec.season}</TableCell>
+                        <TableCell>{rec.certificate}</TableCell>
+                        <TableCell>{rec.mill}</TableCell>
+                        <TableCell>{rec.warehouse}</TableCell>
+                        <TableCell>{rec.price}</TableCell>
                         <TableCell>{rec.buyer}</TableCell>
+                        <TableCell>{rec.status}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
