@@ -116,3 +116,50 @@ export const importCoffeeFile = createAsyncThunk(
     }
   }
 );
+export const generateSummaryFile = createAsyncThunk(
+  'coffee/generateSummaryFile',
+
+  async (summaries, { getState, rejectWithValue }) => {
+    try {
+      const url = `${apiBaseUrl}/coffee/generate_summary_file/`;
+
+      // ✅ Request file as blob
+      const response = await axios.post(url, { summaries }, {
+        responseType: 'blob',
+      });
+
+      // ✅ Extract filename from Content-Disposition header
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'summary_files.zip'; // default fallback
+
+      if (contentDisposition && contentDisposition.includes('filename=')) {
+        filename = contentDisposition
+          .split('filename=')[1]
+          .replace(/["']/g, '')
+          .trim();
+      }
+
+      // ✅ Create blob and trigger download
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      const urlBlob = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = urlBlob;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      // Clean up blob URL
+      window.URL.revokeObjectURL(urlBlob);
+
+      toast.success('Summary file downloaded');
+      return true;
+
+    } catch (error) {
+      const message = error.response?.data?.error || 'Summary file generation failed';
+      toast.error(message);
+      return rejectWithValue(message);
+    }
+  }
+);

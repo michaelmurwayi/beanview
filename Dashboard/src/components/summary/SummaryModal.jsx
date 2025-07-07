@@ -14,10 +14,23 @@ import {
     CircularProgress,
     Button
   } from '@mui/material';
+  import { useDispatch } from 'react-redux';
   import CloseIcon from '@mui/icons-material/Close';
-  import { generateSummaryExcel } from "../../utils/generateStockSummaryExcel"
+  import { generateSummaryFile } from '../../store/slices/Coffee/coffeeActions';
+  
 
   const StockSummaryModal = ({ open, onClose, groupedData, loading }) => {
+    const dispatch = useDispatch();
+    const handleExport = () => {
+      const summaries = Object.entries(groupedData).map(([mark, records]) => ({
+        mark,
+        records,
+      }));
+    
+      console.log('Exporting summaries:', summaries);
+    
+      dispatch(generateSummaryFile(summaries));
+    };
     return (
       <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
         <DialogTitle
@@ -39,7 +52,7 @@ import {
         <DialogContent dividers sx={{ backgroundColor: '#f5f5f5' }}>
             <Button
             variant="outlined"
-            onClick={() => generateSummaryExcel(groupedData)}
+            onClick={() => handleExport(groupedData)}
             size="small"
             sx={{ fontSize: '0.7rem', backgroundColor: '#f0f0f0', color: '#121330' }}
             >

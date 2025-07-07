@@ -28,7 +28,9 @@ from openpyxl.cell.cell import MergedCell
 import pandas as pd
 from copy import copy
 from openpyxl import Workbook
-
+import zipfile
+from io import BytesIO
+from django.http import FileResponse
 
 
 
@@ -164,6 +166,8 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": f"Error fetching daily deliveries: {str(e)}"}, status=400)
 
+    # generate stock summary from farmer records
+        
     @action(detail=False, methods=['POST'])
     def generate_summary_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock summary template.xlsx')
@@ -178,7 +182,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
             os.makedirs(base_dir, exist_ok=True)
 
-            # Collect all status IDs
+            # Collect all status IDs for mapping
             all_status_ids = {
                 record.get('status')
                 for summary in summaries
@@ -198,7 +202,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 records = summary.get('records', [])
 
                 if not mark or not records:
-                    continue  # skip invalid
+                    continue
 
                 mark_dir = os.path.join(base_dir, mark)
                 os.makedirs(mark_dir, exist_ok=True)
@@ -218,7 +222,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                     status_name = status_map.get(status_id, "")
 
                     values = [
-                        
                         record.get('outturn'),
                         record.get('bulkoutturn'),
                         record.get('mark'),
@@ -244,12 +247,24 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                         cell.value = value
 
                 wb.save(file_path)
-                generated_files.append({"mark": mark, "path": file_path})
+                generated_files.append(file_path)
 
-            return Response({
-                "message": "Files generated",
-                "files": generated_files
-            }, status=status.HTTP_200_OK)
+            # ✅ Create ZIP in memory
+            zip_buffer = BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                for file_path in generated_files:
+                    arcname = os.path.basename(file_path)
+                    zip_file.write(file_path, arcname=arcname)
+
+            zip_buffer.seek(0)
+
+            # ✅ Return as downloadable file
+            return FileResponse(
+                zip_buffer,
+                as_attachment=True,
+                filename=f"stock_summaries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                content_type='application/zip'
+            )
 
         except ValidationError as e:
             traceback.print_exc()
@@ -258,7 +273,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         except Exception as e:
             traceback.print_exc()
             return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
 
 def assign_lots(df, start_lot=7301):
     df = df.copy()
@@ -351,110 +365,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
 
-    @action(detail=False, methods=['POST'])
-    def generate_catalogue_file(self, request):
-        try:
-            sale_number = request.data.get("sale")
-            records = request.data.get("records")
-
-            if not sale_number or not records:
-                return Response(
-                    {"error": "Sale number and records are required."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            if not isinstance(records, list):
-                return Response({"error": "Records must be a list."}, status=400)
-
-            df = pd.DataFrame(records)
-            df, num_lots = assign_lots(df)
-            df = replace_mill_ids_with_names(df)
-            df = replace_warehouse_ids_with_names(df)
-            grade_summary, num_bags = summarize_grades(df)
-
-            column_map = {
-                "LOT": "LOT",
-                "C_OUTTURN": "outturn",
-                "MARK": "mark",
-                "GRADE": "grade",
-                "BAGS": "bags",
-                "POCKETS": "pockets",
-                "Weight": "weight",
-                "SALE NO": "sale",
-                "SEASON": "season",
-                "CERTIFICATE": "certificate",
-                "MILL": "mill",
-                "W/H": "warehouse",
-                "AGENT CODE": "agentCode",
-                "RESERVE PRICE": "reserve",
-                "REMARKS": ""  # optional or blank
-            }
-
-            data_for_template = {}
-            for template_col, data_col in column_map.items():
-                if data_col and data_col in df.columns:
-                    data_for_template[template_col] = df[data_col]
-                else:
-                    data_for_template[template_col] = [""] * len(df)
-
-            df_template = pd.DataFrame(data_for_template)
-
-            if df_template.empty:
-                return Response(
-                    {"error": "No valid data found in provided records after mapping."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            template_path = os.path.join(settings.BASE_DIR, "media/templates", "catalogue_template.xlsx")
-            wb = load_workbook(template_path)
-            ws = wb.active
-
-            start_row = 49
-            template_row = 49
-
-            for i, row in df_template.iterrows():
-                for j, col in enumerate(column_map.keys()):
-                    target_cell = ws.cell(row=start_row + i, column=j + 1)
-                    template_cell = ws.cell(row=template_row, column=j + 1)
-
-                    target_cell.value = row.get(col, "")
-                    if template_cell.has_style:
-                        target_cell.font = copy(template_cell.font)
-                        target_cell.border = copy(template_cell.border)
-                        target_cell.fill = copy(template_cell.fill)
-                        target_cell.number_format = copy(template_cell.number_format)
-                        target_cell.protection = copy(template_cell.protection)
-                        target_cell.alignment = copy(template_cell.alignment)
-
-            # ✅ Write summaries
-            write_summary_to_excel(ws, num_bags, num_lots)
-            write_warehouse_location(ws, records)
-            write_milled_by(ws, records, start_row=11, column_letter="H")
-            write_grade_summary(ws, grade_summary, start_row=19, start_col=8)
-
-
-            subdir = str(sale_number)
-            dir_path = os.path.join(settings.MEDIA_ROOT, "catalogue", subdir)
-            os.makedirs(dir_path, exist_ok=True)
-
-            filename = "catalogue_file.xlsx"
-            filepath = os.path.join(dir_path, filename)
-            wb.save(filepath)
-
-            file_url = os.path.join(settings.MEDIA_URL, "catalogue", subdir, filename)
-
-            return Response({
-                "message": f"Catalogue file created for sale {sale_number}.",
-                "file_url": file_url
-            }, status=status.HTTP_201_CREATED)
-
-        except Exception as e:
-            traceback_str = traceback.format_exc()
-            print(traceback_str)
-            return Response(
-                {"error": "Internal server error.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    
     @action(detail=False, methods=['POST'])     
     def generate_auction_file(self, request, *args, **kwargs):
         try:

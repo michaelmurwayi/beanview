@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { globalInitialState } from '../../initialState';
-
-
+import { generateSummaryFile } from './coffeeActions'; // ✅ NEW
 
 const coffeeSlice = createSlice({
   name: 'coffee',
@@ -74,6 +73,24 @@ const coffeeSlice = createSlice({
       state.error = null;
       state.success = false;
     },
+
+    
+  },
+
+  extraReducers: (builder) => {
+    builder
+      .addCase(generateSummaryFile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(generateSummaryFile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.generatedFiles = action.payload;
+      })
+      .addCase(generateSummaryFile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
@@ -91,6 +108,7 @@ export const {
   updateCoffeeFailure,
   deleteCoffeeSuccess,
   clearCoffeeFormStatus,
+ // frontend Excel writer
 } = coffeeSlice.actions;
 
 export default coffeeSlice.reducer;
