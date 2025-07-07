@@ -23,7 +23,7 @@ export const globalInitialState = {
         dropdown: [
           { name: "Add Coffee", link: "/coffee/add", iconKey: "add" },
           { name: "View Coffee Records", link: "/coffee/view", iconKey: "list" },
-          { name: "Stock Summary", link: "/coffee/summary", iconKey: "file" }
+         
         ]
       },
       {
@@ -32,9 +32,8 @@ export const globalInitialState = {
         emoji: "📘",
         isActive: (pathname) => pathname.startsWith("/catalogue"),
         dropdown: [
-          { name: "Add Catalogue", link: "/catalogue/add", iconKey: "add" },
+          { name: "Add Catalogue", link: "/catalogue/create", iconKey: "add" },
           { name: "View Catalogues", link: "/catalogue/view", iconKey: "list" },
-          { name: "Sale Summary", link: "/catalogue/summary", iconKey: "file" }
         ]
       },
       {
