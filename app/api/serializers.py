@@ -33,16 +33,24 @@ class FarmerSerializer(serializers.ModelSerializer):
 
 
 class CoffeeSerializer(serializers.ModelSerializer):
-    farmer = FarmerSerializer(source='mark', read_only=True)
+    farmer = serializers.SerializerMethodField()
     mark = serializers.SlugRelatedField(slug_field='mark', queryset=Farmer.objects.all())
+
+    # Write-only input for updates
+    status_id = serializers.PrimaryKeyRelatedField(
+        queryset=CoffeeStatus.objects.all(),
+        source='status',
+        write_only=True,
+        required=False
+    )
+    # Read-only display for output
+    status = serializers.StringRelatedField(read_only=True)
+
     mill_id = serializers.StringRelatedField()
     warehouse = serializers.StringRelatedField()
-    status = serializers.StringRelatedField()
     catalogue = serializers.StringRelatedField()
     created_by = serializers.StringRelatedField()
 
-
-    # Optional direct field control
     lot = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
@@ -52,7 +60,14 @@ class CoffeeSerializer(serializers.ModelSerializer):
             'catalogue': {'required': False, 'allow_null': True},
             'reserve': {'required': False},
             'buyer': {'required': False},
-            'remarks': {'required': False}
+            'remarks': {'required': False},
+            'sale': {'required': False, 'allow_blank': True},
+        }
+
+    def get_farmer(self, obj):
+        return {
+            "name": obj.mark.name,
+            "mark": obj.mark.mark,
         }
 
     def update(self, instance, validated_data):

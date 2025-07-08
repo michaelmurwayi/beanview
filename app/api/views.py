@@ -92,6 +92,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         """Handle the PUT method for updating a Coffee record."""
         
         instance = self.get_object()
+        
         # PUT should usually update entire resource, so partial=False
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)

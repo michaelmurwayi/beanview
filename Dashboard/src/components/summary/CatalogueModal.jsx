@@ -21,7 +21,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect, useState } from 'react';
-import { generateSummaryFile } from '../../store/slices/Coffee/coffeeActions';
+import { generateSummaryFile, updateCoffee } from '../../store/slices/Coffee/coffeeActions';
 
 const CatalogueSummary = ({
   open,
@@ -45,16 +45,35 @@ const CatalogueSummary = ({
     8: "TK", 9: "KM", 10: "LE", 11: "nan", 12: "KK", 13: "US", 14: "FH", 15: "GR",
   };
 
-  const handleExport = () => {
-    const summaries = Object.entries(localGroupedData).map(([mark, records]) => ({
-      mark,
-      records,
-    }));
-    dispatch(generateSummaryFile(summaries));
+  const confirmCatalogue = async () => {
+    const updatedSummaries = [];
+
+    for (const [mark, records] of Object.entries(localGroupedData)) {
+      const updatedRecords = [];
+
+      for (const rec of records) {
+        const updatedRec = {
+          ...rec,
+          status: 'CATALOGUED',
+          status_id: 2, // Assuming 1 is the ID for 'CATALOG
+        };
+        console.log(`Updating record ID ${updatedRec} with status_id 1`);
+        try {
+          await dispatch(updateCoffee(updatedRec)).unwrap();
+          updatedRecords.push(updatedRec);
+        } catch (err) {
+          console.error(`Failed to update record ID ${rec.id}:`, err);
+        }
+      }
+
+      updatedSummaries.push({ mark, records: updatedRecords });
+    }
+
   };
 
   const handleDelete = (rec) => {
     if (!rec?.id) return;
+
     if (window.confirm('Are you sure you want to remove this item from catalogue?')) {
       const updated = { ...localGroupedData };
 
@@ -90,11 +109,11 @@ const CatalogueSummary = ({
         <DialogContent dividers sx={{ backgroundColor: '#f5f5f5' }}>
           <Button
             variant="outlined"
-            onClick={handleExport}
+            onClick={confirmCatalogue}
             size="small"
             sx={{ fontSize: '0.7rem', backgroundColor: '#f0f0f0', color: '#121330', mb: 2 }}
           >
-            Export Excel
+            Confirm Catalogue
           </Button>
 
           {loading ? (
@@ -184,7 +203,11 @@ const CatalogueSummary = ({
         onClose={() => setFeedback({ ...feedback, open: false })}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={() => setFeedback({ ...feedback, open: false })} severity={feedback.severity}>
+        <Alert
+          onClose={() => setFeedback({ ...feedback, open: false })}
+          severity={feedback.severity}
+          sx={{ width: '100%' }}
+        >
           {feedback.message}
         </Alert>
       </Snackbar>
