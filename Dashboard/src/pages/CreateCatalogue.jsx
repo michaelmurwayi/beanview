@@ -21,6 +21,7 @@ import {
 } from '../store/slices/Coffee/coffeeActions';
 import { useDispatch, useSelector } from 'react-redux';
 import StockSummaryModal from '../components/summary/SummaryModal';
+import CatalogueModal from '../components/summary/CatalogueModal'
 
 const CreateCatalogue = () => {
   const dispatch = useDispatch();
@@ -29,7 +30,7 @@ const CreateCatalogue = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [feedback, setFeedback] = useState({ open: false, message: '', severity: 'success' });
   const [showSummaryModal, setShowSummaryModal] = useState(false);
-  const [filters, setFilters] = useState({ grade: '', mark: '', status_id: '', outturn: '', weight: '' });
+  const [filters, setFilters] = useState({ grade: '', mark: '', outturn: '', weight: '' });
 
   useEffect(() => {
     dispatch(fetchCoffee());
@@ -74,31 +75,40 @@ const CreateCatalogue = () => {
   };
 
   const resetFilters = () => {
-    setFilters({ grade: '', mark: '', status_id: '', outturn: '', weight: '' });
+    setFilters({ grade: '', mark: '', outturn: '', weight: '' });
   };
 
   const filteredData = useMemo(() => {
     return coffee.filter((row) => {
+      console.log(row);
       return (
+        row.status === "RECIEVED" &&
         (filters.grade === '' || row.grade === filters.grade) &&
         (filters.mark === '' || row.mark === filters.mark) &&
-        (filters.status_id === '' || row.status_id === filters.status_id) &&
         (filters.outturn === '' || row.outturn === filters.outturn) &&
         (filters.weight === '' || parseFloat(row.weight) >= parseFloat(filters.weight))
       );
     });
   }, [coffee, filters]);
 
-  const summaryGroups = useMemo(() => {
-    const grouped = {};
-    filteredData.forEach((rec) => {
-      const mark = rec.mark || 'Unmarked';
-      if (!grouped[mark]) grouped[mark] = [];
-      grouped[mark].push(rec);
-    });
-    return grouped;
-  }, [filteredData]);
+  const gradeOrder = [
+    "T", "TT", "C", "AB", "PB", "E", "AA", "SB", "HE", "UG3",
+    "UG2", "UG1", "UG", "NL", "ML"
+  ];
+  
 
+  const summaryGroups = useMemo(() => {
+    // Sort all records based on gradeOrder
+    const sorted = [...filteredData].sort((a, b) => {
+      const gradeA = gradeOrder.indexOf(a.grade);
+      const gradeB = gradeOrder.indexOf(b.grade);
+      return gradeA - gradeB;
+    });
+  
+    // Place all records under a single category/group
+    return { "Catalogue Summary": sorted };
+  }, [filteredData]);
+  
   const columns = [
     { field: 'mark', headerName: 'Mark' },
     { field: 'outturn', headerName: 'Outturn' },
@@ -107,12 +117,13 @@ const CreateCatalogue = () => {
     { field: 'type', headerName: 'Type' },
     { field: 'bags', headerName: 'Bags' },
     { field: 'pockets', headerName: 'Pockets' },
+    { field: 'weight', headerName: 'Weight' },
     { field: 'warehouse', headerName: 'Warehouse' },
     { field: 'mill', headerName: 'Mill' },
     { field: 'sale', headerName: 'Sale' },
     { field: 'price', headerName: 'Price' },
     { field: 'season', headerName: 'Season' },
-    { field: 'status_id', headerName: 'Status' },
+    { field: 'status', headerName: 'Status' },
     { field: 'buyer', headerName: 'Buyer' },
   ];
 
@@ -138,7 +149,6 @@ const CreateCatalogue = () => {
           {[
             { key: 'grade', label: 'Grade' },
             { key: 'mark', label: 'Mark' },
-            { key: 'status_id', label: 'Status' },
           ].map(({ key, label }) => {
             const uniqueOptions = [...new Set(coffee.map((item) => item[key]).filter(Boolean))];
             return (
@@ -197,7 +207,7 @@ const CreateCatalogue = () => {
             Reset
           </Button>
           <Button variant="contained" onClick={() => setShowSummaryModal(true)} size="small" sx={{ fontSize: '0.7rem', backgroundColor: '#121331', color: 'white' }}>
-            Generate Stock Summary
+            Add to Catalogue
           </Button>
         </Paper>
 
@@ -246,7 +256,7 @@ const CreateCatalogue = () => {
         </DialogActions>
       </Dialog>
 
-      <StockSummaryModal open={showSummaryModal} onClose={() => setShowSummaryModal(false)} groupedData={summaryGroups} />
+      <CatalogueModal open={showSummaryModal} onClose={() => setShowSummaryModal(false)} groupedData={summaryGroups} />
 
       <Snackbar
         open={feedback.open}
