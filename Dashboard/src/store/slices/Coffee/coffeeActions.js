@@ -6,9 +6,6 @@ import {
   fetchCoffeeRequest,
   fetchCoffeeSuccess,
   fetchCoffeeFailure,
-  updateCoffeeRequest,
-  updateCoffeeSuccess,
-  updateCoffeeFailure,
 } from './coffeeSlice';
 
 import { createAsyncThunk } from '@reduxjs/toolkit';

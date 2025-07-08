@@ -20,8 +20,7 @@ import {
   deleteCoffee,
 } from '../store/slices/Coffee/coffeeActions';
 import { useDispatch, useSelector } from 'react-redux';
-import StockSummaryModal from '../components/summary/SummaryModal';
-import CatalogueModal from '../components/summary/CatalogueModal'
+import CatalogueModal from '../components/summary/CatalogueModal';
 
 const CreateCatalogue = () => {
   const dispatch = useDispatch();
@@ -31,10 +30,31 @@ const CreateCatalogue = () => {
   const [feedback, setFeedback] = useState({ open: false, message: '', severity: 'success' });
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [filters, setFilters] = useState({ grade: '', mark: '', outturn: '', weight: '' });
+  const [catalogueData, setCatalogueData] = useState({});
 
   useEffect(() => {
     dispatch(fetchCoffee());
   }, [dispatch]);
+
+  const handleCatalogue = () => {
+    const userInput = prompt("Enter Sale Number:");
+    if (!userInput || !userInput.trim()) {
+      alert("Sale number is required.");
+      return;
+    }
+    const saleNumber = userInput.trim();
+
+    const updatedGroupedData = Object.entries(summaryGroups).reduce((acc, [mark, records]) => {
+      acc[mark] = records.map((rec) => ({
+        ...rec,
+        sale: saleNumber,
+      }));
+      return acc;
+    }, {});
+
+    setCatalogueData(updatedGroupedData);
+    setShowSummaryModal(true);
+  };
 
   const handleEditClick = (record) => {
     setSelectedRecord({ ...record });
@@ -57,17 +77,7 @@ const CreateCatalogue = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
-      try {
-        await dispatch(deleteCoffee(id)).unwrap();
-        setFeedback({ open: true, message: 'Record deleted successfully.', severity: 'success' });
-        dispatch(fetchCoffee());
-      } catch (error) {
-        setFeedback({ open: true, message: 'Failed to delete record.', severity: 'error' });
-      }
-    }
-  };
+
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -80,7 +90,6 @@ const CreateCatalogue = () => {
 
   const filteredData = useMemo(() => {
     return coffee.filter((row) => {
-      console.log(row);
       return (
         row.status === "RECIEVED" &&
         (filters.grade === '' || row.grade === filters.grade) &&
@@ -95,20 +104,16 @@ const CreateCatalogue = () => {
     "T", "TT", "C", "AB", "PB", "E", "AA", "SB", "HE", "UG3",
     "UG2", "UG1", "UG", "NL", "ML"
   ];
-  
 
   const summaryGroups = useMemo(() => {
-    // Sort all records based on gradeOrder
     const sorted = [...filteredData].sort((a, b) => {
       const gradeA = gradeOrder.indexOf(a.grade);
       const gradeB = gradeOrder.indexOf(b.grade);
       return gradeA - gradeB;
     });
-  
-    // Place all records under a single category/group
     return { "Catalogue Summary": sorted };
   }, [filteredData]);
-  
+
   const columns = [
     { field: 'mark', headerName: 'Mark' },
     { field: 'outturn', headerName: 'Outturn' },
@@ -146,10 +151,7 @@ const CreateCatalogue = () => {
             gap: 2,
           }}
         >
-          {[
-            { key: 'grade', label: 'Grade' },
-            { key: 'mark', label: 'Mark' },
-          ].map(({ key, label }) => {
+          {[{ key: 'grade', label: 'Grade' }, { key: 'mark', label: 'Mark' }].map(({ key, label }) => {
             const uniqueOptions = [...new Set(coffee.map((item) => item[key]).filter(Boolean))];
             return (
               <TextField
@@ -160,11 +162,7 @@ const CreateCatalogue = () => {
                 value={filters[key]}
                 onChange={handleFilterChange}
                 size="small"
-                sx={{
-                  minWidth: 150,
-                  '& .MuiInputBase-input': { fontSize: '0.7rem' },
-                  '& label': { fontSize: '0.7rem' },
-                }}
+                sx={{ minWidth: 150, '& .MuiInputBase-input': { fontSize: '0.7rem' }, '& label': { fontSize: '0.7rem' } }}
               >
                 <MenuItem value="">All</MenuItem>
                 {uniqueOptions.map((option) => (
@@ -182,11 +180,7 @@ const CreateCatalogue = () => {
             value={filters.outturn}
             onChange={handleFilterChange}
             size="small"
-            sx={{
-              minWidth: 150,
-              '& input': { fontSize: '0.7rem' },
-              '& label': { fontSize: '0.7rem' },
-            }}
+            sx={{ minWidth: 150, '& input': { fontSize: '0.7rem' }, '& label': { fontSize: '0.7rem' } }}
           />
 
           <TextField
@@ -196,17 +190,13 @@ const CreateCatalogue = () => {
             value={filters.weight}
             onChange={handleFilterChange}
             size="small"
-            sx={{
-              minWidth: 150,
-              '& input': { fontSize: '0.7rem' },
-              '& label': { fontSize: '0.7rem' },
-            }}
+            sx={{ minWidth: 150, '& input': { fontSize: '0.7rem' }, '& label': { fontSize: '0.7rem' } }}
           />
 
           <Button variant="outlined" onClick={resetFilters} size="small" sx={{ fontSize: '0.7rem', backgroundColor: '#f0f0f0', color: '#121330' }}>
             Reset
           </Button>
-          <Button variant="contained" onClick={() => setShowSummaryModal(true)} size="small" sx={{ fontSize: '0.7rem', backgroundColor: '#121331', color: 'white' }}>
+          <Button variant="contained" onClick={handleCatalogue} size="small" sx={{ fontSize: '0.7rem', backgroundColor: '#121331', color: 'white' }}>
             Add to Catalogue
           </Button>
         </Paper>
@@ -218,7 +208,7 @@ const CreateCatalogue = () => {
             loading={loading}
             error={error}
             onEdit={handleEditClick}
-            onDelete={(row) => handleDelete(row.id)}
+            onDelete={(row) => handleDelete(row)}
           />
         </Box>
       </Box>
@@ -256,7 +246,13 @@ const CreateCatalogue = () => {
         </DialogActions>
       </Dialog>
 
-      <CatalogueModal open={showSummaryModal} onClose={() => setShowSummaryModal(false)} groupedData={summaryGroups} />
+      <CatalogueModal
+        open={showSummaryModal}
+        onClose={() => setShowSummaryModal(false)}
+        groupedData={catalogueData}
+        onEdit={(record) => console.log('Edit', record)}
+        onDelete={(record) => console.log('Delete', record)}
+      />
 
       <Snackbar
         open={feedback.open}

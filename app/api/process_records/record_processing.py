@@ -158,9 +158,8 @@ def process_records(view, records):
 
              
         try:
-            # import ipdb; ipdb.set_trace()  # Set a breakpoint for debugging
-            Mill_id = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).id
-            record["MILL"] = Mill_id
+
+            record["MILL_ID"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
             record['TYPE'] = ""
             record["WAREHOUSE_ID"] = ""
             record["STATUS"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("STATUS")).pk
@@ -190,7 +189,7 @@ def process_single_record(view, data):
     mill = Mill.objects.filter(name=data["mill"]).values_list("id", flat=True).first()
     data["mill"] = mill
     serializer = view.get_serializer(data=data)
-    # Set a breakpoint for debugging
+    
     if serializer.is_valid(raise_exception=True):
         view.perform_create(serializer)
         created_records = [serializer.data]
