@@ -5,6 +5,7 @@ import ViewFarmers from './pages/ViewFarmers';
 import AddCoffee from './pages/AddCoffee';
 import ViewCoffee from './pages/ViewCoffee';
 import CreateCatalogue from './pages/CreateCatalogue'
+import ViewCatalogue from './pages/ViewCatalogues'; // Uncomment if you implement this page
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -19,7 +20,7 @@ function App() {
         <Route path="/coffee/add" element={<AddCoffee />} />
         <Route path='/coffee/view' element={<ViewCoffee />} />
         <Route path="/catalogue/create" element={<CreateCatalogue />} />
-        {/* <Route path="/catalogue/view" element={<ViewCatalogue />} /> */}
+        <Route path="/catalogue/view" element={<ViewCatalogue />} />
         
         {/* Add more routes as needed */}
       </Routes>
