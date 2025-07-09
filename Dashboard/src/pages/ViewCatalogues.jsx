@@ -10,6 +10,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import Sidebar from '../components/sidebar/Sidebar';
 import CatalogueCardRow from '../components/catalogue/CatalogueCardRow';
+import CatalogueModalSummary from '../components/catalogue/CatalogueModalSummary';
 import { fetchCoffee } from '../store/slices/Coffee/coffeeActions';
 
 const ViewCatalogue = () => {
@@ -18,6 +19,9 @@ const ViewCatalogue = () => {
 
   const [season, setSeason] = useState('');
   const [saleNumber, setSaleNumber] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedGroupedRecords, setSelectedGroupedRecords] = useState({});
+  const [selectedSale, setSelectedSale] = useState('');
 
   useEffect(() => {
     dispatch(fetchCoffee());
@@ -34,6 +38,13 @@ const ViewCatalogue = () => {
       (saleNumber ? record.sale?.toString().includes(saleNumber) : true)
     );
   });
+
+  const handleCardClick = (sale) => {
+    const saleRecords = filteredRecords.filter((r) => r.sale === sale);
+    setSelectedGroupedRecords(saleRecords); // No need to group further
+    setSelectedSale(sale);
+    setModalOpen(true);
+  };
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f4f6f8' }}>
@@ -100,7 +111,7 @@ const ViewCatalogue = () => {
 
             <TextField
               label="Sale Number"
-              placeholder=""
+              placeholder="Enter Sale"
               variant="outlined"
               size="small"
               value={saleNumber}
@@ -137,9 +148,20 @@ const ViewCatalogue = () => {
 
         {/* Catalogue cards */}
         <Box mt={4}>
-          <CatalogueCardRow data={filteredRecords} onCardClick={(sale) => console.log('Clicked sale:', sale)} />
+          <CatalogueCardRow
+            data={filteredRecords}
+            onCardClick={handleCardClick}
+          />
         </Box>
       </Box>
+
+      {/* Summary Modal */}
+      <CatalogueModalSummary
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        groupedData={selectedGroupedRecords}
+        title={`Catalogue Summary for Sale ${selectedSale}`}
+      />
     </Box>
   );
 };

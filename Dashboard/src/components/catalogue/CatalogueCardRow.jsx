@@ -28,15 +28,17 @@ const CatalogueCardRow = ({ data = [] }) => {
   };
 
   const uniqueSales = Array.from(
-    new Map(
-      data
-        .filter((item) => item.sale && item.season)
-        .map((item) => [item.sale, item])
-    )
-  ).map(([sale, record]) => ({
+  new Map(
+    data
+      .filter((item) => item.sale && item.season)
+      .map((item) => [item.sale, item])
+  )
+)
+  .map(([sale, record]) => ({
     sale,
     season: record.season,
-  }));
+  }))
+  .sort((a, b) => Number(b.sale) - Number(a.sale)); // Sort by sale descending
 
   return (
     <Box sx={{ mt: 4 }}>
