@@ -5,6 +5,7 @@ import {
   Paper,
   TextField,
   MenuItem,
+  Button,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import Sidebar from '../components/sidebar/Sidebar';
@@ -21,6 +22,11 @@ const ViewCatalogue = () => {
   useEffect(() => {
     dispatch(fetchCoffee());
   }, [dispatch]);
+
+  const handleResetFilters = () => {
+    setSeason('');
+    setSaleNumber('');
+  };
 
   const filteredRecords = coffeeRecords.filter((record) => {
     return (
@@ -65,15 +71,25 @@ const ViewCatalogue = () => {
             View generated catalogue records, generate catalogue upload files and sale summaries.
           </Typography>
 
-          <Box display="flex" gap={2} alignItems="center">
+          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
             <TextField
               select
               label="Season"
+              placeholder="Select Season"
               variant="outlined"
               size="small"
               value={season}
               onChange={(e) => setSeason(e.target.value)}
-              sx={{ backgroundColor: 'white', borderRadius: 1, minWidth: 150 }}
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: 1,
+                minWidth: 150,
+                '& .MuiInputBase-input::placeholder': {
+                  color: '#333',
+                  fontWeight: 600,
+                  opacity: 1,
+                },
+              }}
             >
               {['2024/2025'].map((option) => (
                 <MenuItem key={option} value={option}>
@@ -84,19 +100,44 @@ const ViewCatalogue = () => {
 
             <TextField
               label="Sale Number"
+              placeholder=""
               variant="outlined"
               size="small"
               value={saleNumber}
               onChange={(e) => setSaleNumber(e.target.value)}
-              sx={{ backgroundColor: 'white', borderRadius: 1 }}
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: 1,
+                '& .MuiInputBase-input::placeholder': {
+                  color: '#333',
+                  fontWeight: 600,
+                  opacity: 1,
+                },
+              }}
             />
+
+            <Button
+              onClick={handleResetFilters}
+              variant="contained"
+              size="small"
+              sx={{
+                textTransform: 'none',
+                fontWeight: 'bold',
+                bgcolor: '#1976d2',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: '#115293',
+                },
+              }}
+            >
+              Reset Filters
+            </Button>
           </Box>
         </Paper>
 
-        {/* Catalogue cards - outside Paper */}
+        {/* Catalogue cards */}
         <Box mt={4}>
           <CatalogueCardRow data={filteredRecords} onCardClick={(sale) => console.log('Clicked sale:', sale)} />
-
         </Box>
       </Box>
     </Box>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -7,9 +7,26 @@ import {
   IconButton,
 } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CatalogueModalSummary from './CatalogueModalSummary';
 
-const CatalogueCardRow = ({ data = [], onCardClick = () => {} }) => {
-  // Get unique sales
+const CatalogueCardRow = ({ data = [] }) => {
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [selectedRecords, setSelectedRecords] = useState([]);
+
+  const salesGrouped = data.reduce((acc, record) => {
+    const sale = record.sale || 'No Sale';
+    if (!acc[sale]) acc[sale] = [];
+    acc[sale].push(record);
+    return acc;
+  }, {});
+
+  const handleOpenModal = (sale) => {
+    setSelectedRecords(salesGrouped[sale]);
+    setSelectedSale(sale);
+    setOpenModal(true);
+  };
+
   const uniqueSales = Array.from(
     new Map(
       data
@@ -27,7 +44,7 @@ const CatalogueCardRow = ({ data = [], onCardClick = () => {} }) => {
         <Paper
           key={sale}
           elevation={2}
-          onClick={() => onCardClick(sale)}
+          onClick={() => handleOpenModal(sale)}
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -37,25 +54,16 @@ const CatalogueCardRow = ({ data = [], onCardClick = () => {} }) => {
             borderRadius: 2,
             cursor: 'pointer',
             backgroundColor: '#fff',
-            borderLeft: '6px solid #2196f3', // Blue vertical line
+            borderLeft: '6px solid #2196f3',
             transition: 'box-shadow 0.3s ease',
-            '&:hover': {
-              boxShadow: 4,
-            },
+            '&:hover': { boxShadow: 4 },
           }}
         >
-          {/* Content */}
           <Box sx={{ flexGrow: 1 }}>
-            <Typography
-              variant="subtitle1"
-              fontWeight="bold"
-              color="primary"
-            >
+            <Typography variant="subtitle1" fontWeight="bold" color="primary">
               Sale {sale}
             </Typography>
           </Box>
-
-          {/* Season + Chevron */}
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <Chip
               label={`Season ${season}`}
@@ -73,6 +81,13 @@ const CatalogueCardRow = ({ data = [], onCardClick = () => {} }) => {
           </Box>
         </Paper>
       ))}
+
+      <CatalogueModalSummary
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        records={selectedRecords}
+        title={`Catalogue Summary for Sale ${selectedSale}`}
+      />
     </Box>
   );
 };
