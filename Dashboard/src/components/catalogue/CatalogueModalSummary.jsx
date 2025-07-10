@@ -22,11 +22,12 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect, useState } from 'react';
 import { updateCoffee } from '../../store/slices/Coffee/coffeeActions';
+import { generateCatalogueFile } from '../../store/slices/Catalogue/catalogueActions';
 
 const CatalogueModalSummary = ({
   open,
   onClose,
-  groupedData = [],
+  groupedData,
   loading = false,
   onEdit = () => {},
   title = 'Catalogue Summary',
@@ -34,23 +35,30 @@ const CatalogueModalSummary = ({
   const dispatch = useDispatch();
   const [localRecords, setLocalRecords] = useState([]);
   const [feedback, setFeedback] = useState({ open: false, message: '', severity: 'success' });
-
+  
   useEffect(() => {
-  if (open && groupedData) {
-    const serialized = JSON.stringify(groupedData);
-    setLocalRecords(JSON.parse(serialized));
-  }
-}, [open, JSON.stringify(groupedData)]);
+    if (open && groupedData) {   
+      const dataArray = Array.isArray(groupedData)
+        ? groupedData
+        : Object.values(groupedData);
+      setLocalRecords([...dataArray]);
+    }
+  }, [open, groupedData]);
 
   const MILL_MAP = {
     1: "ICM", 2: "BU", 3: "HM", 4: "TY", 5: "IM", 6: "KF", 7: "RF",
     8: "TK", 9: "KM", 10: "LE", 11: "nan", 12: "KK", 13: "US", 14: "FH", 15: "GR",
   };
 
-  const GRADE_ORDER = ['AA', 'AB', 'PB', 'C', 'E', 'TT', 'UG', 'UG1', 'UG2', 'UG3', 'UGL', 'UGMT'];
+  const GRADE_ORDER = [
+    "T", "TT", "C", "AB", "PB", "E", "AA", "SB", "HE", "UG3",
+    "UG2", "UG1", "UG", "NL", "ML"
+  ];
+
 
   const confirmCatalogue = async () => {
     for (const rec of localRecords) {
+      console.log(groupedData);
       const updatedRec = { ...rec, status: 'CATALOGUED', status_id: 2 };
       try {
         await dispatch(updateCoffee(updatedRec)).unwrap();
@@ -62,6 +70,11 @@ const CatalogueModalSummary = ({
     setFeedback({ open: true, message: 'Records updated to CATALOGUED.', severity: 'success' });
   };
 
+  const generateCatalogue= async () =>{
+    console.log(groupedData);
+    dispatch(generateCatalogueFile(groupedData));
+
+  }
   const handleDelete = (rec) => {
     const updated = localRecords.filter((r) => r.id !== rec.id);
     setLocalRecords(updated);
@@ -89,11 +102,11 @@ const CatalogueModalSummary = ({
         <DialogContent dividers sx={{ backgroundColor: '#f5f5f5' }}>
           <Button
             variant="outlined"
-            onClick={confirmCatalogue}
+            onClick={generateCatalogue}
             size="small"
             sx={{ fontSize: '0.7rem', backgroundColor: '#f0f0f0', color: '#121330', mb: 2 }}
           >
-            Confirm Catalogue
+            generate Catalogue
           </Button>
 
           {loading ? (

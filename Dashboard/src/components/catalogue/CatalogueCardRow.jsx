@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import {
   Box,
   Typography,
@@ -9,10 +10,16 @@ import {
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CatalogueModalSummary from './CatalogueModalSummary';
 
-const CatalogueCardRow = ({ data = [] }) => {
+const CatalogueCardRow = ({ data }) => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const [selectedRecords, setSelectedRecords] = useState([]);
+
+  useEffect(() => {
+    if (selectedRecords.length > 0) {
+      console.log('Selected records updated:', selectedRecords);
+    }
+  }, [selectedRecords]);
 
   const salesGrouped = data.reduce((acc, record) => {
     const sale = record.sale || 'No Sale';
@@ -23,6 +30,7 @@ const CatalogueCardRow = ({ data = [] }) => {
 
   const handleOpenModal = (sale) => {
     setSelectedRecords(salesGrouped[sale]);
+    
     setSelectedSale(sale);
     setOpenModal(true);
   };
@@ -87,7 +95,7 @@ const CatalogueCardRow = ({ data = [] }) => {
       <CatalogueModalSummary
         open={openModal}
         onClose={() => setOpenModal(false)}
-        records={selectedRecords}
+        groupedData={selectedRecords}
         title={`Catalogue Summary for Sale ${selectedSale}`}
       />
     </Box>

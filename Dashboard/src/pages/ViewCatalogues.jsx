@@ -20,18 +20,34 @@ const ViewCatalogue = () => {
   const [season, setSeason] = useState('');
   const [saleNumber, setSaleNumber] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedGroupedRecords, setSelectedGroupedRecords] = useState({});
+  const [selectedGroupedRecords, setSelectedGroupedRecords] = useState([]);
   const [selectedSale, setSelectedSale] = useState('');
 
+  // Fetch coffee records when component mounts
   useEffect(() => {
     dispatch(fetchCoffee());
   }, [dispatch]);
 
+  // Log grouped records when they change
+  useEffect(() => {
+    console.log('Updated selectedGroupedRecords:', selectedGroupedRecords);
+    
+  }, [selectedGroupedRecords]);
+
+  // Optional: log when modal opens
+  useEffect(() => {
+    if (modalOpen) {
+      console.log('Modal opened for sale:', selectedSale);
+    }
+  }, [modalOpen]);
+
+  // Reset filters
   const handleResetFilters = () => {
     setSeason('');
     setSaleNumber('');
   };
 
+  // Apply filters to coffee records
   const filteredRecords = coffeeRecords.filter((record) => {
     return (
       (season ? record.season === season : true) &&
@@ -39,9 +55,11 @@ const ViewCatalogue = () => {
     );
   });
 
+  // When a card is clicked, open the modal and set grouped records
   const handleCardClick = (sale) => {
+    console.log("we are here")
     const saleRecords = filteredRecords.filter((r) => r.sale === sale);
-    setSelectedGroupedRecords(saleRecords); // No need to group further
+    setSelectedGroupedRecords(saleRecords);
     setSelectedSale(sale);
     setModalOpen(true);
   };
@@ -150,7 +168,7 @@ const ViewCatalogue = () => {
         <Box mt={4}>
           <CatalogueCardRow
             data={filteredRecords}
-            onCardClick={handleCardClick}
+            onClick={handleCardClick}
           />
         </Box>
       </Box>

@@ -31,6 +31,8 @@ from openpyxl import Workbook
 import zipfile
 from io import BytesIO
 from django.http import FileResponse
+from django.http import HttpResponse
+import tempfile
 
 
 
@@ -372,7 +374,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
         try:
             sale_number = request.data.get("sale")
             records = request.data.get("records", [])
-
+            
             if not sale_number or not records:
                 raise ValidationError("Both 'sale' and 'records' are required and must not be empty.")
 
@@ -439,7 +441,54 @@ class CatalogueViewSet(viewsets.ModelViewSet):
         except Exception as e:
             traceback.print_exc()
             return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['POST'])
+    def generate_catalogue_file(self, request):
+        catalogue_data = request.data  # Expecting a list of records
 
+        if not isinstance(catalogue_data, list) or not catalogue_data:
+            return Response({"error": "Invalid or empty catalogue data."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'catalogue_template.xlsx')
+            wb = load_workbook(TEMPLATE_PATH)
+            ws = wb.active  # Assuming writing to the first worksheet
+            
+
+            # Start writing at row 2 (assuming row 1 is headers)
+            
+            START_ROW = 27
+
+            for idx, item in enumerate(catalogue_data, start=START_ROW):
+                ws.cell(row=idx, column=1).value = item.get('mark', '')
+                ws.cell(row=idx, column=2).value = item.get('outturn', '')
+                ws.cell(row=idx, column=3).value = item.get('bulkoutturn', '')
+                ws.cell(row=idx, column=4).value = item.get('grade', '')
+                ws.cell(row=idx, column=5).value = item.get('bags', '')
+                ws.cell(row=idx, column=6).value = item.get('pockets', '')
+                ws.cell(row=idx, column=7).value = item.get('weight', '')
+                ws.cell(row=idx, column=8).value = item.get('sale', '')
+                ws.cell(row=idx, column=9).value = item.get('season', '')
+                ws.cell(row=idx, column=10).value = item.get('certificate', '')
+                # Add more columns if needed
+
+            # Save the workbook to a temporary file and return as response
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+                wb.save(tmp.name)
+                tmp.seek(0)
+                filename = "generated_catalogue.xlsx"
+                response = HttpResponse(
+                    tmp.read(),
+                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+                response['Content-Disposition'] = f'attachment; filename={filename}'
+                return response
+
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to generate file: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 def is_less_than_24_hours_ago(target_date):
     # Get the current date and time
