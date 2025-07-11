@@ -322,36 +322,38 @@ def write_warehouse_location(ws, records):
 
     ws["I10"] = location_text
 
-def write_milled_by(ws, records, start_row=12, column_letter="A"):
+def write_milled_by(ws, records, start_row=10, column_letter="G"):
     # Get unique mill IDs from the records
     mill_ids = {record.get("mill") for record in records if record.get("mill")}
-    
     # Query the Mill model for names and codes
     mills = Mill.objects.filter(id__in=mill_ids).values_list("name", "full_name")
 
     # Clean, deduplicate, and sort
     unique_mills = sorted({(name.strip(), code.strip()) for name, code in mills if name and code})
-
+    print(unique_mills)
     # Write each mill on its own line starting from `start_row`
     for i, (name, code) in enumerate(unique_mills):
         text = f"Milled BY({name} Coffee Mill Denoted as {code})"
         cell = f"{column_letter}{start_row + i}"
         ws[cell] = text
 
-def replace_mill_ids_with_names(df):
-    if "mill" not in df.columns:
-        return df  # nothing to do
+def replace_mill_ids_with_names(records):
+    if not records or not isinstance(records, list):
+        return records  # nothing to do
 
-    # Get unique mill IDs from the DataFrame
-    mill_ids = df["mill"].dropna().unique().tolist()
+    # Collect unique mill IDs from the records
+    mill_ids = list({rec.get("mill") for rec in records if rec.get("mill") is not None})
 
     # Fetch mill names from the database
     mill_map = dict(Mill.objects.filter(id__in=mill_ids).values_list("id", "name"))
 
-    # Replace the IDs with mill names in the DataFrame
-    df["mill"] = df["mill"].map(mill_map).fillna("")
+    # Replace the IDs with mill names
+    for rec in records:
+        mill_id = rec.get("mill")
+        rec["mill"] = mill_map.get(mill_id, "") if mill_id is not None else ""
 
-    return df
+    return records
+
 def replace_warehouse_ids_with_names(df):
     if "warehouse" not in df.columns:
         return df
@@ -389,6 +391,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 for status in CoffeeStatus.objects.filter(id__in=status_ids)
             }
 
+
             # Prepare file path
             filename = f"auction_{sale_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             file_path = os.path.join(sale_dir, filename)
@@ -398,6 +401,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
             ws = wb.active
             ws.title = "Auction File"
 
+            
             # Header
             headers = [
                 'Lot', 'Mark', 'Grade', 'Bags',
@@ -407,6 +411,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
             ws.append(headers)
 
             for record in records:
+        
                 status_id = record.get("status")
                 status_name = status_map.get(status_id, "")
                 Agent_Code = "049"
@@ -452,17 +457,32 @@ class CatalogueViewSet(viewsets.ModelViewSet):
         try:
             TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'catalogue_template.xlsx')
             wb = load_workbook(TEMPLATE_PATH)
-            ws = wb.active  # Assuming writing to the first worksheet
-            
+            ws = wb.active
 
-            # Start writing at row 2 (assuming row 1 is headers)
-            
-            START_ROW = 27
 
-            for idx, item in enumerate(catalogue_data, start=START_ROW):
-                ws.cell(row=idx, column=1).value = item.get('mark', '')
+            # Summarize grades and write to summary section
+            summary, total_bags = summarize_grades(pd.DataFrame(catalogue_data))
+            write_grade_summary(ws, summary, start_row=19, start_col=8)
+
+            # Write number of lots and bags summary
+            write_summary_to_excel(ws, num_bags=total_bags, num_lots=len(catalogue_data))
+
+            # Write mill details (denoted by code)
+            write_milled_by(ws, catalogue_data, start_row=10, column_letter="I")
+
+            # Replace mill IDs with names for display
+            updated_data = replace_mill_ids_with_names(catalogue_data)
+
+
+            # Replace warehouse IDs with names
+            updated_data = replace_warehouse_ids_with_names(pd.DataFrame(updated_data)).to_dict('records')
+
+            # Start writing catalogue rows (starting from row 49)
+            START_ROW = 49
+            for idx, item in enumerate(updated_data, start=START_ROW):
+                ws.cell(row=idx, column=1).value = item.get('lot', '')
                 ws.cell(row=idx, column=2).value = item.get('outturn', '')
-                ws.cell(row=idx, column=3).value = item.get('bulkoutturn', '')
+                ws.cell(row=idx, column=3).value = f"{item.get('outturn')} / {item.get('mark')} / {item.get('farmer', {}).get('code', '')}"
                 ws.cell(row=idx, column=4).value = item.get('grade', '')
                 ws.cell(row=idx, column=5).value = item.get('bags', '')
                 ws.cell(row=idx, column=6).value = item.get('pockets', '')
@@ -470,25 +490,28 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 ws.cell(row=idx, column=8).value = item.get('sale', '')
                 ws.cell(row=idx, column=9).value = item.get('season', '')
                 ws.cell(row=idx, column=10).value = item.get('certificate', '')
-                # Add more columns if needed
+                ws.cell(row=idx, column=11).value = item.get('mill', '')  # Already replaced
+                ws.cell(row=idx, column=12).value = item.get('warehouse', '')  # Already replaced
+                ws.cell(row=idx, column=13).value = "49"  # Agent code
 
-            # Save the workbook to a temporary file and return as response
+            # Save the workbook to a temp file and return it
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
                 wb.save(tmp.name)
                 tmp.seek(0)
-                filename = "generated_catalogue.xlsx"
                 response = HttpResponse(
                     tmp.read(),
                     content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                 )
-                response['Content-Disposition'] = f'attachment; filename={filename}'
+                response['Content-Disposition'] = 'attachment; filename=generated_catalogue.xlsx'
                 return response
 
         except Exception as e:
+            print(e)
             return Response(
                 {"error": f"Failed to generate file: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 def is_less_than_24_hours_ago(target_date):
     # Get the current date and time

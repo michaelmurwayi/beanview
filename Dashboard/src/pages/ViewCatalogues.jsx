@@ -26,6 +26,7 @@ const ViewCatalogue = () => {
   // Fetch coffee records when component mounts
   useEffect(() => {
     dispatch(fetchCoffee());
+    console.log('Coffee records fetched');
   }, [dispatch]);
 
   // Log grouped records when they change
@@ -38,6 +39,7 @@ const ViewCatalogue = () => {
   useEffect(() => {
     if (modalOpen) {
       console.log('Modal opened for sale:', selectedSale);
+      console.log(coffeeRecords)
     }
   }, [modalOpen]);
 

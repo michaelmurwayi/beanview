@@ -2,7 +2,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Typography,
   Table,
   TableHead,
   TableRow,
@@ -10,7 +9,6 @@ import {
   TableBody,
   IconButton,
   Box,
-  Divider,
   CircularProgress,
   Button,
   Snackbar,
@@ -35,15 +33,6 @@ const CatalogueModalSummary = ({
   const dispatch = useDispatch();
   const [localRecords, setLocalRecords] = useState([]);
   const [feedback, setFeedback] = useState({ open: false, message: '', severity: 'success' });
-  
-  useEffect(() => {
-    if (open && groupedData) {   
-      const dataArray = Array.isArray(groupedData)
-        ? groupedData
-        : Object.values(groupedData);
-      setLocalRecords([...dataArray]);
-    }
-  }, [open, groupedData]);
 
   const MILL_MAP = {
     1: "ICM", 2: "BU", 3: "HM", 4: "TY", 5: "IM", 6: "KF", 7: "RF",
@@ -55,11 +44,37 @@ const CatalogueModalSummary = ({
     "UG2", "UG1", "UG", "NL", "ML"
   ];
 
+  useEffect(() => {
+    if (open && groupedData) {
+      const dataArray = Array.isArray(groupedData)
+        ? groupedData
+        : Object.values(groupedData);
+
+      const sortedArray = dataArray.slice().sort((a, b) => {
+        const aIndex = GRADE_ORDER.indexOf(a.grade);
+        const bIndex = GRADE_ORDER.indexOf(b.grade);
+        return (aIndex === -1 ? Infinity : aIndex) - (bIndex === -1 ? Infinity : bIndex);
+      });
+
+      setLocalRecords(sortedArray);
+    }
+  }, [open, groupedData]);
 
   const confirmCatalogue = async () => {
-    for (const rec of localRecords) {
-      console.log(groupedData);
-      const updatedRec = { ...rec, status: 'CATALOGUED', status_id: 2 };
+    const updated = [];
+
+    for (let index = 0; index < localRecords.length; index++) {
+      const rec = localRecords[index];
+      const updatedRec = {
+        ...rec,
+        status: 'CATALOGUED',
+        status_id: 2,
+        lot: 7301 + index,
+        agent_code: 49,
+      };
+
+      updated.push(updatedRec);
+
       try {
         await dispatch(updateCoffee(updatedRec)).unwrap();
       } catch (err) {
@@ -67,14 +82,60 @@ const CatalogueModalSummary = ({
       }
     }
 
-    setFeedback({ open: true, message: 'Records updated to CATALOGUED.', severity: 'success' });
+    setLocalRecords(updated);
+
+    setFeedback({
+      open: true,
+      message: 'Records updated to CATALOGUED.',
+      severity: 'success',
+    });
   };
 
-  const generateCatalogue= async () =>{
-    console.log(groupedData);
-    dispatch(generateCatalogueFile(groupedData));
+  const generateCatalogue = async () => {
+    try {
+      const updatedRecords = localRecords.map((rec, index) => ({
+        ...rec,
+        lot: 7301 + index,
+        agent_code: 49,
+      }));
 
-  }
+      for (const rec of updatedRecords) {
+        try {
+          await dispatch(updateCoffee(rec)).unwrap();
+        } catch (err) {
+          console.error(`Failed to update record ID ${rec.id}:`, err);
+        }
+      }
+
+      const resultAction = await dispatch(generateCatalogueFile(updatedRecords));
+
+      if (generateCatalogueFile.fulfilled.match(resultAction)) {
+        const { data, headers } = resultAction.payload;
+
+        const blob = new Blob([data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const disposition = headers['content-disposition'];
+        const match = disposition?.match(/filename="?(.+?)"?$/);
+        const filename = match ? match[1] : 'catalogue.xlsx';
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Catalogue generation failed:', resultAction.payload);
+      }
+    } catch (error) {
+      console.error('Error downloading catalogue:', error);
+    }
+  };
+
   const handleDelete = (rec) => {
     const updated = localRecords.filter((r) => r.id !== rec.id);
     setLocalRecords(updated);
@@ -104,9 +165,15 @@ const CatalogueModalSummary = ({
             variant="outlined"
             onClick={generateCatalogue}
             size="small"
-            sx={{ fontSize: '0.7rem', backgroundColor: '#f0f0f0', color: '#121330', mb: 2 }}
+            sx={{
+              fontSize: '0.7rem',
+              backgroundColor: '#f0f0f0',
+              color: '#121330',
+              mb: 2,
+              textTransform: 'none',
+            }}
           >
-            generate Catalogue
+            Generate Catalogue
           </Button>
 
           {loading ? (
@@ -138,51 +205,44 @@ const CatalogueModalSummary = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {localRecords
-                  .slice()
-                  .sort((a, b) => {
-                    const aIndex = GRADE_ORDER.indexOf(a.grade);
-                    const bIndex = GRADE_ORDER.indexOf(b.grade);
-                    return (aIndex === -1 ? Infinity : aIndex) - (bIndex === -1 ? Infinity : bIndex);
-                  })
-                  .map((rec, index) => (
-                    <TableRow key={rec.id || index}>
-                      <TableCell>{7301 + index}</TableCell>
-                      <TableCell>{rec.outturn}</TableCell>
-                      <TableCell>{rec.bulkoutturn}</TableCell>
-                      <TableCell>{rec.mark}</TableCell>
-                      <TableCell>{rec.type}</TableCell>
-                      <TableCell>{rec.grade}</TableCell>
-                      <TableCell>{rec.bags}</TableCell>
-                      <TableCell>{rec.pockets}</TableCell>
-                      <TableCell>{rec.weight}</TableCell>
-                      <TableCell>{rec.sale}</TableCell>
-                      <TableCell>{rec.season}</TableCell>
-                      <TableCell>{rec.certificate}</TableCell>
-                      <TableCell>{MILL_MAP[rec.mill] || rec.mill}</TableCell>
-                      <TableCell>{rec.warehouse}</TableCell>
-                      <TableCell>{rec.price}</TableCell>
-                      <TableCell>{rec.buyer}</TableCell>
-                      <TableCell>{rec.status}</TableCell>
-                      <TableCell>
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => onEdit(rec)}
-                          sx={{ mr: 1 }}
-                        >
-                          <EditIcon fontSize="inherit" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDelete(rec)}
-                        >
-                          <DeleteIcon fontSize="inherit" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                {localRecords.map((rec, index) => (
+                  <TableRow key={rec.id || index}>
+                    <TableCell>{7301 + index}</TableCell>
+                    <TableCell>{rec.outturn}</TableCell>
+                    <TableCell>{rec.bulkoutturn}</TableCell>
+                    <TableCell>{rec.mark}</TableCell>
+                    <TableCell>{rec.type}</TableCell>
+                    <TableCell>{rec.grade}</TableCell>
+                    <TableCell>{rec.bags}</TableCell>
+                    <TableCell>{rec.pockets}</TableCell>
+                    <TableCell>{rec.weight}</TableCell>
+                    <TableCell>{rec.sale}</TableCell>
+                    <TableCell>{rec.season}</TableCell>
+                    <TableCell>{rec.certificate}</TableCell>
+                    <TableCell>{MILL_MAP[rec.mill] || rec.mill}</TableCell>
+                    <TableCell>{rec.warehouse}</TableCell>
+                    <TableCell>{rec.price}</TableCell>
+                    <TableCell>{rec.buyer}</TableCell>
+                    <TableCell>{rec.status}</TableCell>
+                    <TableCell>
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => onEdit(rec)}
+                        sx={{ mr: 1 }}
+                      >
+                        <EditIcon fontSize="inherit" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDelete(rec)}
+                      >
+                        <DeleteIcon fontSize="inherit" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           )}

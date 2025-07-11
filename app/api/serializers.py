@@ -68,6 +68,7 @@ class CoffeeSerializer(serializers.ModelSerializer):
         return {
             "name": obj.mark.name,
             "mark": obj.mark.mark,
+            "code": obj.mark.code,
         }
 
     def update(self, instance, validated_data):
