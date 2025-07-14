@@ -28,23 +28,23 @@ export const generateCatalogueFile = createAsyncThunk(
 
 export const generateAuctionFile = createAsyncThunk(
   'catalogue/generateAuctionFile',
-  async (groupedData, thunkAPI) => {
+  async (recordData, thunkAPI) => {
     try {
-      const files = generateAuctionFileFromData(groupedData);
+      console.log("Generating auction file with data:", recordData);
+      const { fileBlob, filename } = generateAuctionFileFromData(recordData); // ✅
 
-      // Trigger downloads (optional)
-      files.forEach(({ fileBlob, filename }) => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(fileBlob);
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        URL.revokeObjectURL(link.href);
-        document.body.removeChild(link);
-      });
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(fileBlob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      URL.revokeObjectURL(link.href);
+      document.body.removeChild(link);
 
-      return files; // Expected shape: [{ mark, fileBlob, filename }]
+      return { fileBlob, filename }; // ✅ match actual return
     } catch (error) {
+      console.error("Auction file generation error:", error);
       return thunkAPI.rejectWithValue('Failed to generate auction file.');
     }
   }

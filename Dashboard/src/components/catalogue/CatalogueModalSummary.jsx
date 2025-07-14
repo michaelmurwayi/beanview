@@ -20,7 +20,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect, useState } from 'react';
 import { updateCoffee } from '../../store/slices/Coffee/coffeeActions';
-import { generateCatalogueFile, generateAuctionFile } from '../../store/slices/Catalogue/catalogueActions';
+import {
+  generateCatalogueFile,
+  generateAuctionFile,
+} from '../../store/slices/Catalogue/catalogueActions';
 
 const CatalogueModalSummary = ({
   open,
@@ -35,13 +38,13 @@ const CatalogueModalSummary = ({
   const [feedback, setFeedback] = useState({ open: false, message: '', severity: 'success' });
 
   const MILL_MAP = {
-    1: "ICM", 2: "BU", 3: "HM", 4: "TY", 5: "IM", 6: "KF", 7: "RF",
-    8: "TK", 9: "KM", 10: "LE", 11: "nan", 12: "KK", 13: "US", 14: "FH", 15: "GR",
+    1: 'ICM', 2: 'BU', 3: 'HM', 4: 'TY', 5: 'IM', 6: 'KF', 7: 'RF',
+    8: 'TK', 9: 'KM', 10: 'LE', 11: 'nan', 12: 'KK', 13: 'US', 14: 'FH', 15: 'GR',
   };
 
   const GRADE_ORDER = [
-    "T", "TT", "C", "AB", "PB", "E", "AA", "SB", "HE", "UG3",
-    "UG2", "UG1", "UG", "NL", "ML"
+    'T', 'TT', 'C', 'AB', 'PB', 'E', 'AA', 'SB', 'HE', 'UG3',
+    'UG2', 'UG1', 'UG', 'NL', 'ML'
   ];
 
   useEffect(() => {
@@ -60,46 +63,19 @@ const CatalogueModalSummary = ({
     }
   }, [open, groupedData]);
 
-  const confirmCatalogue = async () => {
-    const updated = [];
-
-    for (let index = 0; index < localRecords.length; index++) {
-      const rec = localRecords[index];
-      const updatedRec = {
-        ...rec,
-        status: 'CATALOGUED',
-        status_id: 2,
-        lot: 7301 + index,
-        agent_code: 49,
-      };
-
-      updated.push(updatedRec);
-
-      try {
-        await dispatch(updateCoffee(updatedRec)).unwrap();
-      } catch (err) {
-        console.error(`Failed to update record ID ${rec.id}:`, err);
-      }
-    }
-
-    setLocalRecords(updated);
-
-    setFeedback({
-      open: true,
-      message: 'Records updated to CATALOGUED.',
-      severity: 'success',
-    });
-  };
+  // Shared helper for both functions
+  const getUpdatedRecords = () =>
+    localRecords.map((rec, index) => ({
+      ...rec,
+      lot: 7301 + index,
+      agent_code: 49,
+    }));
 
   const generateCatalogue = async () => {
     try {
-      const updatedRecords = localRecords.map((rec, index) => ({
-        ...rec,
-        lot: 7301 + index,
-        agent_code: 49,
-      }));
+      const updated = getUpdatedRecords();
 
-      for (const rec of updatedRecords) {
+      for (const rec of updated) {
         try {
           await dispatch(updateCoffee(rec)).unwrap();
         } catch (err) {
@@ -107,7 +83,7 @@ const CatalogueModalSummary = ({
         }
       }
 
-      const resultAction = await dispatch(generateCatalogueFile(updatedRecords));
+      const resultAction = await dispatch(generateCatalogueFile(updated));
 
       if (generateCatalogueFile.fulfilled.match(resultAction)) {
         const { data, headers } = resultAction.payload;
@@ -138,15 +114,9 @@ const CatalogueModalSummary = ({
 
   const handleGenerateAuction = async () => {
     try {
-      const grouped = localRecords.reduce((acc, rec, i) => {
-        const mark = rec.mark || 'Unknown';
-        if (!acc[mark]) acc[mark] = [];
-        acc[mark].push({ ...rec, lot: 7301 + i, agent_code: 49 });
-        return acc;
-      }, {});
+      const updated = getUpdatedRecords();
 
-      const result = await dispatch(generateAuctionFile(grouped));
-
+      const result = await dispatch(generateAuctionFile(updated));
       if (generateAuctionFile.fulfilled.match(result)) {
         setFeedback({
           open: true,
