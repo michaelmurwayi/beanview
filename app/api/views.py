@@ -33,6 +33,7 @@ from io import BytesIO
 from django.http import FileResponse
 from django.http import HttpResponse
 import tempfile
+from openpyxl.worksheet.worksheet import Worksheet
 
 
 
@@ -288,16 +289,24 @@ def summarize_grades(df):
     total_bags = df["bags"].sum()
     return summary, total_bags
 
-def write_grade_summary(ws, summary, start_row=19, start_col=8):
-    row = start_row
-    for grade, bags in summary.items():
-        # Write the grade in the specified column
-        cell_grade = ws.cell(row=row, column=start_col)
-        # Write the bags in the column to the right
-        cell_bags = ws.cell(row=row, column=start_col + 1)
-        cell_grade.value = grade
-        cell_bags.value = bags
-        row += 1  # Move to the next row for the next pair
+def write_grade_summary(ws: Worksheet, summary: dict, start_row: int = 19, start_col: int = 8):
+    """
+    Write grade summary data to an Excel worksheet starting from a specific row and column.
+
+    Args:
+        ws (Worksheet): An openpyxl Worksheet object.
+        summary (dict): A dictionary with grade names as keys and bag counts as values.
+        start_row (int): The starting row index (1-based).
+        start_col (int): The starting column index (1-based).
+    """
+    for idx, (grade, bags) in enumerate(summary.items()):
+        row = start_row + idx  # Calculate the current row for this item
+
+        # Write the grade to the first column
+        ws.cell(row=row, column=start_col, value=grade)
+
+        # Write the bags to the column right next to it
+        ws.cell(row=row, column=start_col + 1, value=bags)
 
 
 def write_summary_to_excel(ws, num_bags, num_lots):
@@ -322,20 +331,30 @@ def write_warehouse_location(ws, records):
 
     ws["I10"] = location_text
 
-def write_milled_by(ws, records, start_row=10, column_letter="G"):
-    # Get unique mill IDs from the records
+def write_milled_by(ws: Worksheet, records: list, start_row: int = 10, start_col: int = 9):
+    """
+    Write unique mills into the Excel worksheet starting from given row and column.
+
+    Args:
+        ws (Worksheet): openpyxl Worksheet to write into.
+        records (list): List of record dicts with a "mill" field (mill ID).
+        start_row (int): Row to start writing from (default is 10).
+        start_col (int): Column index (1-based, e.g., 9 = column I).
+    """
+    # Extract mill IDs from records
     mill_ids = {record.get("mill") for record in records if record.get("mill")}
-    # Query the Mill model for names and codes
+
+    # Query the Mill model
     mills = Mill.objects.filter(id__in=mill_ids).values_list("name", "full_name")
 
-    # Clean, deduplicate, and sort
+    # Deduplicate and sort
     unique_mills = sorted({(name.strip(), code.strip()) for name, code in mills if name and code})
-    print(unique_mills)
-    # Write each mill on its own line starting from `start_row`
+
+    # Write each mill line
     for i, (name, code) in enumerate(unique_mills):
-        text = f"Milled BY({name} Coffee Mill Denoted as {code})"
-        cell = f"{column_letter}{start_row + i}"
-        ws[cell] = text
+        text = f"Milled BY({code} Coffee Mill Denoted as {name})"
+        row = start_row + i
+        ws.cell(row=row, column=start_col, value=text)
 
 def replace_mill_ids_with_names(records):
     if not records or not isinstance(records, list):
@@ -462,13 +481,13 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
             # Summarize grades and write to summary section
             summary, total_bags = summarize_grades(pd.DataFrame(catalogue_data))
-            write_grade_summary(ws, summary, start_row=19, start_col=8)
+            write_grade_summary(ws, summary, start_row=16, start_col=8)
 
             # Write number of lots and bags summary
             write_summary_to_excel(ws, num_bags=total_bags, num_lots=len(catalogue_data))
 
             # Write mill details (denoted by code)
-            write_milled_by(ws, catalogue_data, start_row=10, column_letter="I")
+            write_milled_by(ws, catalogue_data, start_row=10, start_col=9)
 
             # Replace mill IDs with names for display
             updated_data = replace_mill_ids_with_names(catalogue_data)

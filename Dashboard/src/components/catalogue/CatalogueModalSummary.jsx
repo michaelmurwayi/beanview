@@ -20,7 +20,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect, useState } from 'react';
 import { updateCoffee } from '../../store/slices/Coffee/coffeeActions';
-import { generateCatalogueFile } from '../../store/slices/Catalogue/catalogueActions';
+import { generateCatalogueFile, generateAuctionFile } from '../../store/slices/Catalogue/catalogueActions';
 
 const CatalogueModalSummary = ({
   open,
@@ -136,6 +136,36 @@ const CatalogueModalSummary = ({
     }
   };
 
+  const handleGenerateAuction = async () => {
+    try {
+      const grouped = localRecords.reduce((acc, rec, i) => {
+        const mark = rec.mark || 'Unknown';
+        if (!acc[mark]) acc[mark] = [];
+        acc[mark].push({ ...rec, lot: 7301 + i, agent_code: 49 });
+        return acc;
+      }, {});
+
+      const result = await dispatch(generateAuctionFile(grouped));
+
+      if (generateAuctionFile.fulfilled.match(result)) {
+        setFeedback({
+          open: true,
+          message: 'Auction files generated and downloaded.',
+          severity: 'success',
+        });
+      } else {
+        throw new Error(result.payload || 'Auction file generation failed');
+      }
+    } catch (err) {
+      console.error('Auction generation error:', err);
+      setFeedback({
+        open: true,
+        message: 'Failed to generate auction file.',
+        severity: 'error',
+      });
+    }
+  };
+
   const handleDelete = (rec) => {
     const updated = localRecords.filter((r) => r.id !== rec.id);
     setLocalRecords(updated);
@@ -161,20 +191,35 @@ const CatalogueModalSummary = ({
         </DialogTitle>
 
         <DialogContent dividers sx={{ backgroundColor: '#f5f5f5' }}>
-          <Button
-            variant="outlined"
-            onClick={generateCatalogue}
-            size="small"
-            sx={{
-              fontSize: '0.7rem',
-              backgroundColor: '#f0f0f0',
-              color: '#121330',
-              mb: 2,
-              textTransform: 'none',
-            }}
-          >
-            Generate Catalogue
-          </Button>
+          <Box display="flex" gap={1} mb={2}>
+            <Button
+              variant="outlined"
+              onClick={generateCatalogue}
+              size="small"
+              sx={{
+                fontSize: '0.7rem',
+                backgroundColor: '#f0f0f0',
+                color: '#121330',
+                textTransform: 'none',
+              }}
+            >
+              Generate Catalogue
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={handleGenerateAuction}
+              size="small"
+              sx={{
+                fontSize: '0.7rem',
+                backgroundColor: '#e3f2fd',
+                color: '#121330',
+                textTransform: 'none',
+              }}
+            >
+              Generate Auction File
+            </Button>
+          </Box>
 
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
