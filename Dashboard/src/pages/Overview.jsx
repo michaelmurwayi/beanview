@@ -11,10 +11,15 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Sidebar from '../components/sidebar/Sidebar';
 import Card from '../components/overview/Card';
 import { Grid } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+
 
 
 const Overview = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const dispatch = useDispatch();
+  const { coffeeRecords } = useSelector((state) => state.coffee);
+  
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -42,16 +47,16 @@ const Overview = () => {
         >
         <Grid container spacing={15}>
           <Grid item xs={12} sm={6} md={4}>
-            <Card header="Total Sales" stat="Ksh 3.2M" text="Compared to last month" />
+            <Card header="Number of Farmers" stat="3.2M" text="Co-operatives, Small & large Estates" />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
-            <Card header="Active Users" stat="1,024" text="Up 12% from yesterday" />
+            <Card header="Number of Bags" stat="1,024" text="Total number of all bags Recieved" />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
-            <Card header="Pending Orders" stat="76" text="Updated 1 hour ago" />
+            <Card header="Total Weight" stat="76" text="Total weight of all coffee Recieved" />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
-            <Card header="Pending Orders" stat="76" text="Updated 1 hour ago" />
+            <Card header="Number of Sales" stat="76" text="All sales attended to date" />
           </Grid>
         </Grid> 
         </Box>

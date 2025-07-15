@@ -18,15 +18,16 @@ const StatCard = ({ header, stat, text }) => {
           color="#00C2FF"
           gutterBottom
           mt={1}
+          textAlign={'center'}
         >
           {header}
         </Typography>
 
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'white' }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
           {stat}
         </Typography>
 
-        <Typography variant="body2" color="white">
+        <Typography variant="body2" color="white" sx={{ textAlign: 'center' }}>
           {text}
         </Typography>
       </CardContent>
