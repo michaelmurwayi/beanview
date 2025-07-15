@@ -6,6 +6,15 @@ export const globalInitialState = {
   navigation: {
     items: [
       {
+        name: "Dashboard",
+        iconKey: "dashboard",
+        emoji: "📊",
+        isActive: (pathname) => pathname.startsWith("/"),
+        dropdown: [
+           { name: "overview", link: "/", iconKey: "list" }
+        ]
+      },
+      {
         name: "Farmers",
         iconKey: "farmers",
         emoji: "👩‍🌾",
