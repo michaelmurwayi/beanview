@@ -69,6 +69,7 @@ class CoffeeSerializer(serializers.ModelSerializer):
             "name": obj.mark.name,
             "mark": obj.mark.mark,
             "code": obj.mark.code,
+            "County": obj.mark.county if obj.mark.county else None,
         }
 
     def update(self, instance, validated_data):

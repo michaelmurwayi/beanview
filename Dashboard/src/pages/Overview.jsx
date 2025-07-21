@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchFarmers } from '../store/slices/Farmers/farmerActions';
 import { fetchCoffee } from '../store/slices/Coffee/coffeeActions';
 import CoffeeSalesChart from '../components/overview/CoffeeSalesChart';
+import CoffeeLocationBreakdownTable from '../components/overview/LocationBreakDown';
 
 const Overview = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -189,6 +190,7 @@ const Overview = () => {
           </Grid>
         </Grid>
 
+        <CoffeeLocationBreakdownTable filteredRecords={filteredRecords} />
       </Box>
     </Box>
   );
