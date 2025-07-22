@@ -7,52 +7,69 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Typography,
 } from '@mui/material';
 
 const CoffeeLocationBreakdownTable = ({ filteredRecords, onUniqueLocationsExtracted }) => {
-  const breakdown = useMemo(() =>
-    filteredRecords.reduce((acc, record) => {
-      const location = record?.farmer?.County || 'Unknown';
-      if (!acc[location]) {
-        acc[location] = { bags: 0, weight: 0 };
-      }
-      acc[location].bags += record.bags || 0;
-      acc[location].weight += parseFloat(record.weight) || 0;
-      return acc;
-    }, {}), [filteredRecords]);
+  // Aggregate coffee data by county
+  const breakdown = useMemo(
+    () =>
+      filteredRecords.reduce((acc, record) => {
+        const location = record?.farmer?.County || 'Unknown';
+        if (!acc[location]) {
+          acc[location] = { bags: 0, weight: 0 };
+        }
+        acc[location].bags += record.bags || 0;
+        acc[location].weight += parseFloat(record.weight) || 0;
+        return acc;
+      }, {}),
+    [filteredRecords]
+  );
 
+  // Get unique counties
   const locations = Object.keys(breakdown);
 
+  // Notify parent component of the extracted unique locations
   useEffect(() => {
     if (typeof onUniqueLocationsExtracted === 'function') {
       onUniqueLocationsExtracted(locations);
     }
   }, [locations, onUniqueLocationsExtracted]);
 
-  const rows = locations.map(location => ({
+  // Prepare rows for rendering
+  const rows = locations.map((location) => ({
     location,
     bags: breakdown[location].bags,
     weight: breakdown[location].weight,
   }));
 
   return (
-    <Paper elevation={3} sx={{ p: 2, mt: 2, width: '50%', height: '50vh', display: 'flex', flexDirection: 'column' }}>
-      <Typography
-        variant="h6"
-        gutterBottom
-        sx={{ backgroundColor: '#121330', color: '#fff', px: 2, py: 1, borderRadius: 1 }}
+    <Paper
+      elevation={3}
+      sx={{ p: 0, mt: 2, width: '100%', borderRadius:'15px', height: '50vh', display: 'flex', flexDirection: 'column' }}
+    >
+      <TableContainer
+        sx={{
+          flex: 1,
+          overflowY: 'scroll',
+          '&::-webkit-scrollbar': { display: 'none' }, // Chrome, Safari
+          scrollbarWidth: 'none',                     // Firefox
+          msOverflowStyle: 'none',                    // Edge & IE
+        }}
       >
-        Coffee Breakdown by Location
-      </Typography>
-
-      <TableContainer sx={{ flex: 1, overflowY: 'auto' }}>
         <Table stickyHeader>
           <TableHead>
+            <TableRow>
+              <TableCell
+                colSpan={3}
+                sx={{ backgroundColor: '#121330', color: '#fff', fontWeight: 'bold' }}
+              >
+                Coffee Breakdown by Location
+              </TableCell>
+            </TableRow>
             <TableRow sx={{ backgroundColor: '#121330' }}>
-              <TableCell sx={{ color: '#121330' }}><strong>Location (County)</strong></TableCell>
-              <TableCell align="right" sx={{ color: '#121330' }}><strong>Bags</strong></TableCell>
-              <TableCell align="right" sx={{ color: '#121330' }}><strong>Total Weight (kg)</strong></TableCell>
+              <TableCell sx={{ color: '#121330', fontWeight: 'bold' }}>County</TableCell>
+              <TableCell align="right" sx={{ color: '#121330', fontWeight: 'bold' }}>Bags</TableCell>
+              <TableCell align="right" sx={{ color: '#121330', fontWeight: 'bold' }}>Total Weight (kg)</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

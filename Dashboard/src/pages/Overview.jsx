@@ -9,7 +9,6 @@ import {
   MenuItem,
   Button,
   Paper,
-  Typography,
 } from '@mui/material';
 import Sidebar from '../components/sidebar/Sidebar';
 import Card from '../components/overview/Card';
@@ -19,6 +18,7 @@ import { fetchFarmers } from '../store/slices/Farmers/farmerActions';
 import { fetchCoffee } from '../store/slices/Coffee/coffeeActions';
 import CoffeeSalesChart from '../components/overview/CoffeeSalesChart';
 import CoffeeLocationBreakdownTable from '../components/overview/LocationBreakDown';
+import CoffeeSaleBreakdownTable from '../components/overview/SaleBreakDown';
 
 const Overview = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -180,7 +180,7 @@ const Overview = () => {
           </Box>
         </Paper>
 
-        {/* 📋 Grade Breakdown Table */}
+        {/* 📊 Grade Table + Sales Chart */}
         <Grid container spacing={2} sx={{ mt: 2 }}>
           <Grid item xs={12} md={6}>
             <CoffeeGradeTable coffeeRecords={filteredRecords} />
@@ -190,7 +190,15 @@ const Overview = () => {
           </Grid>
         </Grid>
 
-        <CoffeeLocationBreakdownTable filteredRecords={filteredRecords} />
+        {/* 📍 Location & Sale Breakdown */}
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Grid item xs={12} md={6}>
+            <CoffeeLocationBreakdownTable filteredRecords={filteredRecords} />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <CoffeeSaleBreakdownTable filteredRecords={filteredRecords} />
+          </Grid>
+        </Grid>
       </Box>
     </Box>
   );
