@@ -36,17 +36,23 @@ class CoffeeSerializer(serializers.ModelSerializer):
     farmer = serializers.SerializerMethodField()
     mark = serializers.SlugRelatedField(slug_field='mark', queryset=Farmer.objects.all())
 
-    # Write-only input for updates
     status_id = serializers.PrimaryKeyRelatedField(
         queryset=CoffeeStatus.objects.all(),
         source='status',
         write_only=True,
         required=False
     )
-    # Read-only display for output
     status = serializers.StringRelatedField(read_only=True)
 
-    mill_id = serializers.StringRelatedField()
+    # Accept mill_id for input
+    mill_id = serializers.PrimaryKeyRelatedField(
+        queryset=Mill.objects.all(),
+        source='mill',
+        write_only=True
+    )
+    # Show mill name in output
+    mill = serializers.StringRelatedField(read_only=True)
+
     warehouse = serializers.StringRelatedField()
     catalogue = serializers.StringRelatedField()
     created_by = serializers.StringRelatedField()
