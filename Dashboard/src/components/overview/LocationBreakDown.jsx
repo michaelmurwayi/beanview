@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -10,22 +10,26 @@ import {
   Typography,
 } from '@mui/material';
 
-const CoffeeLocationBreakdownTable = ({ filteredRecords }) => {
-  // Aggregate totals by county
-  const breakdown = filteredRecords.reduce((acc, record) => {
-    const location = record?.farmer?.county || 'Unknown';
-    if (!acc[location]) {
-      acc[location] = { bags: 0, weight: 0 };
-    }
-    acc[location].bags += record.bags || 0;
-    acc[location].weight += parseFloat(record.weight) || 0;
-    return acc;
-  }, {});
+const CoffeeLocationBreakdownTable = ({ filteredRecords, onUniqueLocationsExtracted }) => {
+  const breakdown = useMemo(() =>
+    filteredRecords.reduce((acc, record) => {
+      const location = record?.farmer?.County || 'Unknown';
+      if (!acc[location]) {
+        acc[location] = { bags: 0, weight: 0 };
+      }
+      acc[location].bags += record.bags || 0;
+      acc[location].weight += parseFloat(record.weight) || 0;
+      return acc;
+    }, {}), [filteredRecords]);
 
-  // Extract unique locations
   const locations = Object.keys(breakdown);
 
-  // Convert to row format
+  useEffect(() => {
+    if (typeof onUniqueLocationsExtracted === 'function') {
+      onUniqueLocationsExtracted(locations);
+    }
+  }, [locations, onUniqueLocationsExtracted]);
+
   const rows = locations.map(location => ({
     location,
     bags: breakdown[location].bags,
@@ -33,18 +37,22 @@ const CoffeeLocationBreakdownTable = ({ filteredRecords }) => {
   }));
 
   return (
-    <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
-      <Typography variant="h6" gutterBottom>
+    <Paper elevation={3} sx={{ p: 2, mt: 2, width: '50%', height: '50vh', display: 'flex', flexDirection: 'column' }}>
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{ backgroundColor: '#121330', color: '#fff', px: 2, py: 1, borderRadius: 1 }}
+      >
         Coffee Breakdown by Location
       </Typography>
 
-      <TableContainer>
-        <Table>
+      <TableContainer sx={{ flex: 1, overflowY: 'auto' }}>
+        <Table stickyHeader>
           <TableHead>
-            <TableRow>
-              <TableCell><strong>Location (County)</strong></TableCell>
-              <TableCell align="right"><strong>Bags</strong></TableCell>
-              <TableCell align="right"><strong>Total Weight (kg)</strong></TableCell>
+            <TableRow sx={{ backgroundColor: '#121330' }}>
+              <TableCell sx={{ color: '#121330' }}><strong>Location (County)</strong></TableCell>
+              <TableCell align="right" sx={{ color: '#121330' }}><strong>Bags</strong></TableCell>
+              <TableCell align="right" sx={{ color: '#121330' }}><strong>Total Weight (kg)</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
