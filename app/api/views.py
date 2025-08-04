@@ -331,7 +331,7 @@ def write_warehouse_location(ws, records):
 
     ws["I10"] = location_text
 
-def write_milled_by(ws: Worksheet, records: list, start_row: int = 10, start_col: int = 9):
+def write_milled_by(ws: Worksheet, records: list, start_row: int = 46, start_col: int = 5):
     """
     Write unique mills into the Excel worksheet starting from given row and column.
 
@@ -341,20 +341,37 @@ def write_milled_by(ws: Worksheet, records: list, start_row: int = 10, start_col
         start_row (int): Row to start writing from (default is 10).
         start_col (int): Column index (1-based, e.g., 9 = column I).
     """
-    # Extract mill IDs from records
-    mill_ids = {record.get("mill") for record in records if record.get("mill")}
+    # Mapping of mill codes to mill names
+    mill_map = {
+        "HC": "Hema",
+        "BU": "Bungoma",
+        "GR": "",
+        "ICM": "",
+        "LE": "Lower Eastern Millers",
+        "KF": "Kofinaf",
+        "KP": "NKPCU",
+        "KM": "Komothai",
+        "KK": "Kipkeleon",
+        "TY": "Othaya Millers",
+        "USCM": "Umoja Millers",
+        "RF": "",
+        "TK": "",
+        "TCM": "",
+        "HM": "Hema",
+        "US": "Umoja Millers",
+        "ED": "Eda Millers",
+        "FH": ""
+    }
 
-    # Query the Mill model
-    mills = Mill.objects.filter(id__in=mill_ids).values_list("name", "full_name")
-
-    # Deduplicate and sort
-    unique_mills = sorted({(name.strip(), code.strip()) for name, code in mills if name and code})
-
-    # Write each mill line
-    for i, (name, code) in enumerate(unique_mills):
-        text = f"Milled BY({code} Coffee Mill Denoted as {name})"
+    # Extract unique mill codes from the records
+    unique_mill_codes = sorted({record.get("mill") for record in records if record.get("mill")})
+    for i, code in enumerate(unique_mill_codes):
+        name = mill_map.get(code, "")
         row = start_row + i
-        ws.cell(row=row, column=start_col, value=text)
+        # Write code in the first cell
+        ws.cell(row=row, column=start_col, value=code)
+        # Write name in the next cell
+        ws.cell(row=row, column=start_col + 1, value=name)
 
 def replace_mill_ids_with_names(records):
     if not records or not isinstance(records, list):
@@ -481,23 +498,24 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
             # Summarize grades and write to summary section
             summary, total_bags = summarize_grades(pd.DataFrame(catalogue_data))
-            write_grade_summary(ws, summary, start_row=16, start_col=8)
-
+            # write_grade_summary(ws, summary, start_row=38, start_col=5)
+            # print("Grade summary written to Excel.")
             # Write number of lots and bags summary
-            write_summary_to_excel(ws, num_bags=total_bags, num_lots=len(catalogue_data))
+            # write_summary_to_excel(ws, num_bags=total_bags, num_lots=len(catalogue_data))
 
             # Write mill details (denoted by code)
-            write_milled_by(ws, catalogue_data, start_row=10, start_col=9)
-
+            
+            write_milled_by(ws, catalogue_data, start_row=45, start_col=5)
+            print("Milled by details written to Excel.")
             # Replace mill IDs with names for display
-            updated_data = replace_mill_ids_with_names(catalogue_data)
+            updated_data = catalogue_data
 
 
             # Replace warehouse IDs with names
             updated_data = replace_warehouse_ids_with_names(pd.DataFrame(updated_data)).to_dict('records')
-
+            print("Warehouse IDs replaced with names.")
             # Start writing catalogue rows (starting from row 49)
-            START_ROW = 49
+            START_ROW = 85
             for idx, item in enumerate(updated_data, start=START_ROW):
                 ws.cell(row=idx, column=1).value = item.get('lot', '')
                 ws.cell(row=idx, column=2).value = item.get('outturn', '')

@@ -85,5 +85,5 @@ def ImportFarmers(file_path):
         print(f"❌ Critical error: {e}")
 
 # Run the import
-file = os.path.expanduser('~/Downloads/farmers upload.xlsx')
+file = os.path.expanduser('~/Downloads/farmers.xlsx')
 ImportFarmers(file)

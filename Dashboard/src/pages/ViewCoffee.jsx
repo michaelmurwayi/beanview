@@ -30,12 +30,11 @@ const ViewCoffee = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [feedback, setFeedback] = useState({ open: false, message: '', severity: 'success' });
   const [showSummaryModal, setShowSummaryModal] = useState(false);
-  const [filters, setFilters] = useState({ grade: '', mark: '', status_id: '', outturn: '' });
+  const [filters, setFilters] = useState({ grade: '', mark: '', status_id: '', outturn: '', sale: '' });
 
   useEffect(() => {
     dispatch(fetchCoffee());
   }, [dispatch]);
-  
 
   const handleEditClick = (record) => {
     setSelectedRecord({ ...record });
@@ -76,7 +75,7 @@ const ViewCoffee = () => {
   };
 
   const resetFilters = () => {
-    setFilters({ grade: '', mark: '', status_id: '', outturn: '' });
+    setFilters({ grade: '', mark: '', status_id: '', outturn: '', sale: '' });
   };
 
   const filteredData = useMemo(() => {
@@ -85,7 +84,8 @@ const ViewCoffee = () => {
         (filters.grade === '' || row.grade === filters.grade) &&
         (filters.mark === '' || row.mark === filters.mark) &&
         (filters.status_id === '' || row.status_id === filters.status_id) &&
-        (filters.outturn === '' || row.outturn === filters.outturn)
+        (filters.outturn === '' || row.outturn === filters.outturn) &&
+        (filters.sale === '' || row.sale === filters.sale)
       );
     });
   }, [coffee, filters]);
@@ -138,26 +138,18 @@ const ViewCoffee = () => {
             gap: 2,
           }}
         >
-          {[
-            { key: 'grade', label: 'Grade' },
-            { key: 'mark', label: 'Mark' },
-            { key: 'status_id', label: 'Status' },
-          ].map(({ key, label }) => {
+          {['grade', 'mark', 'status_id', 'sale'].map((key) => {
             const uniqueOptions = [...new Set(coffee.map((item) => item[key]).filter(Boolean))];
             return (
               <TextField
                 select
                 key={key}
                 name={key}
-                label={label}
+                label={key.charAt(0).toUpperCase() + key.slice(1)}
                 value={filters[key]}
                 onChange={handleFilterChange}
                 size="small"
-                sx={{
-                  minWidth: 150,
-                  '& .MuiInputBase-input': { fontSize: '0.7rem' },
-                  '& label': { fontSize: '0.7rem' },
-                }}
+                sx={{ minWidth: 150, '& .MuiInputBase-input': { fontSize: '0.7rem' }, '& label': { fontSize: '0.7rem' } }}
               >
                 <MenuItem value="">All</MenuItem>
                 {uniqueOptions.map((option) => (
@@ -175,11 +167,7 @@ const ViewCoffee = () => {
             value={filters.outturn}
             onChange={handleFilterChange}
             size="small"
-            sx={{
-              minWidth: 150,
-              '& input': { fontSize: '0.7rem' },
-              '& label': { fontSize: '0.7rem' },
-            }}
+            sx={{ minWidth: 150, '& input': { fontSize: '0.7rem' }, '& label': { fontSize: '0.7rem' } }}
           />
 
           <Button variant="outlined" onClick={resetFilters} size="small" sx={{ fontSize: '0.7rem', backgroundColor: '#f0f0f0', color: '#121330' }}>

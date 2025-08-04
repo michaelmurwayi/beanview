@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, Box, TablePagination
+  TableRow, Paper, Typography, Box, TablePagination, IconButton, TextField
 } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const TableDisplay = ({
   data = [],
   columns = [],
   loading = false,
   error = null,
+  onEdit = () => {},
+  onDelete = () => {}
 }) => {
   const [page, setPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,17 +22,42 @@ const TableDisplay = ({
   const handleChangePage = (_, newPage) => {
     setPage(newPage);
   };
-
+  console.log('Data:', data);
+  // Filter data by 'mark'
   const filteredData = Array.isArray(data)
-    ? data.filter((row) =>
-        row.mark?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  ? data.filter((row) =>
+      row.mark?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  : [];
+
+  // Add Actions column
+  const extendedColumns = [
+    ...columns,
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      isAction: true
+    }
+  ];
 
   const hasData = Array.isArray(filteredData) && filteredData.length > 0;
 
   return (
     <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden', m: 0, p: 0 }}>
+      <Box sx={{ p: 2 }}>
+        <TextField
+          label="Search by Mark"
+          variant="outlined"
+          size="small"
+          fullWidth
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPage(0); // Reset to first page on search
+          }}
+        />
+      </Box>
+
       {loading ? (
         <Typography align="center" py={4}>Loading data...</Typography>
       ) : error ? (
@@ -48,7 +77,7 @@ const TableDisplay = ({
             <Table stickyHeader sx={{ minWidth: 1000 }}>
               <TableHead>
                 <TableRow>
-                  {columns.map((col) => (
+                  {extendedColumns.map((col) => (
                     <TableCell
                       key={col.field}
                       sx={{
@@ -87,6 +116,23 @@ const TableDisplay = ({
                           {row[col.field] ?? '--'}
                         </TableCell>
                       ))}
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                        <IconButton
+                          color="primary"
+                          size="small"
+                          onClick={() => onEdit(row)}
+                          sx={{ mr: 1 }}
+                        >
+                          <EditIcon fontSize="inherit" />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          size="small"
+                          onClick={() => onDelete(row)}
+                        >
+                          <DeleteIcon fontSize="inherit" />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
                   ))}
               </TableBody>
