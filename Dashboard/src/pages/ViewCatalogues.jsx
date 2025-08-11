@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -29,19 +29,56 @@ const ViewCatalogue = () => {
     console.log('Coffee records fetched');
   }, [dispatch]);
 
-  // Log grouped records when they change
-  useEffect(() => {
-    console.log('Updated selectedGroupedRecords:', selectedGroupedRecords);
-    
-  }, [selectedGroupedRecords]);
+  // Function to merge bulk outturn records
+  const checkBulkOutturn = (rows) => {
+    const bulked = [];
+    const groupedMap = new Map();
+    const mergedRecords = [];
 
-  // Optional: log when modal opens
-  useEffect(() => {
-    if (modalOpen) {
-      console.log('Modal opened for sale:', selectedSale);
-      console.log(coffeeRecords)
-    }
-  }, [modalOpen]);
+    rows.forEach((record) => {
+      const bulkoutturn = record.bulkoutturn?.trim();
+      const grade = record.grade?.trim();
+
+      if (!bulkoutturn) {
+        bulked.push(record); // Missing bulkoutturn
+        return;
+      }
+
+      const key = `${bulkoutturn}_${grade}`;
+
+      if (!groupedMap.has(key)) {
+        groupedMap.set(key, []);
+      }
+
+      groupedMap.get(key).push(record);
+    });
+
+    // Merge grouped records
+    groupedMap.forEach((records, key) => {
+      const [bulkoutturn, grade] = key.split('_');
+      const totalWeight = records.reduce((sum, r) => sum + parseFloat(r.weight || 0), 0);
+      const bags = Math.floor(totalWeight / 50);
+      const pockets = Math.round(totalWeight % 50);
+
+      const base = records[0]; // take fields from first record
+
+      const merged = {
+        ...base,
+        outturn: bulkoutturn,
+        mark: `${grade}/Bulk`,
+        weight: totalWeight.toFixed(2),
+        bags,
+        pockets,
+      };
+
+      mergedRecords.push(merged);
+    });
+
+    // Combine mergedRecords and bulked into filtered records
+    const filteredRecords = [...mergedRecords, ...bulked];
+
+    return filteredRecords;
+  };
 
   // Reset filters
   const handleResetFilters = () => {
@@ -50,16 +87,22 @@ const ViewCatalogue = () => {
   };
 
   // Apply filters to coffee records
-  const filteredRecords = coffeeRecords.filter((record) => {
-    return (
-      (season ? record.season === season : true) &&
-      (saleNumber ? record.sale?.toString().includes(saleNumber) : true)
-    );
-  });
+  const filteredRecordsRaw = useMemo(() => {
+    return coffeeRecords.filter((record) => {
+      return (
+        (season ? record.season === season : true) &&
+        (saleNumber ? record.sale?.toString().includes(saleNumber) : true)
+      );
+    });
+  }, [coffeeRecords, season, saleNumber]);
+
+  // Merge bulk outturn records after filtering
+  const filteredRecords = useMemo(() => {
+    return checkBulkOutturn(filteredRecordsRaw);
+  }, [filteredRecordsRaw]);
 
   // When a card is clicked, open the modal and set grouped records
   const handleCardClick = (sale) => {
-    console.log("we are here")
     const saleRecords = filteredRecords.filter((r) => r.sale === sale);
     setSelectedGroupedRecords(saleRecords);
     setSelectedSale(sale);

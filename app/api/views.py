@@ -495,31 +495,23 @@ class CatalogueViewSet(viewsets.ModelViewSet):
             wb = load_workbook(TEMPLATE_PATH)
             ws = wb.active
 
-
-            # Summarize grades and write to summary section
-            summary, total_bags = summarize_grades(pd.DataFrame(catalogue_data))
-            # write_grade_summary(ws, summary, start_row=38, start_col=5)
-            # print("Grade summary written to Excel.")
-            # Write number of lots and bags summary
-            # write_summary_to_excel(ws, num_bags=total_bags, num_lots=len(catalogue_data))
-
-            # Write mill details (denoted by code)
-            
-            write_milled_by(ws, catalogue_data, start_row=45, start_col=5)
-            print("Milled by details written to Excel.")
-            # Replace mill IDs with names for display
-            updated_data = catalogue_data
-
-
             # Replace warehouse IDs with names
-            updated_data = replace_warehouse_ids_with_names(pd.DataFrame(updated_data)).to_dict('records')
+            updated_data = replace_warehouse_ids_with_names(pd.DataFrame(catalogue_data)).to_dict('records')
             print("Warehouse IDs replaced with names.")
-            # Start writing catalogue rows (starting from row 49)
-            START_ROW = 85
+
+            # Start writing catalogue rows (starting from row 84)
+            START_ROW = 84
             for idx, item in enumerate(updated_data, start=START_ROW):
                 ws.cell(row=idx, column=1).value = item.get('lot', '')
                 ws.cell(row=idx, column=2).value = item.get('outturn', '')
-                ws.cell(row=idx, column=3).value = f"{item.get('outturn')} / {item.get('mark')} / {item.get('farmer', {}).get('code', '')}"
+
+                # If bulkoutturn exists, do not add grower code to mark
+                if item.get('bulkoutturn'):
+                    mark_value = f"{item.get('outturn')} / {item.get('mark', '')}"
+                else:
+                    mark_value = f"{item.get('outturn')} / {item.get('mark', '')} / {item.get('farmer', {}).get('code', '')}"
+
+                ws.cell(row=idx, column=3).value = mark_value
                 ws.cell(row=idx, column=4).value = item.get('grade', '')
                 ws.cell(row=idx, column=5).value = item.get('bags', '')
                 ws.cell(row=idx, column=6).value = item.get('pockets', '')

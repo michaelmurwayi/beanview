@@ -77,7 +77,59 @@ const CreateCatalogue = () => {
     }
   };
 
+  const checkBulkOutturn = (rows) => {
+    const bulked = [];
+    const groupedMap = new Map();
+    const mergedRecords = [];
 
+    rows.forEach((record) => {
+      const bulkoutturn = record.bulkoutturn?.trim();
+      const grade = record.grade?.trim();
+
+      if (!bulkoutturn) {
+        bulked.push(record); // Missing bulkoutturn
+        return;
+      }
+
+      const key = `${bulkoutturn}_${grade}`;
+
+      if (!groupedMap.has(key)) {
+        groupedMap.set(key, []);
+      }
+
+      groupedMap.get(key).push(record);
+    });
+
+    // Merge grouped records
+    groupedMap.forEach((records, key) => {
+      const [bulkoutturn, grade] = key.split('_');
+      const totalWeight = records.reduce((sum, r) => sum + parseFloat(r.weight || 0), 0);
+      const bags = Math.floor(totalWeight / 50);
+      const pockets = Math.round(totalWeight % 50);
+
+      const base = records[0]; // take fields from first record
+
+      const merged = {
+        ...base,
+        outturn: bulkoutturn,
+        mark: `${grade}/Bulk`,
+        weight: totalWeight.toFixed(2),
+        bags,
+        pockets,
+      };
+
+      mergedRecords.push(merged);
+    });
+
+    // Combine mergedRecords and bulked into filtered records
+    const filteredRecords = [...mergedRecords, ...bulked];
+
+    return {
+      mergedRecords,
+      bulked,
+      filteredRecords,
+    };
+  };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -88,10 +140,11 @@ const CreateCatalogue = () => {
     setFilters({ grade: '', mark: '', outturn: '', weight: '' });
   };
 
+  // First filter based on user input
   const filteredData = useMemo(() => {
     return coffee.filter((row) => {
       return (
-        row.status === "RECIEVED" &&
+        row.status === "PENDING" &&
         (filters.grade === '' || row.grade === filters.grade) &&
         (filters.mark === '' || row.mark === filters.mark) &&
         (filters.outturn === '' || row.outturn === filters.outturn) &&
@@ -99,6 +152,9 @@ const CreateCatalogue = () => {
       );
     });
   }, [coffee, filters]);
+
+  // Then merge and bulk with checkBulkOutturn
+  const { filteredRecords } = useMemo(() => checkBulkOutturn(filteredData), [filteredData]);
 
   const gradeOrder = [
     "T", "TT", "C", "AB", "PB", "E", "AA", "SB", "HE", "UG3",
@@ -203,7 +259,7 @@ const CreateCatalogue = () => {
 
         <Box sx={{ flex: 1, overflow: 'auto', bgcolor: '#fff', borderRadius: 1, boxShadow: 1 }}>
           <Table
-            data={filteredData}
+            data={filteredRecords} // <-- use merged and bulked data here
             columns={columns}
             loading={loading}
             error={error}
