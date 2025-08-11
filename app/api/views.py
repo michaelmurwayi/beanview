@@ -174,8 +174,8 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         
     @action(detail=False, methods=['POST'])
     def generate_summary_file(self, request, *args, **kwargs):
-        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock summary template.xlsx')
-        START_ROW = 27
+        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock_summary_template.xlsx')
+        START_ROW = 25
 
         try:
             summaries = request.data.get('summaries', [])
@@ -204,6 +204,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             for summary in summaries:
                 mark = summary.get('mark')
                 records = summary.get('records', [])
+                code = summary.get("records")[0]['farmer']['code']
 
                 if not mark or not records:
                     continue
@@ -218,8 +219,9 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 ws = wb.active
 
                 # Set mark name in cell B6
-                ws['B6'] = mark
-
+                ws['B3'] = mark
+                ws['B2'] = code
+                
                 for row_offset, record in enumerate(records, start=1):
                     row = START_ROW + row_offset
                     status_id = record.get('status')
