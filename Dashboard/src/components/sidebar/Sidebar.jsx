@@ -22,6 +22,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ListIcon from "@mui/icons-material/ListAlt";
 import KeyboardCommandKeyIcon from '@mui/icons-material/KeyboardCommandKey';
 import FileIcon from "@mui/icons-material/Description";
+import LogoutButton from "../auth/Logout";
 
 const iconMap = {
   farmers: <PeopleIcon />, 
@@ -108,6 +109,7 @@ const Sidebar = () => {
                 </Typography>
               )}
             </Box>
+            <LogoutButton/>
           </Box>
         </Fade>
 

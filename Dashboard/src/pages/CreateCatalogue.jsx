@@ -145,11 +145,7 @@ const CreateCatalogue = () => {
     return coffee.filter((row) => {
       console.log(row)
       return (
-<<<<<<< Updated upstream
-        row.status === "PENDING" &&
-=======
         row.status === "2" &&
->>>>>>> Stashed changes
         (filters.grade === '' || row.grade === filters.grade) &&
         (filters.mark === '' || row.mark === filters.mark) &&
         (filters.outturn === '' || row.outturn === filters.outturn) &&
