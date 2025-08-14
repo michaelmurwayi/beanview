@@ -1,18 +1,17 @@
-// ProtectedRoute.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
-  if (isLoading) {
-    return <div>Loading...</div>; // or a spinner
-  }
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      loginWithRedirect();
+    }
+  }, [isLoading, isAuthenticated, loginWithRedirect]);
 
-  if (!isAuthenticated) {
-    // Redirect to login page or Auth0 login
-    return <Navigate to="/login" replace />;
+  if (isLoading || (!isAuthenticated && !isLoading)) {
+    return <div>Loading...</div>;
   }
 
   return children;
