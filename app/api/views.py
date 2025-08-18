@@ -542,7 +542,146 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 {"error": f"Failed to generate file: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    @action(detail=False, methods=['POST'])
+    def generate_sale_file(self, request, *args, **kwargs):
+        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'sale_summary_template.xlsx')
+        START_ROW = 9
 
+        try:
+            sale_number = request.data.get("sale number")  # 🔹 fix key name
+            if not sale_number:
+                raise ValidationError("'sale number' is required.")
+
+            # ✅ no farmer relation
+            qs = Coffee.objects.filter(sale=sale_number)
+
+            if not qs.exists():
+                raise ValidationError(f"No records found for sale number {sale_number}")
+
+            summaries = []
+            for record in qs:
+                summaries.append({
+                    "id": record.id,
+                    "farmer": {
+                        "name": getattr(record, "farmer_name", None),
+                        "mark": getattr(record, "farmer_mark", None),
+                        "code": getattr(record, "farmer_code", None),
+                        "County": getattr(record, "farmer_county", None),
+                    },
+                    "mark": record.mark,
+                    "status": record.status,
+                    "mill": record.mill,
+                    "warehouse": record.warehouse,
+                    "catalogue": record.catalogue,
+                    "created_by": record.created_by,
+                    "lot": record.lot,
+                    "outturn": record.outturn,
+                    "bulkoutturn": record.bulkoutturn,
+                    "type": record.type,
+                    "grade": record.grade,
+                    "bags": record.bags,
+                    "pockets": record.pockets,
+                    "weight": str(record.weight),
+                    "sale": record.sale,
+                    "season": record.season,
+                    "milling_charges": str(record.milling_charges),
+                    "warehouse_charges": str(record.warehouse_charges),
+                    "brokerage_charges": str(record.brokerage_charges),
+                    "export_charges": float(record.export_charges or 0),
+                    "transport_charges": float(record.transport_charges or 0),
+                    "price": str(record.price),
+                    "net_value": str(record.net_value),
+                    "gross_value": str(record.gross_value),
+                    "certificate": record.certificate,
+                    "catalogue_type": record.catalogue_type,
+                    "reserve": record.reserve,
+                    "buyer": record.buyer,
+                    "remarks": record.remarks,
+                    "file": record.file,
+                    "created_at": record.created_at,
+                    "updated_at": record.updated_at,
+                })
+
+            base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
+            os.makedirs(base_dir, exist_ok=True)
+
+            generated_files = []
+
+            for summary in summaries:
+                
+                mark = summary.get('mark').mark
+                code = summary.get('mark').code
+
+                if not mark:
+                    continue
+
+                mark_dir = os.path.join(base_dir, mark)
+                os.makedirs(mark_dir, exist_ok=True)
+
+                filename = f"{mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                file_path = os.path.join(mark_dir, filename)
+
+                wb = load_workbook(TEMPLATE_PATH)
+                ws = wb.active
+
+                # Set mark + code
+                ws['C4'] = mark
+                ws['C5'] = code
+
+                values = [
+                    summary.get('outturn'),
+                    summary.get('bags'),
+                    summary.get('pockets'),
+                    summary.get('weight'),
+                    summary.get('grade'),
+                    summary.get('price'),
+                    # calculate gross value
+                    (float(summary.get('weight', 0)) / 50 * float(summary.get('price', 0)))
+                    if summary.get('weight') and summary.get('price') else 0,
+                    summary.get('warehouse_charges'),  # 🔹 fixed typo
+                    summary.get('brokerage_charges'),
+                    summary.get('milling_charges'),
+                    summary.get('mill').name,
+                    summary.get('export_charges'),
+                    summary.get('transport_charges'),
+                    summary.get('net_value'),
+                    summary.get('buyer'),
+                ]
+                
+            for col_index, value in enumerate(values, start=1):
+                cell = ws.cell(row=START_ROW, column=col_index)
+                if isinstance(cell, MergedCell):
+                    continue
+                cell.value = value
+
+            wb.save(file_path)
+            generated_files.append(file_path)
+            
+            
+            # ✅ Create ZIP in memory
+            zip_buffer = BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                for file_path in generated_files:
+                    arcname = os.path.basename(file_path)
+                    zip_file.write(file_path, arcname=arcname)
+
+            zip_buffer.seek(0)
+
+            # ✅ Return as downloadable file
+            return FileResponse(
+                zip_buffer,
+                as_attachment=True,
+                filename=f"stock_summaries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                content_type='application/zip'
+            )
+
+        except ValidationError as e:
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            traceback.print_exc()
+            return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 def is_less_than_24_hours_ago(target_date):
     # Get the current date and time
