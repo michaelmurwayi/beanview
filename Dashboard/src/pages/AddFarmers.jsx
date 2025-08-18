@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { useEffect } from 'react';
+import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
 import {
   Box,
   Tabs,
@@ -10,21 +10,19 @@ import {
   Container,
   Button,
   Alert,
-} from '@mui/material';
-import Sidebar from '../components/sidebar/Sidebar';
-import CoffeeForm from '../components/farmerupload/UploadForm'; // Assuming this is your form
-import { updateFarmerFormField} from '../store/slices/Farmers/farmerSlice'; // Adjust the import path as needed
-import { submitFarmer } from '../store/slices/Farmers/farmerActions';
+} from "@mui/material";
+import Sidebar from "../components/sidebar/Sidebar";
+import CoffeeForm from "../components/farmerupload/UploadForm"; // Assuming this is your form
+import { updateFarmerFormField } from "../store/slices/Farmers/farmerSlice"; // Adjust the import path as needed
+import { submitFarmer } from "../store/slices/Farmers/farmerActions";
 
 const FormUpload = () => {
   const formData = useSelector((state) => state.farmer.FarmerUploadFormData);
-  console.log('Form Data:', formData);
+  console.log("Form Data:", formData);
   const { error, success } = useSelector((state) => state.farmer);
 
   const dispatch = useDispatch();
-  
 
-  
   const handleChange = (e) => {
     const { name, value } = e.target;
     dispatch(updateFarmerFormField({ field: name, value }));
@@ -32,13 +30,13 @@ const FormUpload = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted with:', formData);
+    console.log("Form submitted with:", formData);
     // Dispatch submit action here if needed
     dispatch(submitFarmer(formData));
   };
 
-   // Clear error after 5s
-   useEffect(() => {
+  // Clear error after 5s
+  useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
         dispatch(postFarmerFailure(null));
@@ -47,12 +45,15 @@ const FormUpload = () => {
     }
   }, [error, success, dispatch]);
 
-
   return (
     <Box p={2}>
       <Container sx={{ mt: 4 }}>
         <form onSubmit={handleSubmit}>
-          <CoffeeForm formData={formData} handleChange={handleChange} handleSubmit={handleSubmit} />
+          <CoffeeForm
+            formData={formData}
+            handleChange={handleChange}
+            handleSubmit={handleSubmit}
+          />
           {/* Submit button removed */}
         </form>
       </Container>
@@ -60,18 +61,23 @@ const FormUpload = () => {
   );
 };
 
-
 const FileUpload = () => (
-  <Box p={2} display="flex" justifyContent="center" alignItems="center" height="100vh">
+  <Box
+    p={2}
+    display="flex"
+    justifyContent="center"
+    alignItems="center"
+    height="100vh"
+  >
     <Paper
       elevation={3}
       sx={{
         p: 4,
-        bgcolor: '#f0f0f0',
+        bgcolor: "#f0f0f0",
         borderRadius: 2,
-        textAlign: 'center',
+        textAlign: "center",
         maxWidth: 400,
-        width: '100%',
+        width: "100%",
       }}
     >
       <Typography variant="h6" gutterBottom>
@@ -84,21 +90,24 @@ const FileUpload = () => (
   </Box>
 );
 
-
 const UploadTabs = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const { error, success } = useSelector((state) => state.farmer);
 
   return (
-    <Box display="flex" height="100%" width="100%" sx={{ overflow: 'hidden auto' }} m={0} p={0}>
-      {/* Sidebar */}
-      <Box width="250px" bgcolor="#121330">
-        <Sidebar />
-      </Box>
+    <Box
+      display="flex"
+      height="100%"
+      width="100%"
+      sx={{ overflow: "hidden auto" }}
+      m={0}
+      p={0}
+    >
+      <Sidebar />
 
       {/* Main Content */}
       <Box flex={1} display="flex" flexDirection="column">
-      {success && (
+        {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
             Farmer submitted successfully!
           </Alert>
@@ -113,10 +122,10 @@ const UploadTabs = () => {
         <Paper
           elevation={1}
           sx={{
-            height: '100%',
-            width: '100%',
+            height: "100%",
+            width: "100%",
             borderRadius: 0,
-            backgroundColor: '#f9f9fb',
+            backgroundColor: "#f9f9fb",
           }}
         >
           <Tabs
@@ -124,27 +133,27 @@ const UploadTabs = () => {
             onChange={(e, newIndex) => setTabIndex(newIndex)}
             variant="fullWidth"
             sx={{
-              backgroundColor: '#ffffff',
-              borderBottom: '1px solid #e0e0e0',
-              '& .MuiTab-root': {
-                textTransform: 'none',
+              backgroundColor: "#ffffff",
+              borderBottom: "1px solid #e0e0e0",
+              "& .MuiTab-root": {
+                textTransform: "none",
                 fontWeight: 500,
-                fontSize: '1rem',
-                borderRadius: '8px 8px 0 0',
+                fontSize: "1rem",
+                borderRadius: "8px 8px 0 0",
                 mx: 0.5,
-                transition: 'all 0.2s ease',
-                color: '#555',
-                '&:hover': {
-                  backgroundColor: '#f0f0f5',
+                transition: "all 0.2s ease",
+                color: "#555",
+                "&:hover": {
+                  backgroundColor: "#f0f0f5",
                 },
               },
-              '& .Mui-selected': {
-                backgroundColor: '#e7f0fa',
-                color: '#1976d2',
+              "& .Mui-selected": {
+                backgroundColor: "#e7f0fa",
+                color: "#1976d2",
               },
-              '& .MuiTabs-indicator': {
+              "& .MuiTabs-indicator": {
                 height: 3,
-                backgroundColor: '#90caf9',
+                backgroundColor: "#90caf9",
                 borderRadius: 2,
               },
             }}

@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, Box, TablePagination, IconButton, TextField
-} from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Box,
+  TablePagination,
+  IconButton,
+  TextField,
+} from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const TableDisplay = ({
   data = [],
@@ -13,16 +23,16 @@ const TableDisplay = ({
   loading = false,
   error = null,
   onEdit = () => {},
-  onDelete = () => {}
+  onDelete = () => {},
 }) => {
   const [page, setPage] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const rowsPerPage = 65;
 
   const handleChangePage = (_, newPage) => {
     setPage(newPage);
   };
-  console.log('Data:', data);
+
   // Filter data by 'mark'
   const filteredData = data.filter((row) =>
     row.mark?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -31,17 +41,13 @@ const TableDisplay = ({
   // Add Actions column
   const extendedColumns = [
     ...columns,
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      isAction: true
-    }
+    { field: "actions", headerName: "Actions", isAction: true },
   ];
 
   const hasData = Array.isArray(filteredData) && filteredData.length > 0;
 
   return (
-    <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden', m: 0, p: 0 }}>
+    <Paper elevation={3} sx={{ width: "100%", overflow: "hidden", m: 0, p: 0 }}>
       <Box sx={{ p: 2 }}>
         <TextField
           label="Search by Mark"
@@ -51,13 +57,15 @@ const TableDisplay = ({
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
-            setPage(0); // Reset to first page on search
+            setPage(0);
           }}
         />
       </Box>
 
       {loading ? (
-        <Typography align="center" py={4}>Loading data...</Typography>
+        <Typography align="center" py={4}>
+          Loading data...
+        </Typography>
       ) : error ? (
         <Typography align="center" color="error" py={4}>
           Failed to load data: {error}
@@ -66,25 +74,29 @@ const TableDisplay = ({
         <>
           <TableContainer
             sx={{
-              overflow: 'auto',
-              maxHeight: '100%',
-              scrollbarWidth: 'none',
-              '&::-webkit-scrollbar': { display: 'none' },
+              overflow: "auto",
+              maxHeight: "100%",
+              // Hide scrollbar in WebKit
+              "&::-webkit-scrollbar": { display: "none" },
+              // Hide scrollbar in Firefox
+              scrollbarWidth: "none",
+              // Hide scrollbar in IE/Edge (legacy)
+              msOverflowStyle: "none",
             }}
           >
-            <Table stickyHeader sx={{ minWidth: 1000 }}>
+            <Table stickyHeader sx={{ minWidth: 600 }}>
               <TableHead>
                 <TableRow>
                   {extendedColumns.map((col) => (
                     <TableCell
                       key={col.field}
                       sx={{
-                        fontWeight: 'bold',
-                        fontSize: '0.75rem',
-                        backgroundColor: '#121330',
-                        color: 'white',
-                        padding: '6px',
-                        whiteSpace: 'nowrap',
+                        fontWeight: "bold",
+                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                        backgroundColor: "#121330",
+                        color: "white",
+                        padding: "6px",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {col.headerName}
@@ -100,21 +112,25 @@ const TableDisplay = ({
                       key={idx}
                       hover
                       sx={{
-                        '&:hover': {
-                          backgroundColor: '#ACCAFD',
-                          cursor: 'pointer',
+                        "&:hover": {
+                          backgroundColor: "#ACCAFD",
+                          cursor: "pointer",
                         },
                       }}
                     >
                       {columns.map((col) => (
                         <TableCell
                           key={col.field}
-                          sx={{ fontSize: '0.65rem', padding: '6px', whiteSpace: 'nowrap' }}
+                          sx={{
+                            fontSize: { xs: "0.6rem", sm: "0.65rem" },
+                            padding: "6px",
+                            whiteSpace: "nowrap",
+                          }}
                         >
-                          {row[col.field] ?? '--'}
+                          {row[col.field] ?? "--"}
                         </TableCell>
                       ))}
-                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
                         <IconButton
                           color="primary"
                           size="small"
@@ -155,12 +171,13 @@ const TableDisplay = ({
           width="100%"
           m={0}
         >
-          <InfoOutlinedIcon sx={{ fontSize: 48, color: '#999' }} />
+          <InfoOutlinedIcon sx={{ fontSize: 48, color: "#999" }} />
           <Typography variant="h6" mt={2} color="textSecondary">
             No information to display
           </Typography>
           <Typography variant="body2" color="text.secondary" maxWidth={400}>
-            🤷‍♂️ It seems there’s currently no data available. Please contact the system administrator or try again later.
+            🤷‍♂️ It seems there’s currently no data available. Please contact the
+            system administrator or try again later.
           </Typography>
         </Box>
       )}
