@@ -1,24 +1,23 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { Provider } from 'react-redux';
-import { Auth0Provider } from '@auth0/auth0-react';
-import App from './App';
-import store from './store/store';
+// src/main.jsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { Provider } from "react-redux";
+import { Auth0Provider } from "@auth0/auth0-react";
+import App from "./App";
+import store from "./store/store"; // adjust path if needed
 
-// Your Auth0 domain and client ID from your Auth0 dashboard
-const domain = 'dev-48vrii7xsykextuk.us.auth0.com';
-const clientId = 'gcPdRHpDodOG9dLTmM0CiXwlqqmHQdr1';
-
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Provider store={store}>
-      <Auth0Provider
-        domain={domain}
-        clientId={clientId}
-        authorizationParams={{ redirect_uri: window.location.origin + '/home' }}
-      >
+    <Auth0Provider
+      domain="dev-48vrii7xsykextuk.us.auth0.com" // e.g. dev-abc123.us.auth0.com
+      clientId="gcPdRHpDodOG9dLTmM0CiXwlqqmHQdr1" // e.g. XyzAbc123456
+      authorizationParams={{
+        redirect_uri: window.location.origin + "/home",
+      }}
+    >
+      <Provider store={store}>
         <App />
-      </Auth0Provider>
-    </Provider>
+      </Provider>
+    </Auth0Provider>
   </React.StrictMode>
 );

@@ -6,7 +6,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useTheme } from "@mui/material/styles";
 import SidebarNavItem from "../navitem/NavItem";
-import LogoutButton from "../auth/LogoutButton";
+import LoginButton from "../auth/LoginButton";
 
 const drawerWidth = 240;
 const collapsedWidth = 72;
@@ -48,6 +48,7 @@ export default function Sidebar() {
             },
           }}
         >
+          {/* Normal navigation items from Redux */}
           {navItems.map((item, idx) => (
             <SidebarNavItem
               key={idx}
@@ -69,35 +70,17 @@ export default function Sidebar() {
           {!isLoading && (
             <>
               {!isAuthenticated ? (
-                <SidebarNavItem
-                  name="Login"
-                  collapsed={collapsed}
-                  emoji="🔑"
-                  link="#"
-                  onExpandSidebar={() => setCollapsed(false)}
-                  dropdown={[
-                    {
-                      name: "Sign In",
-                      link: "#",
-                      icon: "➡️",
-                      onClick: handleLogin,
-                    },
-                  ]}
-                />
+                // 🔐 Login Item
+                <LoginButton />
               ) : (
+                // 🚪 Logout Item
                 <SidebarNavItem
                   name={user?.name || "Logout"}
                   collapsed={collapsed}
                   emoji="🚪"
-                  link="#"
+                  onClick={handleLogout}
                   onExpandSidebar={() => setCollapsed(false)}
-                  dropdown={[
-                    {
-                      name: "",
-                      link: "#",
-                      icon: <LogoutButton />,
-                    },
-                  ]}
+                  isActive={false}
                 />
               )}
             </>

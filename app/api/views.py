@@ -188,19 +188,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
             base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
             os.makedirs(base_dir, exist_ok=True)
 
-            # Collect all status IDs for mapping
-            all_status_ids = {
-                record.get('status')
-                for summary in summaries
-                for record in summary.get('records', [])
-                if record.get('status') is not None
-            }
-
-            status_map = {
-                status.id: status.name
-                for status in CoffeeStatus.objects.filter(id__in=all_status_ids)
-            }
-
             generated_files = []
 
             for summary in summaries:
@@ -226,8 +213,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 
                 for row_offset, record in enumerate(records, start=1):
                     row = START_ROW + row_offset
-                    status_id = record.get('status')
-                    status_name = status_map.get(status_id, "")
 
                     values = [
                         record.get('outturn'),
@@ -245,7 +230,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                         record.get('warehouse'),
                         record.get('price'),
                         record.get('buyer'),
-                        status_name,
+                        record.get('status'),
                     ]
 
                     for col_index, value in enumerate(values, start=1):
@@ -490,83 +475,86 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['POST'])
     def generate_sale_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'sale_summary_template.xlsx')
-        START_ROW = 9
+        START_ROW = 25
 
         try:
-            sale_number = request.data.get("sale number")
-            if not sale_number:
-                raise ValidationError("'sale number' is required.")
+            summaries = request.data.get('summaries', [])
 
-            qs = Coffee.objects.filter(sale=sale_number)
-            if not qs.exists():
-                raise ValidationError(f"No records found for sale number {sale_number}")
+            if not summaries:
+                raise ValidationError("'summaries' is required and must not be empty.")
 
-            # ✅ Group records by mark
-            grouped = defaultdict(list)
-            for record in qs:
-                grouped[record.mark].append(record)
+            base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
+            os.makedirs(base_dir, exist_ok=True)
+
+            generated_files = []
+
+            for summary in summaries:
+                mark = summary.get('mark')
+                records = summary.get('records', [])
+                code = summary.get("records")[0]['farmer']['code']
+
+                if not mark or not records:
+                    continue
+
+                mark_dir = os.path.join(base_dir, mark)
+                os.makedirs(mark_dir, exist_ok=True)
+
+                filename = f"{mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                file_path = os.path.join(mark_dir, filename)
+
+                wb = load_workbook(TEMPLATE_PATH)
+                ws = wb.active
+
+                # Set mark name in cell B6
+                ws['B3'] = mark
+                ws['B2'] = code
+                
+                for row_offset, record in enumerate(records, start=1):
+                    row = START_ROW + row_offset
+
+                    values = [
+                        record.get('outturn'),
+                        record.get('bulkoutturn'),
+                        record.get('mark'),
+                        record.get('type'),
+                        record.get('grade'),
+                        record.get('bags'),
+                        record.get('pockets'),
+                        record.get('weight'),
+                        record.get('sale_number'),
+                        record.get('season'),
+                        record.get('certificate'),
+                        record.get('mill'),
+                        record.get('warehouse'),
+                        record.get('price'),
+                        record.get('buyer'),
+                        record.get('status'),
+                    ]
+
+                    for col_index, value in enumerate(values, start=1):
+                        cell = ws.cell(row=row, column=col_index)
+                        if isinstance(cell, MergedCell):
+                            continue
+                        cell.value = value
+
+                wb.save(file_path)
+                generated_files.append(file_path)
 
             # ✅ Create ZIP in memory
             zip_buffer = BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-                for idx, (mark, records) in enumerate(grouped.items(), start=1):
-                    mark_name = mark.mark if hasattr(mark, "mark") else str(mark)
-                    mark_code = mark.code if hasattr(mark, "code") else None
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                for file_path in generated_files:
+                    arcname = os.path.basename(file_path)
+                    zip_file.write(file_path, arcname=arcname)
 
-                    # Load template workbook
-                    wb = load_workbook(TEMPLATE_PATH)
-                    ws = wb.active
-
-                    # Fill mark + code
-                    ws['C4'] = mark_name
-                    ws['C5'] = mark_code
-
-                    row = START_ROW
-                    for record in records:
-                        values = [
-                            record.outturn,
-                            record.bags,
-                            record.pockets,
-                            str(record.weight),
-                            record.grade,
-                            str(record.price),
-                            (float(record.weight or 0) / 50 * float(record.price or 0)) if record.weight and record.price else 0,
-                            str(record.warehouse_charges),
-                            str(record.brokerage_charges),
-                            str(record.milling_charges),
-                            record.mill.name if record.mill else None,
-                            float(record.export_charges or 0),
-                            float(record.transport_charges or 0),
-                            str(record.net_value),
-                            record.buyer,
-                        ]
-
-                        for col_index, value in enumerate(values, start=1):
-                            cell = ws.cell(row=row, column=col_index)
-                            if isinstance(cell, MergedCell):
-                                continue
-                            cell.value = value
-                        row += 1
-
-                    # Save workbook to in-memory buffer
-                    excel_buffer = BytesIO()
-                    wb.save(excel_buffer)
-                    excel_buffer.seek(0)
-
-                    # Write this workbook as a separate file inside the ZIP
-                    safe_mark = mark_name.replace(" ", "_")
-                    zip_filename = f"{safe_mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.xlsx"
-                    zip_file.writestr(zip_filename, excel_buffer.read())
-
-            # ✅ reset buffer pointer
             zip_buffer.seek(0)
 
-            # ✅ Return as downloadable ZIP
+            # ✅ Return as downloadable file
             return FileResponse(
                 zip_buffer,
                 as_attachment=True,
                 filename=f"stock_summaries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
-                content_type="application/zip"
+                content_type='application/zip'
             )
 
         except ValidationError as e:
@@ -576,19 +564,6 @@ class CatalogueViewSet(viewsets.ModelViewSet):
         except Exception as e:
             traceback.print_exc()
             return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-def is_less_than_24_hours_ago(target_date):
-    # Get the current date and time
-    current_date = datetime.now()
 
-    # Calculate the difference between the current date and the target date
-    time_difference = current_date - target_date
 
-    # Check if the difference is less than 24 hours
-    return time_difference < timedelta(hours=24)
-
-def read_data_from_pdf_file(mill,file,requests):
-    data = []
-    import ipdb;ipdb.set_trace()
-
-    return data
 

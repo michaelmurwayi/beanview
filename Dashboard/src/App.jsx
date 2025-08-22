@@ -1,44 +1,26 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Overview from "./pages/Overview";
+import AddFarmers from "./pages/AddFarmers";
+import ViewFarmers from "./pages/ViewFarmers";
+import AddCoffee from "./pages/AddCoffee";
+import ViewCoffee from "./pages/ViewCoffee";
+import CreateCatalogue from "./pages/CreateCatalogue";
+import ViewCatalogue from "./pages/ViewCatalogues";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-import Overview from './pages/Overview';
-import AddFarmers from './pages/AddFarmers';
-import ViewFarmers from './pages/ViewFarmers';
-import AddCoffee from './pages/AddCoffee';
-import ViewCoffee from './pages/ViewCoffee';
-import CreateCatalogue from './pages/CreateCatalogue';
-import ViewCatalogue from './pages/ViewCatalogues';
-
-import Login from './pages/Login'; // your login page
-import ProtectedRoute from './components/auth/ProtectedRoute'; // path to ProtectedRoute.jsx
-
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import LoginButton from "./components/auth/LoginButton";
+import LogoutButton from "./components/auth/LogoutButton";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* Public route */}
-        <Route path="/login" element={<Login />} />
+      {/* Auth Buttons */}
 
-        {/* Protected routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Overview />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute>
-              <Overview />
-            </ProtectedRoute>
-          }
-        />
+      <Routes>
+        <Route path="/" element={<Overview />} />
+        <Route path="home" element={<AddFarmers />} />
         <Route
           path="/farmers/add"
           element={

@@ -6,6 +6,6 @@ export default defineConfig({
   server: {
     https: false,
     host: true, // so it listens on all addresses
-    allowedHosts: ["4d1d0418cd5b.ngrok-free.app"], // add your ngrok host here
+    allowedHosts: ["aa3a145cacab.ngrok-free.app"], // add your ngrok host here
   },
 });
