@@ -1,7 +1,8 @@
 // store/slices/catalogue/catalogueSlice.js
-import { createSlice } from '@reduxjs/toolkit';
-import { generateCatalogueFile } from './catalogueActions';
-import { generateAuctionFile } from './catalogueActions';
+import { createSlice } from "@reduxjs/toolkit";
+import { generateCatalogueFile } from "./catalogueActions";
+import { generateAuctionFile } from "./catalogueActions";
+import { generateSaleFile } from "./catalogueActions";
 
 const initialState = {
   loading: false,
@@ -10,7 +11,7 @@ const initialState = {
 };
 
 const catalogueSlice = createSlice({
-  name: 'catalogue',
+  name: "catalogue",
   initialState,
   reducers: {
     clearCatalogueState: (state) => {
@@ -45,9 +46,22 @@ const catalogueSlice = createSlice({
       })
       .addCase(generateAuctionFile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Failed to generate auction file';
+        state.error = action.payload || "Failed to generate auction file";
+      })
+      .addCase(generateSaleFile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.files = [];
+      })
+      .addCase(generateSaleFile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.files = action.payload; // Expecting: [{ mark, fileBlob, filename }]
+      })
+      .addCase(generateSaleFile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to generate auction file";
       });
-
   },
 });
 

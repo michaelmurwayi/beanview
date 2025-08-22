@@ -1,15 +1,16 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading, error, loginWithRedirect } = useAuth0();
   const [timeoutReached, setTimeoutReached] = useState(false);
+  const location = useLocation();
 
-  // Safety: prevent infinite "Loading..."
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeoutReached(true);
-    }, 10000); // 10s fallback
+    }, 10000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -22,15 +23,18 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (error || timeoutReached) {
-    loginWithRedirect();
+  if ((error || timeoutReached) && !isAuthenticated) {
+    loginWithRedirect({
+      appState: { returnTo: location.pathname }, // 🔑 save current route
+    });
     return null;
   }
 
-  // 🔑 If not authenticated, kick off Auth0 login
   if (!isAuthenticated && !isLoading) {
-    loginWithRedirect();
-    return null; // prevent rendering until redirect happens
+    loginWithRedirect({
+      appState: { returnTo: location.pathname }, // 🔑 save current route
+    });
+    return null;
   }
 
   return children;

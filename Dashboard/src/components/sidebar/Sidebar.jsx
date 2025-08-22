@@ -7,7 +7,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useTheme } from "@mui/material/styles";
 import SidebarNavItem from "../navitem/NavItem";
 import LoginButton from "../auth/LoginButton";
-
+import LogoutButton from "../auth/LogoutButton";
 const drawerWidth = 240;
 const collapsedWidth = 72;
 
@@ -74,14 +74,7 @@ export default function Sidebar() {
                 <LoginButton />
               ) : (
                 // 🚪 Logout Item
-                <SidebarNavItem
-                  name={user?.name || "Logout"}
-                  collapsed={collapsed}
-                  emoji="🚪"
-                  onClick={handleLogout}
-                  onExpandSidebar={() => setCollapsed(false)}
-                  isActive={false}
-                />
+                <LogoutButton />
               )}
             </>
           )}
