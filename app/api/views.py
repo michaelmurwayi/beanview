@@ -40,6 +40,7 @@ from collections import defaultdict
 
 
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -475,27 +476,40 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['POST'])
     def generate_sale_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'sale_summary_template.xlsx')
-        START_ROW = 25
+        START_ROW = 17
 
         try:
-            summaries = request.data.get('summaries', [])
-
-            if not summaries:
-                raise ValidationError("'summaries' is required and must not be empty.")
+            sale_number = request.data.get('saleNumber')
+            if not sale_number:
+                raise ValidationError("'saleNumber' is required and must not be empty.")
 
             base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
             os.makedirs(base_dir, exist_ok=True)
 
             generated_files = []
 
-            for summary in summaries:
-                mark = summary.get('mark')
-                records = summary.get('records', [])
-                code = summary.get("records")[0]['farmer']['code']
+            # ✅ Step 1: Get coffees for this sale
+            coffees = Coffee.objects.filter(sale=sale_number).select_related("mark")
+            serializer = CoffeeSerializer(coffees, many=True)
+            coffees_data = serializer.data
 
-                if not mark or not records:
+            # ✅ Step 2: Group coffees by mark
+            
+            grouped = {}
+            for coffee in coffees_data:
+                mark = coffee.get("mark")
+                if mark not in grouped:
+                    grouped[mark] = []
+                grouped[mark].append(coffee)
+
+            # ✅ Step 3: Generate Excel per mark
+            for mark, records in grouped.items():
+                if not records:
                     continue
 
+                farmer = records[0].get("farmer")
+                code = farmer.get("code")
+                
                 mark_dir = os.path.join(base_dir, mark)
                 os.makedirs(mark_dir, exist_ok=True)
 
@@ -505,30 +519,31 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 wb = load_workbook(TEMPLATE_PATH)
                 ws = wb.active
 
-                # Set mark name in cell B6
+                # Set mark + code
                 ws['B3'] = mark
                 ws['B2'] = code
-                
+
+                # Fill rows
                 for row_offset, record in enumerate(records, start=1):
                     row = START_ROW + row_offset
 
                     values = [
                         record.get('outturn'),
-                        record.get('bulkoutturn'),
-                        record.get('mark'),
-                        record.get('type'),
-                        record.get('grade'),
                         record.get('bags'),
                         record.get('pockets'),
                         record.get('weight'),
-                        record.get('sale_number'),
-                        record.get('season'),
-                        record.get('certificate'),
-                        record.get('mill'),
-                        record.get('warehouse'),
+                        record.get('grade'),
                         record.get('price'),
+                        record.get('gross_value'),
+                        record.get('warehouse_charges'),
+                        record.get('broker_charges'),
+                        record.get('milling_charges'),
+                        record.get('mill'),
+                        record.get('export_charges'),
+                        record.get('transport_charges'),
+                        record.get('net_pay'),
                         record.get('buyer'),
-                        record.get('status'),
+                        
                     ]
 
                     for col_index, value in enumerate(values, start=1):
@@ -540,7 +555,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 wb.save(file_path)
                 generated_files.append(file_path)
 
-            # ✅ Create ZIP in memory
+            # ✅ Step 4: Create ZIP in memory
             zip_buffer = BytesIO()
             with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
                 for file_path in generated_files:
@@ -549,7 +564,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
             zip_buffer.seek(0)
 
-            # ✅ Return as downloadable file
+            # ✅ Step 5: Return as downloadable ZIP
             return FileResponse(
                 zip_buffer,
                 as_attachment=True,
@@ -564,6 +579,3 @@ class CatalogueViewSet(viewsets.ModelViewSet):
         except Exception as e:
             traceback.print_exc()
             return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-

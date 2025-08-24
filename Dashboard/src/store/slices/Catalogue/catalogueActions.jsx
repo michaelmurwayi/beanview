@@ -54,14 +54,15 @@ export const generateAuctionFile = createAsyncThunk(
 export const generateSaleFile = createAsyncThunk(
   "catalogue/generateSaleFile",
 
-  async (summaries, { getState, rejectWithValue }) => {
+  async (saleNumber, { getState, rejectWithValue }) => {
+    console.log(saleNumber);
     try {
-      const url = `${apiBaseUrl}/catalogue/generate_sale_file/`;
+      const url = `http://127.0.0.1:8000/api/catalogue/generate_sale_file/`;
 
       // ✅ Request file as blob
       const response = await axios.post(
         url,
-        { summaries },
+        { saleNumber },
         {
           responseType: "blob",
         }

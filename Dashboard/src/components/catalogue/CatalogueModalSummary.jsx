@@ -23,6 +23,7 @@ import { updateCoffee } from "../../store/slices/Coffee/coffeeActions";
 import {
   generateCatalogueFile,
   generateAuctionFile,
+  generateSaleFile,
 } from "../../store/slices/Catalogue/catalogueActions";
 
 const CatalogueModalSummary = ({
@@ -168,6 +169,10 @@ const CatalogueModalSummary = ({
       });
     }
   };
+  const handleGenerateSaleFile = () => {
+    const saleNumber = "31";
+    dispatch(generateSaleFile(saleNumber));
+  };
 
   const handleDelete = (rec) => {
     const updated = localRecords.filter((r) => r.id !== rec.id);
@@ -221,6 +226,20 @@ const CatalogueModalSummary = ({
               }}
             >
               Generate Auction File
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleGenerateSaleFile}
+              size="small"
+              sx={{
+                fontSize: "0.7rem",
+                backgroundColor: "orange",
+                color: "white",
+                fontWeight: "bold",
+                textTransform: "none",
+              }}
+            >
+              Generate Sale File
             </Button>
           </Box>
 
