@@ -11,6 +11,15 @@ import {
   Paper,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
 import Sidebar from "../components/sidebar/Sidebar";
 import Card from "../components/overview/Card";
 import CoffeeGradeTable from "../components/overview/CoffeeGradeTable";
@@ -20,6 +29,63 @@ import CoffeeSaleBreakdownTable from "../components/overview/SaleBreakDown";
 
 import { fetchFarmers } from "../store/slices/Farmers/farmerActions";
 import { fetchCoffee } from "../store/slices/Coffee/coffeeActions";
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#f44336"];
+
+// ==============================
+// Coffee Status Pie Chart Component
+// ==============================
+const CoffeeStatusPieChart = ({ coffeeRecords }) => {
+  const statusCounts = coffeeRecords.reduce((acc, record) => {
+    const status = record.status || "Unknown";
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {});
+
+  const data = Object.keys(statusCounts).map((status) => ({
+    name: status,
+    value: statusCounts[status],
+  }));
+
+  return (
+    <Box
+      sx={{
+        bgcolor: "white",
+        p: 2,
+        borderRadius: "15px",
+        boxShadow: 3,
+        height: "100%",
+      }}
+    >
+      <h3 style={{ textAlign: "center", marginBottom: "10px" }}>
+        Coffee Records Status
+      </h3>
+      <ResponsiveContainer width="100%" height={250}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={80}
+            fill="#8884d8"
+            label
+          >
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
+            ))}
+          </Pie>
+          <Tooltip />
+          <Legend verticalAlign="bottom" height={36} />
+        </PieChart>
+      </ResponsiveContainer>
+    </Box>
+  );
+};
 
 const Overview = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -48,35 +114,32 @@ const Overview = () => {
 
   const [filteredRecords, setFilteredRecords] = useState([]);
 
-  /* ==============================
-     Fetch Data
-  ============================== */
+  // ==============================
+  // Fetch Farmers and Coffee Records
+  // ==============================
   useEffect(() => {
     dispatch(fetchFarmers());
     dispatch(fetchCoffee());
   }, [dispatch]);
 
-  /* ==============================
-     Filter Coffee Records
-  ============================== */
+  // ==============================
+  // Filter Coffee Records
+  // ==============================
   useEffect(() => {
     if (!Array.isArray(farmers) || !Array.isArray(coffeeRecords)) return;
 
     let records = [...coffeeRecords];
 
     // Apply filters dynamically
-    if (filters.grade)
-      records = records.filter((r) => r.grade === filters.grade);
-    if (filters.mark) records = records.filter((r) => r.mark === filters.mark);
-    if (filters.status)
-      records = records.filter((r) => r.status === filters.status);
-    if (filters.outturn)
-      records = records.filter((r) => r.outturn === filters.outturn);
-    if (filters.sale) records = records.filter((r) => r.sale === filters.sale);
+    Object.keys(filters).forEach((key) => {
+      if (filters[key]) {
+        records = records.filter((r) => r[key] === filters[key]);
+      }
+    });
 
     setFilteredRecords(records);
 
-    // Update summary
+    // Update summary values
     const farmerCount = filters.mark ? 1 : farmers.length;
     const totalBags = records.reduce((sum, r) => sum + (r.bags || 0), 0);
     const totalWeight = records.reduce(
@@ -95,9 +158,9 @@ const Overview = () => {
     });
   }, [farmers, coffeeRecords, filters]);
 
-  /* ==============================
-     Handlers
-  ============================== */
+  // ==============================
+  // Handlers
+  // ==============================
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -116,9 +179,9 @@ const Overview = () => {
     });
   };
 
-  /* ==============================
-     Unique values helper
-  ============================== */
+  // ==============================
+  // Helper to Get Unique Filter Options
+  // ==============================
   const unique = (key) => [
     ...new Set(coffeeRecords.map((r) => r[key]).filter(Boolean)),
   ];
@@ -177,28 +240,55 @@ const Overview = () => {
         {/* 🔍 Filter Panel */}
         <Paper
           elevation={3}
-          sx={{ mt: 4, p: 2, borderRadius: 2, backgroundColor: "#ffffff" }}
+          sx={{
+            mt: 4,
+            p: 2,
+            borderRadius: "25px",
+            backgroundColor: "#121330",
+          }}
         >
           <Box
             sx={{
               display: "flex",
               justifyContent: "center",
               flexWrap: "wrap",
-              gap: 4,
+              gap: 2,
             }}
           >
             {/* Grade Filter */}
-            <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel>Grade</InputLabel>
+            <FormControl
+              sx={{
+                minWidth: { xs: 120, sm: 150, md: 180 },
+                height: { xs: "36px", sm: "40px", md: "44px" },
+              }}
+            >
+              <InputLabel
+                sx={{
+                  top: "-6px",
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                }}
+              >
+                Grade
+              </InputLabel>
               <Select
                 name="grade"
                 value={filters.grade}
-                label="Grade"
                 onChange={handleFilterChange}
+                sx={{
+                  height: { xs: "36px", sm: "40px", md: "44px" },
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                  backgroundColor: "#1c1c3c",
+                }}
               >
                 <MenuItem value="">All</MenuItem>
                 {unique("grade").map((value) => (
-                  <MenuItem key={value} value={value}>
+                  <MenuItem
+                    sx={{ backgroundColor: "white", color: "#121330" }}
+                    key={value}
+                    value={value}
+                  >
                     {value}
                   </MenuItem>
                 ))}
@@ -206,13 +296,31 @@ const Overview = () => {
             </FormControl>
 
             {/* Mark Filter */}
-            <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel>Mark</InputLabel>
+            <FormControl
+              sx={{
+                minWidth: { xs: 120, sm: 150, md: 180 },
+                height: { xs: "36px", sm: "40px", md: "44px" },
+              }}
+            >
+              <InputLabel
+                sx={{
+                  top: "-6px",
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                }}
+              >
+                Mark
+              </InputLabel>
               <Select
                 name="mark"
                 value={filters.mark}
-                label="Mark"
                 onChange={handleFilterChange}
+                sx={{
+                  height: { xs: "36px", sm: "40px", md: "44px" },
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                  backgroundColor: "#1c1c3c",
+                }}
               >
                 <MenuItem value="">All</MenuItem>
                 {unique("mark").map((value) => (
@@ -225,12 +333,25 @@ const Overview = () => {
 
             {/* Status Filter */}
             <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel>Status</InputLabel>
+              <InputLabel
+                sx={{
+                  top: "-6px",
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                }}
+              >
+                Status
+              </InputLabel>
               <Select
                 name="status"
                 value={filters.status}
-                label="Status"
                 onChange={handleFilterChange}
+                sx={{
+                  height: { xs: "36px", sm: "40px", md: "44px" },
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                  backgroundColor: "#1c1c3c",
+                }}
               >
                 <MenuItem value="">All</MenuItem>
                 {unique("status").map((value) => (
@@ -243,12 +364,25 @@ const Overview = () => {
 
             {/* Outturn Filter */}
             <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel>Outturn</InputLabel>
+              <InputLabel
+                sx={{
+                  top: "-6px",
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                }}
+              >
+                Outturn
+              </InputLabel>
               <Select
                 name="outturn"
                 value={filters.outturn}
-                label="Outturn"
                 onChange={handleFilterChange}
+                sx={{
+                  height: { xs: "36px", sm: "40px", md: "44px" },
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                  backgroundColor: "#1c1c3c",
+                }}
               >
                 <MenuItem value="">All</MenuItem>
                 {unique("outturn").map((value) => (
@@ -259,14 +393,27 @@ const Overview = () => {
               </Select>
             </FormControl>
 
-            {/* ✅ Fixed Sale Filter */}
+            {/* Sale Filter */}
             <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel>Sale</InputLabel>
+              <InputLabel
+                sx={{
+                  top: "-6px",
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                }}
+              >
+                Sale
+              </InputLabel>
               <Select
-                name="sale" // FIXED
-                value={filters.sale} // FIXED
-                label="Sale"
+                name="sale"
+                value={filters.sale}
                 onChange={handleFilterChange}
+                sx={{
+                  height: { xs: "36px", sm: "40px", md: "44px" },
+                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                  color: "white",
+                  backgroundColor: "#1c1c3c",
+                }}
               >
                 <MenuItem value="">All</MenuItem>
                 {unique("sale").map((value) => (
@@ -281,7 +428,7 @@ const Overview = () => {
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <Button
                 variant="contained"
-                sx={{ color: "white" }}
+                color="error"
                 onClick={handleResetFilters}
               >
                 Reset
@@ -290,25 +437,37 @@ const Overview = () => {
           </Box>
         </Paper>
 
-        {/* 📊 Grade Table + Sales Chart */}
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={12} md={6}>
-            <CoffeeGradeTable coffeeRecords={filteredRecords} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <CoffeeSalesChart coffeeRecords={filteredRecords} />
-          </Grid>
-        </Grid>
+        {/* 📈 Main Layout */}
+        <Box sx={{ mt: 2, width: "100%" }}>
+          <Grid container spacing={2}>
+            {/* ===== LEFT COLUMN ===== */}
+            <Grid item xs={12} md={6}>
+              <Box display="flex" flexDirection="column" gap={2}>
+                {/* Top: Sales Chart */}
+                <CoffeeSalesChart coffeeRecords={filteredRecords} />
 
-        {/* 📍 Location & Sale Breakdown */}
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={12} md={6}>
-            <CoffeeLocationBreakdownTable filteredRecords={filteredRecords} />
+                {/* Bottom: Grade Table */}
+                <CoffeeGradeTable coffeeRecords={filteredRecords} />
+              </Box>
+            </Grid>
+
+            {/* ===== RIGHT COLUMN ===== */}
+            <Grid item xs={12} md={6}>
+              <Box display="flex" flexDirection="column" gap={2}>
+                {/* Top: Location Breakdown */}
+                <CoffeeLocationBreakdownTable
+                  filteredRecords={filteredRecords}
+                />
+
+                {/* Middle: Sale Breakdown */}
+                <CoffeeSaleBreakdownTable filteredRecords={filteredRecords} />
+
+                {/* Bottom: Coffee Status Pie Chart */}
+                <CoffeeStatusPieChart coffeeRecords={filteredRecords} />
+              </Box>
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <CoffeeSaleBreakdownTable filteredRecords={filteredRecords} />
-          </Grid>
-        </Grid>
+        </Box>
       </Box>
     </Box>
   );

@@ -6,40 +6,59 @@ const StatCard = ({ header, stat, text }) => {
     <Card
       sx={{
         minWidth: 250,
-        borderRadius: 3,
-        boxShadow: 3,
-        bgcolor: "#ffffff",
-        backgroundImage:
-          "url(https://i.pinimg.com/736x/d1/73/b5/d173b5f9086434078208a8ecb43fef99.jpg)",
+        borderRadius: 4,
+        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
+        background: "linear-gradient(135deg, #121330 0%, #1e1f47 100%)",
+        color: "white",
+        transition: "transform 0.3s ease, box-shadow 0.3s ease",
+        "&:hover": {
+          transform: "translateY(-5px)",
+          boxShadow: "0 8px 25px rgba(0, 0, 0, 0.4)",
+        },
       }}
     >
       <CardContent>
+        {/* Header */}
         <Typography
-          variant="h5"
-          color="#00C2FF"
-          gutterBottom
-          mt={1}
-          textAlign={"center"}
+          variant="subtitle2"
+          sx={{
+            textTransform: "uppercase",
+            letterSpacing: "1px",
+            color: "#00C2FF",
+            fontWeight: 600,
+            textAlign: "center",
+            mb: 1,
+          }}
         >
           {header}
         </Typography>
 
+        {/* Main Statistic */}
         <Typography
           variant="h4"
           sx={{
             fontWeight: "bold",
-            fontSize: "1.2rem",
-            color: "orange",
+            fontSize: {
+              xs: "1.6rem",
+              sm: "1.8rem",
+              md: "2rem",
+            },
             textAlign: "center",
+            color: "orange",
+            mb: 1,
           }}
         >
           {stat}
         </Typography>
 
+        {/* Description */}
         <Typography
           variant="body2"
-          color="white"
-          sx={{ textAlign: "center", fontWeight: "" }}
+          sx={{
+            textAlign: "center",
+            fontSize: "0.9rem",
+            color: "rgba(255, 255, 255, 0.8)",
+          }}
         >
           {text}
         </Typography>

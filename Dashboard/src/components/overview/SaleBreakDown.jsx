@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -7,13 +7,13 @@ import {
   TableHead,
   TableRow,
   Paper,
-} from '@mui/material';
+} from "@mui/material";
 
 const CoffeeSaleNumberBreakdownTable = ({ filteredRecords }) => {
   // Aggregate coffee data by sale number
   const breakdown = useMemo(() => {
     return filteredRecords.reduce((acc, record) => {
-      const saleNumber = record?.sale || 'Unknown';
+      const saleNumber = record?.sale || "Unknown";
       if (!acc[saleNumber]) {
         acc[saleNumber] = { bags: 0, weight: 0 };
       }
@@ -36,21 +36,20 @@ const CoffeeSaleNumberBreakdownTable = ({ filteredRecords }) => {
       sx={{
         p: 0,
         mt: 2,
-        width: '100%',
-        height: '50vh',
-        borderRadius: '15px',
-        display: 'flex',
-        flexDirection: 'column',
-
+        width: "100%",
+        height: "50vh",
+        borderRadius: "0px",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <TableContainer
         sx={{
           flex: 1,
-          overflowY: 'scroll',
-          '&::-webkit-scrollbar': { display: 'none' }, // Chrome, Safari
-          scrollbarWidth: 'none', // Firefox
-          msOverflowStyle: 'none', // Edge & IE
+          overflowY: "scroll",
+          "&::-webkit-scrollbar": { display: "none" }, // Chrome, Safari
+          scrollbarWidth: "none", // Firefox
+          msOverflowStyle: "none", // Edge & IE
         }}
       >
         <Table stickyHeader>
@@ -59,22 +58,29 @@ const CoffeeSaleNumberBreakdownTable = ({ filteredRecords }) => {
               <TableCell
                 colSpan={3}
                 sx={{
-                  backgroundColor: '#121330',
-                  color: '#fff',
-                  fontWeight: 'bold',
+                  backgroundColor: "#121330",
+                  color: "orange",
+                  fontWeight: "bold",
+                  textAlign: "right",
                 }}
               >
                 Coffee Breakdown by Sale Number
               </TableCell>
             </TableRow>
-            <TableRow sx={{ backgroundColor: '#121330' }}>
-              <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
+            <TableRow sx={{ backgroundColor: "" }}>
+              <TableCell sx={{ color: "black", fontWeight: "bold" }}>
                 Sale Number
               </TableCell>
-              <TableCell align="right" sx={{ color: '#fff', fontWeight: 'bold' }}>
+              <TableCell
+                align="right"
+                sx={{ color: "black", fontWeight: "bold" }}
+              >
                 Bags
               </TableCell>
-              <TableCell align="right" sx={{ color: '#fff', fontWeight: 'bold' }}>
+              <TableCell
+                align="right"
+                sx={{ color: "black", fontWeight: "bold" }}
+              >
                 Total Weight (kg)
               </TableCell>
             </TableRow>

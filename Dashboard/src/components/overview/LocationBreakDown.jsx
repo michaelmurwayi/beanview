@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -7,14 +7,17 @@ import {
   TableHead,
   TableRow,
   Paper,
-} from '@mui/material';
+} from "@mui/material";
 
-const CoffeeLocationBreakdownTable = ({ filteredRecords, onUniqueLocationsExtracted }) => {
+const CoffeeLocationBreakdownTable = ({
+  filteredRecords,
+  onUniqueLocationsExtracted,
+}) => {
   // Aggregate coffee data by county
   const breakdown = useMemo(
     () =>
       filteredRecords.reduce((acc, record) => {
-        const location = record?.farmer?.County || 'Unknown';
+        const location = record?.farmer?.County || "Unknown";
         if (!acc[location]) {
           acc[location] = { bags: 0, weight: 0 };
         }
@@ -30,7 +33,7 @@ const CoffeeLocationBreakdownTable = ({ filteredRecords, onUniqueLocationsExtrac
 
   // Notify parent component of the extracted unique locations
   useEffect(() => {
-    if (typeof onUniqueLocationsExtracted === 'function') {
+    if (typeof onUniqueLocationsExtracted === "function") {
       onUniqueLocationsExtracted(locations);
     }
   }, [locations, onUniqueLocationsExtracted]);
@@ -45,15 +48,23 @@ const CoffeeLocationBreakdownTable = ({ filteredRecords, onUniqueLocationsExtrac
   return (
     <Paper
       elevation={3}
-      sx={{ p: 0, mt: 2, width: '100%', borderRadius:'15px', height: '50vh', display: 'flex', flexDirection: 'column' }}
+      sx={{
+        p: 0,
+        mt: 2,
+        width: "100%",
+        borderRadius: "0px",
+        height: "50vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
       <TableContainer
         sx={{
           flex: 1,
-          overflowY: 'scroll',
-          '&::-webkit-scrollbar': { display: 'none' }, // Chrome, Safari
-          scrollbarWidth: 'none',                     // Firefox
-          msOverflowStyle: 'none',                    // Edge & IE
+          overflowY: "scroll",
+          "&::-webkit-scrollbar": { display: "none" }, // Chrome, Safari
+          scrollbarWidth: "none", // Firefox
+          msOverflowStyle: "none", // Edge & IE
         }}
       >
         <Table stickyHeader>
@@ -61,15 +72,32 @@ const CoffeeLocationBreakdownTable = ({ filteredRecords, onUniqueLocationsExtrac
             <TableRow>
               <TableCell
                 colSpan={3}
-                sx={{ backgroundColor: '#121330', color: '#fff', fontWeight: 'bold' }}
+                sx={{
+                  backgroundColor: "#121330",
+                  color: "orange",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
               >
                 Coffee Breakdown by Location
               </TableCell>
             </TableRow>
-            <TableRow sx={{ backgroundColor: '#121330' }}>
-              <TableCell sx={{ color: '#121330', fontWeight: 'bold' }}>County</TableCell>
-              <TableCell align="right" sx={{ color: '#121330', fontWeight: 'bold' }}>Bags</TableCell>
-              <TableCell align="right" sx={{ color: '#121330', fontWeight: 'bold' }}>Total Weight (kg)</TableCell>
+            <TableRow sx={{ backgroundColor: "#121330" }}>
+              <TableCell sx={{ color: "#121330", fontWeight: "bold" }}>
+                County
+              </TableCell>
+              <TableCell
+                align="right"
+                sx={{ color: "#121330", fontWeight: "bold" }}
+              >
+                Bags
+              </TableCell>
+              <TableCell
+                align="right"
+                sx={{ color: "#121330", fontWeight: "bold" }}
+              >
+                Total Weight (kg)
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

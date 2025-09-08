@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Table,
@@ -9,13 +9,13 @@ import {
   TableRow,
   Paper,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 
 const CoffeeGradeTable = ({ coffeeRecords = [] }) => {
   const gradeSummary = {};
 
   // Aggregate coffee data by grade
-  coffeeRecords.forEach(record => {
+  coffeeRecords.forEach((record) => {
     const { grade, weight, bags } = record;
     if (!grade) return;
 
@@ -34,42 +34,43 @@ const CoffeeGradeTable = ({ coffeeRecords = [] }) => {
   }));
 
   return (
-    <Box sx={{ width: '100%', height: 'auto', mt: 4 }}>
+    <Box sx={{ width: "100%", height: "auto", mt: 4 }}>
       <TableContainer
         component={Paper}
         elevation={4}
         sx={{
           borderRadius: 3,
-          overflow: 'hidden',
+          overflow: "hidden",
         }}
       >
         <Typography
           variant="h6"
           sx={{
             p: 2,
-            bgcolor: '#121330',
-            color: '#fff',
-            fontWeight: 'bold',
+            bgcolor: "#121330",
+            color: "orange",
+            fontWeight: "bold",
           }}
-        >Grade Breakdown
+        >
+          Grade Breakdown
         </Typography>
 
         <Table size="small">
           <TableHead>
-            <TableRow sx={{ backgroundColor: '#f0f0f0' }}>
+            <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
               <TableCell
                 sx={{
-                  fontWeight: 'bold',
-                  width: '120px',
-                  whiteSpace: 'nowrap',
+                  fontWeight: "bold",
+                  width: "120px",
+                  whiteSpace: "nowrap",
                 }}
               >
                 Grade
               </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+              <TableCell align="right" sx={{ fontWeight: "bold" }}>
                 Total Weight (kg)
               </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+              <TableCell align="right" sx={{ fontWeight: "bold" }}>
                 Total Bags
               </TableCell>
             </TableRow>
@@ -79,9 +80,9 @@ const CoffeeGradeTable = ({ coffeeRecords = [] }) => {
               <TableRow
                 key={row.grade}
                 sx={{
-                  backgroundColor: index % 2 === 0 ? '#fff' : '#f9f9f9',
-                  '&:hover': {
-                    backgroundColor: '#f1f1f1',
+                  backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
+                  "&:hover": {
+                    backgroundColor: "#f1f1f1",
                   },
                 }}
               >
