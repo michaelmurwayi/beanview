@@ -47,21 +47,10 @@ const TableDisplay = ({
   const hasData = Array.isArray(filteredData) && filteredData.length > 0;
 
   return (
-    <Paper elevation={3} sx={{ width: "100%", overflow: "hidden", m: 0, p: 0 }}>
-      <Box sx={{ p: 2 }}>
-        <TextField
-          label="Search by Mark"
-          variant="outlined"
-          size="small"
-          fullWidth
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setPage(0);
-          }}
-        />
-      </Box>
-
+    <Paper
+      elevation={0}
+      sx={{ width: "inherit", overflow: "hidden", m: 0, p: 0 }}
+    >
       {loading ? (
         <Typography align="center" py={4}>
           Loading data...
