@@ -1,5 +1,5 @@
 // redux/actions/farmerActions.js
-import axios from 'axios';
+import axios from "axios";
 import {
   postFarmerRequest,
   postFarmerSuccess,
@@ -10,39 +10,40 @@ import {
   updateFarmerRequest,
   updateFarmerSuccess,
   updateFarmerFailure,
-} from './farmerSlice';
-import { createAsyncThunk } from '@reduxjs/toolkit';
-
+} from "./farmerSlice";
+import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const submitFarmer = () => async (dispatch, getState) => {
-    dispatch(postFarmerRequest());
-    const { apiBaseUrl, FarmerUploadFormData } = getState().farmer;
-  
-    try {
-      const response = await fetch(`${apiBaseUrl}/farmers/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(FarmerUploadFormData),
-      });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        // response.ok is false for 4xx or 5xx
-        const errorMsg = data?.error || 'Failed to add farmer';
-        dispatch(postFarmerFailure(errorMsg));
-      } else {
-        dispatch(postFarmerSuccess(data));
-      }
-    } catch (error) {
-      dispatch(postFarmerFailure(error.message));
+  dispatch(postFarmerRequest());
+  const { apiBaseUrl, FarmerUploadFormData } = getState().farmer;
+  console.log(getState().farmer);
+  console.log(apiBaseUrl);
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/farmers/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(FarmerUploadFormData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // response.ok is false for 4xx or 5xx
+      const errorMsg = data?.error || "Failed to add farmer";
+      dispatch(postFarmerFailure(errorMsg));
+    } else {
+      dispatch(postFarmerSuccess(data));
     }
-  };
+  } catch (error) {
+    dispatch(postFarmerFailure(error.message));
+  }
+};
 
 export const fetchFarmers = () => async (dispatch, getState) => {
-  const  apiBaseUrl  = "http://localhost:8000/api"; // Use your actual API base URL here
+  const apiBaseUrl = "http://localhost:8000/api"; // Use your actual API base URL here
   dispatch(fetchFarmersRequest());
 
   try {
@@ -52,16 +53,18 @@ export const fetchFarmers = () => async (dispatch, getState) => {
   } catch (error) {
     dispatch(fetchFarmersFailure(error.message));
   }
-}
+};
 
 export const deleteFarmer = (id) => async (dispatch) => {
   dispatch(fetchFarmersRequest());
 
   try {
     await axios.delete(`${apiBaseUrl}/farmers/${id}/`);
-    
+
     // Option 1: Re-fetch the full list after deletion
-    const response = await axios.get(`${process.env.REACT_APP_API_URL}/farmers/`);
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/farmers/`
+    );
     dispatch(fetchFarmersSuccess(response.data));
 
     // Option 2: Or remove locally without refetching (requires additional reducer)
@@ -71,10 +74,11 @@ export const deleteFarmer = (id) => async (dispatch) => {
   }
 };
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
 export const updateFarmer = createAsyncThunk(
-  'farmers/update',
+  "farmers/update",
   async (farmer, { rejectWithValue }) => {
     try {
       const { id, ...payload } = farmer;
@@ -85,4 +89,3 @@ export const updateFarmer = createAsyncThunk(
     }
   }
 );
-  

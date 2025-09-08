@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Grid,
@@ -7,20 +7,25 @@ import {
   Divider,
   Paper,
   Button,
-} from '@mui/material';
+} from "@mui/material";
 
 const sectionTitleStyle = {
-  fontSize: '0.7rem',
-  fontWeight: 600,
-  color: '#B6D0E2',
-  textTransform: 'uppercase',
-  marginBottom: '1rem',
+  fontSize: "0.85rem",
+  fontWeight: 700,
+  color: "#3b5998",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+  marginBottom: "1rem",
 };
 
 const inputFieldStyle = {
-  '& .MuiInputBase-root': {
-    backgroundColor: '#f9f9f9',
-    borderRadius: '8px',
+  "& .MuiInputBase-root": {
+    backgroundColor: "#f9f9f9",
+    borderRadius: "10px",
+    height: "50px",
+  },
+  "& .MuiInputLabel-root": {
+    fontSize: "0.85rem",
   },
 };
 
@@ -31,33 +36,53 @@ const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
       justifyContent="center"
       px={{ xs: 2, sm: 4 }}
       width="100%"
-      sx={{ overflowX: 'hidden' }}
+      sx={{ overflowX: "hidden" }}
     >
       <Paper
-        elevation={2}
+        elevation={4}
         sx={{
-          p: 4,
-          width: '100%',
-          maxWidth: 900,
-          bgcolor: '#fff',
+          p: { xs: 3, sm: 4 },
+          width: "100%",
+          maxWidth: 950,
+          bgcolor: "#fff",
           mt: 4,
           mb: 4,
+          borderRadius: "16px",
         }}
       >
-        <Box display="flex" justifyContent="flex-end" mb={2}>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            sx={{ textTransform: 'none', px: 4 }}
-            onClick={handleSubmit}
-          >
-            Submit
-          </Button>
-        </Box>
+        {/* ======= Header ======= */}
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: "bold",
+            color: "#121330",
+            letterSpacing: "0.5px",
+            mb: 3,
+          }}
+        >
+          Farmer Registration
+        </Typography>
 
-        {/* Section: Personal Information */}
-        <Typography sx={sectionTitleStyle} >Farmer Information</Typography>
+        {/* ======= Section 1: Farmer Identification ======= */}
+        <Typography sx={sectionTitleStyle}>Farmer Identification</Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Farmer Code"
+              name="code"
+              value={formData.code}
+              onChange={handleChange}
+              required
+              fullWidth
+              sx={inputFieldStyle}
+            />
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 5 }} />
+
+        {/* ======= Section 2: Farmer Details ======= */}
+        <Typography sx={sectionTitleStyle}>Farmer Details</Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -91,22 +116,11 @@ const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
               sx={inputFieldStyle}
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Farmer Code"
-              name="code"
-              value={formData.code}
-              onChange={handleChange}
-              required
-              fullWidth
-              sx={inputFieldStyle}
-            />
-          </Grid>
         </Grid>
 
-        <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 5 }} />
 
-        {/* Section: Contact Information */}
+        {/* ======= Section 3: Contact Information ======= */}
         <Typography sx={sectionTitleStyle}>Contact Information</Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
@@ -151,18 +165,20 @@ const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              label="Phone"
+              label="Phone Number"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               fullWidth
               sx={inputFieldStyle}
+              inputProps={{ maxLength: 15 }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               label="Email"
               name="email"
+              type="email"
               value={formData.email}
               onChange={handleChange}
               fullWidth
@@ -171,9 +187,9 @@ const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
           </Grid>
         </Grid>
 
-        <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 5 }} />
 
-        {/* Section: Banking Information */}
+        {/* ======= Section 4: Banking Information ======= */}
         <Typography sx={sectionTitleStyle}>Banking Information</Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
@@ -204,6 +220,7 @@ const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
               onChange={handleChange}
               fullWidth
               sx={inputFieldStyle}
+              inputProps={{ maxLength: 20 }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -217,6 +234,26 @@ const FarmerForm = ({ formData, handleChange, handleSubmit }) => {
             />
           </Grid>
         </Grid>
+
+        {/* ======= Footer Submit Button ======= */}
+        <Box display="flex" justifyContent="flex-end" mt={6}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            sx={{
+              textTransform: "none",
+              px: 4,
+              py: 1.2,
+              fontSize: "1rem",
+              borderRadius: "10px",
+              fontWeight: "bold",
+            }}
+            onClick={handleSubmit}
+          >
+            Submit
+          </Button>
+        </Box>
       </Paper>
     </Box>
   );

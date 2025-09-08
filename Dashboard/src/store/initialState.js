@@ -54,6 +54,7 @@ export const globalInitialState = {
     loading: false,
     error: null,
     success: false,
+    apiBaseUrl: "http://127.0.0.1:8000/api",
     FarmerUploadFormData: {
       name: "",
       nation_id: "",

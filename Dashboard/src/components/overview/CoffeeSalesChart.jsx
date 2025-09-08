@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   BarChart,
   Bar,
@@ -8,8 +8,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Legend,
-} from 'recharts';
-import { Paper, Typography, Box, useTheme } from '@mui/material';
+} from "recharts";
+import { Paper, Typography, Box, useTheme } from "@mui/material";
 
 const CoffeeSalesChart = ({ coffeeRecords = [] }) => {
   const theme = useTheme(); // Optional: for consistent MUI theming
@@ -31,17 +31,19 @@ const CoffeeSalesChart = ({ coffeeRecords = [] }) => {
   }));
 
   return (
-    <Box sx={{ width: '100%', mt: 4, display: 'flex', justifyContent: 'center' }}>
+    <Box
+      sx={{ width: "100%", mt: 4, display: "flex", justifyContent: "center" }}
+    >
       <Paper
         elevation={6}
         sx={{
           p: 3,
           borderRadius: 4,
-          height: '70vh',
-          width: '100vw',
-          maxWidth: '1000px',
-          backgroundColor: '#ffffff',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+          height: "70vh",
+          width: "100vw",
+          maxWidth: "1000px",
+          backgroundColor: "#ffffff",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
         }}
       >
         <Typography
@@ -50,7 +52,7 @@ const CoffeeSalesChart = ({ coffeeRecords = [] }) => {
             mb: 2,
             fontWeight: 700,
             color: theme.palette.primary.main,
-            textTransform: 'uppercase',
+            textTransform: "uppercase",
             letterSpacing: 0.5,
           }}
         >
@@ -58,11 +60,11 @@ const CoffeeSalesChart = ({ coffeeRecords = [] }) => {
         </Typography>
 
         {data.length === 0 ? (
-          <Typography sx={{ mt: 4, color: 'text.secondary' }}>
+          <Typography sx={{ mt: 4, color: "text.secondary" }}>
             No data available for chart
           </Typography>
         ) : (
-          <Box sx={{ flexGrow: 1, width: '100%', height: '100%' }}>
+          <Box sx={{ flexGrow: 1, width: "100%", height: "100%" }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={data}
@@ -80,23 +82,23 @@ const CoffeeSalesChart = ({ coffeeRecords = [] }) => {
                 <YAxis
                   tick={{ fontSize: 12 }}
                   label={{
-                    value: 'Weight (kg)',
+                    value: "Weight (kg)",
                     angle: -90,
-                    position: 'insideLeft',
+                    position: "insideLeft",
                     fontSize: 13,
-                    fill: '#555',
+                    fill: "#555",
                   }}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#f9f9f9', borderRadius: 8 }}
-                  labelStyle={{ fontWeight: 'bold' }}
+                  contentStyle={{ backgroundColor: "#f9f9f9", borderRadius: 8 }}
+                  labelStyle={{ fontWeight: "bold" }}
                 />
                 <Legend
                   verticalAlign="top"
                   height={36}
                   iconType="circle"
                   formatter={(value) => (
-                    <span style={{ color: '#333', fontSize: 13 }}>{value}</span>
+                    <span style={{ color: "#333", fontSize: 13 }}>{value}</span>
                   )}
                 />
                 <Bar
