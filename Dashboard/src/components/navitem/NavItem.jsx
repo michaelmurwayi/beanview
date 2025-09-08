@@ -42,7 +42,7 @@ const SidebarNavItem = ({
 
   return (
     <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <Tooltip title={collapsed ? name : ""} placement="right" arrow>
+      <Tooltip title={collapsed ? name : ""} placement="center" arrow>
         <ListItem
           button
           component={link ? Link : "div"}
@@ -52,18 +52,20 @@ const SidebarNavItem = ({
           sx={{
             backgroundColor: isActive ? "#1e1e1e" : "#121330",
             color: "#fff",
+
             borderLeft: isActive
               ? "4px solid #00e676"
               : "4px solid transparent",
             "&:hover": {
-              backgroundColor: "#1c1d47",
+              backgroundColor: "#00e676",
               borderLeft: "4px solid #00e676",
             },
-            pl: 3,
             display: "flex",
             alignItems: "center",
-            gap: 1,
             justifyContent: collapsed ? "center" : "flex-start",
+            margin: "10px",
+            width: "inherit",
+            marginTop: "10%",
           }}
         >
           {emoji && (
@@ -88,10 +90,9 @@ const SidebarNavItem = ({
             component="div"
             disablePadding
             sx={{
-              backgroundColor: "#f1eded",
-              borderRadius: "20px",
-              boxShadow: "inset 0 1px 3px #121330",
-              border: "1px solid #ddd",
+              backgroundColor: "#121330",
+              borderRadius: "0px",
+              boxShadow: "inset 0 1px 3px green",
             }}
           >
             {dropdown.map((subItem, idx) => {
@@ -104,26 +105,27 @@ const SidebarNavItem = ({
                   sx={{
                     pl: 2,
                     py: 1,
-                    color: subItem.name.includes("Add") ? "black" : "black",
-                    backgroundColor: isSubActive ? "#e0e0e0" : "inherit",
-                    borderRadius: "25px",
+                    color: subItem.name.includes("Add") ? "white" : "white",
+                    backgroundColor: isSubActive ? "#121330" : "inherit",
+                    borderRadius: "0px",
                     borderLeft: isSubActive
                       ? "4px solid #00e676"
                       : "4px solid transparent",
                     "&:hover": {
-                      backgroundColor: "#e0e0e0",
-                      borderLeft: "4px solid #00e676",
+                      backgroundColor: "#121330",
                     },
+                    boxShadow: "inset 0px 0px  1px 3px #121330",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    fontSize: "1.8rem",
                   }}
                 >
                   <ListItemText
                     primary={subItem.name}
                     primaryTypographyProps={{
-                      fontSize: "0.7rem",
-                      fontWeight: 500,
+                      fontSize: "0.8rem",
+                      fontWeight: 900,
                     }}
                   />
                   <span style={{ fontSize: "1.2rem", marginLeft: 8 }}>

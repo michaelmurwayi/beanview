@@ -1,6 +1,13 @@
 // src/components/layout/Sidebar.jsx
 import React, { useState } from "react";
-import { Drawer, Toolbar, Box, List, useMediaQuery } from "@mui/material";
+import {
+  Drawer,
+  Toolbar,
+  Box,
+  List,
+  useMediaQuery,
+  Typography,
+} from "@mui/material";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -8,7 +15,10 @@ import { useTheme } from "@mui/material/styles";
 import SidebarNavItem from "../navitem/NavItem";
 import LoginButton from "../auth/LoginButton";
 import LogoutButton from "../auth/LogoutButton";
-const drawerWidth = 240;
+import { Divider } from "@mui/material";
+import { Avatar } from "@mui/material";
+
+const drawerWidth = 340;
 const collapsedWidth = 72;
 
 export default function Sidebar() {
@@ -31,15 +41,49 @@ export default function Sidebar() {
   const drawerContent = (
     <>
       <Toolbar />
-      <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 1 }}>
+      <Box sx={{ textAlign: "center", py: 2 }}>
+        <Typography variant="h5" sx={{ mb: 1, fontWeight: "bold" }}>
+          SMART MUG
+        </Typography>
+        {/* Display logged-in user info if authenticated */}
+        {isAuthenticated && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              mt: 1,
+              color: "orange",
+            }}
+          >
+            {/* User Avatar */}
+            <Avatar
+              alt={user?.name}
+              src={user?.picture}
+              sx={{ width: 32, height: 32 }}
+            />
+
+            {/* User Name */}
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {user?.name}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      <Divider sx={{ width: "50%", mx: "auto", borderColor: "primary.main" }} />
+
+      <Box sx={{ flexGrow: 1, overflowY: "auto", mt: 5 }}>
         <List
           disablePadding
           sx={{
             display: "flex",
+            width: "auto",
             flexDirection: "column",
             gap: "8px", // space between items
             "& .MuiListItem-root": {
-              paddingTop: "10px",
+              paddingTop: "20px",
               paddingBottom: "10px",
               lineHeight: "1.6", // better readability
             },
