@@ -22,13 +22,15 @@ const TableDisplay = ({
   const handleChangePage = (_, newPage) => {
     setPage(newPage);
   };
+
   console.log('Data:', data);
+
   // Filter data by 'mark'
   const filteredData = Array.isArray(data)
-  ? data.filter((row) =>
-      row.mark?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  : [];
+    ? data.filter((row) =>
+        row.mark?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   // Add Actions column
   const extendedColumns = [
@@ -56,8 +58,12 @@ const TableDisplay = ({
             sx={{
               overflow: 'auto',
               maxHeight: '100%',
-              scrollbarWidth: 'none',
-              '&::-webkit-scrollbar': { display: 'none' },
+              // Completely hide the scrollbar
+              scrollbarWidth: 'none', // Firefox
+              msOverflowStyle: 'none', // IE and Edge
+              '&::-webkit-scrollbar': {
+                display: 'none', // Chrome, Safari, Opera
+              },
             }}
           >
             <Table stickyHeader sx={{ minWidth: 1000 }}>

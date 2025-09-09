@@ -179,7 +179,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['POST'])
     def generate_summary_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock_summary_template.xlsx')
-        START_ROW = 25
+        START_ROW = 32
 
         try:
             summaries = request.data.get('summaries', [])
@@ -210,8 +210,8 @@ class CoffeeViewSet(viewsets.ModelViewSet):
                 ws = wb.active
 
                 # Set mark name in cell B6
-                ws['B3'] = mark
-                ws['B2'] = code
+                ws['B3'] = code
+                ws['B4'] = mark
                 
                 for row_offset, record in enumerate(records, start=1):
                     row = START_ROW + row_offset
