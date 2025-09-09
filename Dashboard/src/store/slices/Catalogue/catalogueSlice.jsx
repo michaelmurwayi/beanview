@@ -46,7 +46,7 @@ const catalogueSlice = createSlice({
       })
       .addCase(generateAuctionFile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to generate auction file";
+        state.error = action.payload || 'Failed to generate auction file';
       })
       .addCase(generateSaleFile.pending, (state) => {
         state.loading = true;
@@ -60,7 +60,7 @@ const catalogueSlice = createSlice({
       })
       .addCase(generateSaleFile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to generate auction file";
+        state.error = action.payload || 'Failed to generate Sale file';
       });
   },
 });

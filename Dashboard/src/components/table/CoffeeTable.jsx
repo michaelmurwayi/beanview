@@ -44,20 +44,6 @@ const TableDisplay = ({
 
   return (
     <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden', m: 0, p: 0 }}>
-      <Box sx={{ p: 2 }}>
-        <TextField
-          label="Search by Mark"
-          variant="outlined"
-          size="small"
-          fullWidth
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setPage(0); // Reset to first page on search
-          }}
-        />
-      </Box>
-
       {loading ? (
         <Typography align="center" py={4}>Loading data...</Typography>
       ) : error ? (

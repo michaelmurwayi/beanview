@@ -165,7 +165,7 @@ const ViewCoffee = () => {
           sx={{
             p: 2,
             mb: 2,
-            backgroundColor: "#fff",
+            backgroundColor: "#121330",
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
@@ -190,6 +190,9 @@ const ViewCoffee = () => {
                   minWidth: 150,
                   "& .MuiInputBase-input": { fontSize: "0.7rem" },
                   "& label": { fontSize: "0.7rem" },
+                  backgroundColor: "white",
+                  borderRadius: "15px",
+                  
                 }}
               >
                 <MenuItem value="">All</MenuItem>
@@ -216,6 +219,8 @@ const ViewCoffee = () => {
               minWidth: 150,
               "& input": { fontSize: "0.7rem" },
               "& label": { fontSize: "0.7rem" },
+              backgroundColor: "white",
+              borderRadius: "15px",
             }}
           />
 
@@ -225,8 +230,9 @@ const ViewCoffee = () => {
             size="small"
             sx={{
               fontSize: "0.7rem",
-              backgroundColor: "#f0f0f0",
-              color: "#121330",
+              backgroundColor: "red",
+              color: "white",
+              fontWeight: "bold",
             }}
           >
             Reset
@@ -237,8 +243,9 @@ const ViewCoffee = () => {
             size="small"
             sx={{
               fontSize: "0.7rem",
-              backgroundColor: "#121331",
+              backgroundColor: "primary.main ",
               color: "white",
+              fontWeight: "bold",
             }}
           >
             Generate Stock Summary

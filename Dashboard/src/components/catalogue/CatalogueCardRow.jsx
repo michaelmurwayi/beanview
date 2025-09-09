@@ -96,6 +96,7 @@ const CatalogueCardRow = ({ data }) => {
         open={openModal}
         onClose={() => setOpenModal(false)}
         groupedData={selectedRecords}
+        sale={selectedSale}
         title={`Catalogue Summary for Sale ${selectedSale}`}
       />
     </Box>

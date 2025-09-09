@@ -105,3 +105,26 @@ export const generateSaleFile = createAsyncThunk(
     }
   }
 );
+
+export const generateSaleFile = createAsyncThunk(
+  'catalogue/generateSaleFile',
+  async (catalogueData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        'http://127.0.0.1:8000/api/catalogue/generate_sale_file/',
+        catalogueData,
+        {
+          responseType: 'blob', // Important for binary file download
+        }
+      );
+
+      // Return full response including headers for filename
+      return {
+        data: response.data,
+        headers: response.headers,
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);

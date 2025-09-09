@@ -24,15 +24,15 @@ import {
   generateCatalogueFile,
   generateAuctionFile,
   generateSaleFile,
-} from "../../store/slices/Catalogue/catalogueActions";
+} from '../../store/slices/Catalogue/catalogueActions';
 
 const CatalogueModalSummary = ({
   open,
   onClose,
   groupedData,
   loading = false,
-  onEdit = () => {},
-  title = "Catalogue Summary",
+  sale,
+  title = 'Catalogue Summary',
 }) => {
   const dispatch = useDispatch();
   const [localRecords, setLocalRecords] = useState([]);
@@ -169,10 +169,40 @@ const CatalogueModalSummary = ({
       });
     }
   };
-  const handleGenerateSaleFile = () => {
-    const saleNumber = "31";
-    dispatch(generateSaleFile(saleNumber));
-  };
+  const handleGenerateSaleFile = async () => {
+  try {
+    console.log(sale)
+    const updated = getUpdatedRecords(); // however you prepare sale records
+    const resultAction = await dispatch(generateSaleFile({"sale number": sale}));
+
+    // ✅ check the correct thunk
+    if (generateSaleFile.fulfilled.match(resultAction)) {
+      const { data, headers } = resultAction.payload;
+
+      const blob = new Blob([data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const disposition = headers['content-disposition'];
+      const match = disposition?.match(/filename="?(.+?)"?$/);
+      const filename = match ? match[1] : 'sale_summary.xlsx'; // ✅ correct fallback
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } else {
+      console.error('Sale summary generation failed:', resultAction.payload);
+    }
+  } catch (error) {
+    console.error('Error downloading sale summary:', error);
+  }
+};
+
 
   const handleDelete = (rec) => {
     const updated = localRecords.filter((r) => r.id !== rec.id);
@@ -229,17 +259,17 @@ const CatalogueModalSummary = ({
             </Button>
             <Button
               variant="outlined"
-              onClick={handleGenerateSaleFile}
+              onClick={() => handleGenerateSaleFile()}
               size="small"
               sx={{
-                fontSize: "0.7rem",
-                backgroundColor: "orange",
-                color: "white",
-                fontWeight: "bold",
-                textTransform: "none",
+                fontSize: '0.7rem',
+                backgroundColor: '#FFA500',
+                color: 'white',
+                fontWeight: 'bold',
+                textTransform: 'none',
               }}
             >
-              Generate Sale File
+              Generate Sale Summary
             </Button>
           </Box>
 
@@ -296,23 +326,6 @@ const CatalogueModalSummary = ({
                     <TableCell>{rec.price}</TableCell>
                     <TableCell>{rec.buyer}</TableCell>
                     <TableCell>{rec.status}</TableCell>
-                    <TableCell>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => onEdit(rec)}
-                        sx={{ mr: 1 }}
-                      >
-                        <EditIcon fontSize="inherit" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDelete(rec)}
-                      >
-                        <DeleteIcon fontSize="inherit" />
-                      </IconButton>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
