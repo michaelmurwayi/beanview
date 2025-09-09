@@ -11,7 +11,10 @@ import {
 } from "@mui/material";
 import Sidebar from "../components/sidebar/Sidebar";
 import CoffeeForm from "../components/farmerupload/UploadForm";
-import { updateFarmerFormField } from "../store/slices/Farmers/farmerSlice";
+import {
+  updateFarmerFormField,
+  resetFarmerForm,
+} from "../store/slices/Farmers/farmerSlice";
 import { submitFarmer } from "../store/slices/Farmers/farmerActions";
 
 // ==================
@@ -78,34 +81,44 @@ const FormUpload = () => {
   const { error, success } = useSelector((state) => state.farmer);
   const dispatch = useDispatch();
 
+  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     dispatch(updateFarmerFormField({ field: name, value }));
   };
 
+  // Handle form submit
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Basic validation before submit
+    if (!formData.code || !formData.name) {
+      alert("Farmer Code and Full Name are required.");
+      return;
+    }
+
     console.log("Submitting farmer:", formData);
     dispatch(submitFarmer(formData));
   };
 
-  // Clear form when submission is successful
+  // Reset form on successful submit
   useEffect(() => {
     if (success) {
       const timer = setTimeout(() => {
         dispatch(resetFarmerForm());
-      }, 2000); // Wait 2 seconds before clearing so user can see success message
+      }, 2000); // Delay to let the user see success message
 
       return () => clearTimeout(timer);
     }
   }, [success, dispatch]);
 
-  // Clear notifications after 5 seconds
+  // Clear notifications automatically after 5 seconds
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
         dispatch({ type: "farmer/postFarmerFailure", payload: null });
       }, 5000);
+
       return () => clearTimeout(timer);
     }
   }, [error, success, dispatch]);
@@ -169,7 +182,7 @@ const UploadTabs = () => {
 
       {/* Main Content */}
       <Box sx={styles.mainContent}>
-        {/* Tabs at the very top */}
+        {/* Tabs */}
         <Paper elevation={0} sx={styles.tabPaper}>
           <Tabs
             value={tabIndex}
@@ -196,7 +209,7 @@ const UploadTabs = () => {
           )}
         </Box>
 
-        {/* Tab Content */}
+        {/* Content */}
         <Box sx={styles.contentWrapper}>
           {tabIndex === 0 && <FormUpload />}
           {tabIndex === 1 && <FileUpload />}

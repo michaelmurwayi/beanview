@@ -1,104 +1,206 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
-  Box, Tabs, Tab, Typography, Paper, Container, Button, Alert, TextField
-} from '@mui/material';
-import Sidebar from '../components/sidebar/Sidebar';
-import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import { submitCoffee, fetchCoffee } from '../store/slices/Coffee/coffeeActions';
-import CoffeeUploadForm from '../components/coffeeupload/UploadForm'; // Adjust the import path as needed
-import { globalInitialState } from '../store/initialState';
-import UploadFile from '../components/coffeeupload/UploadFile'; // Adjust the import path as needed
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  Paper,
+  Container,
+  Alert,
+  Button,
+} from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import Sidebar from "../components/sidebar/Sidebar";
+import CoffeeUploadForm from "../components/coffeeupload/UploadForm";
+import UploadFile from "../components/coffeeupload/UploadFile";
+import {
+  submitCoffee,
+  fetchCoffee,
+} from "../store/slices/Coffee/coffeeActions";
+import { globalInitialState } from "../store/initialState";
 
+const initialCoffeeForm = globalInitialState.coffee.CoffeeUploadFormData;
 
+/** ---------- FORM UPLOAD ---------- **/
 const FormUpload = () => {
-  const [formData, setFormData] = useState(globalInitialState.coffee.CoffeeUploadFormData);
-
+  const [formData, setFormData] = useState(initialCoffeeForm);
   const dispatch = useDispatch();
-  const { success, error } = useSelector((state) => state.coffee);
+  const { coffeeRecords, success, error, loading } = useSelector(
+    (state) => state.coffee
+  );
+
+  // Fetch coffee records on mount
+  useEffect(() => {
+    dispatch(fetchCoffee());
+  }, [dispatch]);
+
+  // Extract unique marks
+  const uniqueMarks = [
+    ...new Set(coffeeRecords.map((record) => record.mark).filter(Boolean)),
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: isNaN(value) || value === '' ? value : Number(value)
+      [name]: isNaN(value) || value === "" ? value : Number(value),
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const resultAction = await dispatch(submitCoffee(formData));
-    if (resultAction.type.includes('fulfilled')) {
-      toast.success('Coffee submitted!');
+
+    try {
+      const result = await dispatch(submitCoffee(formData)).unwrap();
+      toast.success("Coffee submitted successfully!");
       setFormData(initialCoffeeForm);
-      dispatch(fetchCoffee());
-    } else {
-      toast.error('Submit failed');
+      dispatch(fetchCoffee()); // refresh list
+    } catch (err) {
+      toast.error("Submission failed");
     }
   };
 
   return (
-    <Container sx={{ mt: 4 }}>
-      {success && <Alert severity="success">Coffee submitted successfully</Alert>}
-      {error && <Alert severity="error">{error}</Alert>}
-      <CoffeeUploadForm
-        formData={formData}
-        handleChange={handleChange}
-        handleSubmit={handleSubmit}
-    />
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      {/* Alerts */}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          Coffee submitted successfully
+        </Alert>
+      )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Typography
+        variant="h5"
+        sx={{
+          color: "#121330",
+          mb: 3,
+          fontWeight: "bold",
+          textAlign: "center",
+        }}
+      >
+        Coffee Form Upload
+      </Typography>
+
+      {/* Coffee Form */}
+      <form onSubmit={handleSubmit}>
+        {loading && <p>Loading coffee upload form...</p>}
+        {!loading && !error && (
+          <CoffeeUploadForm
+            formData={formData}
+            handleChange={handleChange}
+            marks={uniqueMarks} // Pass unique marks to form
+          />
+        )}
+
+        {/* Submit Button */}
+        <Box display="flex" justifyContent="center" mt={4}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            type="submit"
+            sx={{
+              px: 4,
+              py: 1.5,
+              fontSize: "1rem",
+              borderRadius: 2,
+            }}
+          >
+            Submit
+          </Button>
+        </Box>
+      </form>
     </Container>
   );
 };
 
+/** ---------- FILE UPLOAD ---------- **/
 const FileUpload = () => {
-  const dispatch = useDispatch();
   const { success, error } = useSelector((state) => state.coffee);
+
   const handleFileSelect = (file) => {
-    setSelectedFile(file);
-    console.log('Selected file:', file);
-    // Dispatch processing logic here if needed
+    console.log("Selected file:", file);
+    // TODO: Implement file upload handling
   };
-  
+
   return (
-  <Box p={2} display="flex" justifyContent="center" alignItems="center" height="100vh">
-    {success && <Alert severity="success">Coffee submitted successfully</Alert>}
-    {error && <Alert severity="error">{error}</Alert>}
-    <Paper
-      elevation={3}
-      sx={{
-        p: 4,
-        bgcolor: '#f0f0f0',
-        borderRadius: 2,
-        textAlign: 'center',
-        maxWidth: 400,
-        width: '100%',
-      }}
-    >
-    <UploadFile sheetNames={['Sheet1', 'Sheet2']} selectedSheet="Sheet1" onFileSelect={handleFileSelect} /> {/* Updated to use handleFileSelect */}
-    </Paper>
-  </Box>
-)};
+    <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          Coffee submitted successfully
+        </Alert>
+      )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
+      <Typography
+        variant="h5"
+        sx={{
+          color: "#121330",
+          mb: 3,
+          fontWeight: "bold",
+          textAlign: "center",
+        }}
+      >
+        Coffee File Upload
+      </Typography>
 
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          bgcolor: "#f9f9fb",
+          borderRadius: 3,
+          maxWidth: 400,
+          mx: "auto",
+        }}
+      >
+        <UploadFile
+          sheetNames={["Sheet1", "Sheet2"]}
+          selectedSheet="Sheet1"
+          onFileSelect={handleFileSelect}
+        />
+      </Paper>
+    </Container>
+  );
+};
+
+/** ---------- MAIN UPLOAD TABS ---------- **/
 const UploadCoffeeTabs = () => {
   const [tabIndex, setTabIndex] = useState(0);
 
   return (
-    <Box display="flex" height="100%" width="100%" sx={{ overflow: 'hidden auto' }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f9f9fb" }}>
       {/* Sidebar */}
-      <Box width="250px" bgcolor="#121330">
-        <Sidebar />
-      </Box>
+      <Sidebar />
 
       {/* Main Content */}
-      <Box flex={1} display="flex" flexDirection="column">
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          pl: { xs: 2, sm: 3, md: 5 },
+          pr: 0,
+        }}
+      >
+        {/* Tabs Header */}
         <Paper
           elevation={1}
           sx={{
-            height: '100%',
-            width: '100%',
-            borderRadius: 0,
-            backgroundColor: '#f9f9fb',
+            backgroundColor: "#fff",
+            borderBottom: "1px solid #e0e0e0",
+            mb: 3,
           }}
         >
           <Tabs
@@ -106,39 +208,42 @@ const UploadCoffeeTabs = () => {
             onChange={(e, newIndex) => setTabIndex(newIndex)}
             variant="fullWidth"
             sx={{
-              backgroundColor: '#ffffff',
-              borderBottom: '1px solid #e0e0e0',
-              '& .MuiTab-root': {
-                textTransform: 'none',
+              "& .MuiTab-root": {
+                textTransform: "none",
                 fontWeight: 500,
-                fontSize: '1rem',
-                borderRadius: '8px 8px 0 0',
-                mx: 0.5,
-                color: '#555',
-                '&:hover': {
-                  backgroundColor: '#f0f0f5',
+                fontSize: "1rem",
+                color: "#555",
+                "&:hover": {
+                  backgroundColor: "#f0f0f5",
                 },
               },
-              '& .Mui-selected': {
-                backgroundColor: '#e7f0fa',
-                color: '#1976d2',
+              "& .Mui-selected": {
+                backgroundColor: "#e7f0fa",
+                color: "#1976d2",
               },
-              '& .MuiTabs-indicator': {
+              "& .MuiTabs-indicator": {
                 height: 3,
-                backgroundColor: '#90caf9',
-                borderRadius: 2,
+                backgroundColor: "#90caf9",
               },
             }}
           >
             <Tab label="Form Upload" />
             <Tab label="File Upload" />
           </Tabs>
-
-          <Box p={2}>
-            {tabIndex === 0 && <FormUpload />}
-            {tabIndex === 1 && <FileUpload />}
-          </Box>
         </Paper>
+
+        {/* Tab Content */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            p: { xs: 2, sm: 3 },
+            backgroundColor: "#f9f9fb",
+          }}
+        >
+          {tabIndex === 0 && <FormUpload />}
+          {tabIndex === 1 && <FileUpload />}
+        </Box>
       </Box>
     </Box>
   );

@@ -143,7 +143,13 @@ const ViewFarmers = () => {
       >
         <Typography
           variant="h4"
-          sx={{ mb: 2, fontWeight: "bold", color: "#121330" }}
+          sx={{
+            mb: 2,
+            fontWeight: "bold",
+            color: "#121330",
+            textAlign: "center", // Align text to the far right
+            width: "100%", // Ensure it spans full width
+          }}
         >
           Farmer Records
         </Typography>
