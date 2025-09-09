@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Dialog,
@@ -11,26 +11,40 @@ import {
   Alert,
   Paper,
   MenuItem,
-} from '@mui/material';
-import Sidebar from '../components/sidebar/Sidebar';
-import Table from '../components/table/CoffeeTable';
+} from "@mui/material";
+import Sidebar from "../components/sidebar/Sidebar";
+import Table from "../components/table/CoffeeTable";
 import {
   fetchCoffee,
   updateCoffee,
   deleteCoffee,
-} from '../store/slices/Coffee/coffeeActions';
-import { useDispatch, useSelector } from 'react-redux';
-import Summary from '../components/summary/Summary';
-import StockSummaryModal from '../components/summary/SummaryModal';
+} from "../store/slices/Coffee/coffeeActions";
+import { useDispatch, useSelector } from "react-redux";
+import Summary from "../components/summary/Summary";
+import StockSummaryModal from "../components/summary/SummaryModal";
 
 const ViewCoffee = () => {
   const dispatch = useDispatch();
-  const { coffeeRecords: coffee, loading, error } = useSelector((state) => state.coffee);
+  const {
+    coffeeRecords: coffee,
+    loading,
+    error,
+  } = useSelector((state) => state.coffee);
   const [selectedRecord, setSelectedRecord] = useState({});
   const [showEditModal, setShowEditModal] = useState(false);
-  const [feedback, setFeedback] = useState({ open: false, message: '', severity: 'success' });
+  const [feedback, setFeedback] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const [showSummaryModal, setShowSummaryModal] = useState(false);
-  const [filters, setFilters] = useState({ grade: '', mark: '', status_id: '', outturn: '', sale: '' });
+  const [filters, setFilters] = useState({
+    grade: "",
+    mark: "",
+    status_id: "",
+    outturn: "",
+    sale: "",
+  });
 
   useEffect(() => {
     dispatch(fetchCoffee());
@@ -49,22 +63,38 @@ const ViewCoffee = () => {
   const handleUpdate = async () => {
     try {
       await dispatch(updateCoffee(selectedRecord)).unwrap();
-      setFeedback({ open: true, message: 'Record updated successfully.', severity: 'success' });
+      setFeedback({
+        open: true,
+        message: "Record updated successfully.",
+        severity: "success",
+      });
       setShowEditModal(false);
       dispatch(fetchCoffee());
     } catch (err) {
-      setFeedback({ open: true, message: 'Failed to update record.', severity: 'error' });
+      setFeedback({
+        open: true,
+        message: "Failed to update record.",
+        severity: "error",
+      });
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
+    if (window.confirm("Are you sure you want to delete this record?")) {
       try {
         await dispatch(deleteCoffee(id)).unwrap();
-        setFeedback({ open: true, message: 'Record deleted successfully.', severity: 'success' });
+        setFeedback({
+          open: true,
+          message: "Record deleted successfully.",
+          severity: "success",
+        });
         dispatch(fetchCoffee());
       } catch (error) {
-        setFeedback({ open: true, message: 'Failed to delete record.', severity: 'error' });
+        setFeedback({
+          open: true,
+          message: "Failed to delete record.",
+          severity: "error",
+        });
       }
     }
   };
@@ -75,17 +105,17 @@ const ViewCoffee = () => {
   };
 
   const resetFilters = () => {
-    setFilters({ grade: '', mark: '', status_id: '', outturn: '', sale: '' });
+    setFilters({ grade: "", mark: "", status_id: "", outturn: "", sale: "" });
   };
 
   const filteredData = useMemo(() => {
     return coffee.filter((row) => {
       return (
-        (filters.grade === '' || row.grade === filters.grade) &&
-        (filters.mark === '' || row.mark === filters.mark) &&
-        (filters.status_id === '' || row.status_id === filters.status_id) &&
-        (filters.outturn === '' || row.outturn === filters.outturn) &&
-        (filters.sale === '' || row.sale === filters.sale)
+        (filters.grade === "" || row.grade === filters.grade) &&
+        (filters.mark === "" || row.mark === filters.mark) &&
+        (filters.status_id === "" || row.status_id === filters.status_id) &&
+        (filters.outturn === "" || row.outturn === filters.outturn) &&
+        (filters.sale === "" || row.sale === filters.sale)
       );
     });
   }, [coffee, filters]);
@@ -93,7 +123,7 @@ const ViewCoffee = () => {
   const summaryGroups = useMemo(() => {
     const grouped = {};
     filteredData.forEach((rec) => {
-      const mark = rec.mark || 'Unmarked';
+      const mark = rec.mark || "Unmarked";
       if (!grouped[mark]) grouped[mark] = [];
       grouped[mark].push(rec);
     });
@@ -101,45 +131,52 @@ const ViewCoffee = () => {
   }, [filteredData]);
 
   const columns = [
-    { field: 'mark', headerName: 'Mark' },
-    { field: 'outturn', headerName: 'Outturn' },
-    { field: 'bulkoutturn', headerName: 'Bulkoutturn' },
-    { field: 'grade', headerName: 'Grade' },
-    { field: 'type', headerName: 'Type' },
-    { field: 'bags', headerName: 'Bags' },
-    { field: 'pockets', headerName: 'Pockets' },
-    { field: 'warehouse', headerName: 'Warehouse' },
-    { field: 'mill', headerName: 'Mill' },
-    { field: 'sale', headerName: 'Sale' },
-    { field: 'price', headerName: 'Price' },
-    { field: 'season', headerName: 'Season' },
-    { field: 'status_id', headerName: 'Status' },
-    { field: 'buyer', headerName: 'Buyer' },
+    { field: "mark", headerName: "Mark" },
+    { field: "outturn", headerName: "Outturn" },
+    { field: "bulkoutturn", headerName: "Bulkoutturn" },
+    { field: "grade", headerName: "Grade" },
+    { field: "type", headerName: "Type" },
+    { field: "bags", headerName: "Bags" },
+    { field: "pockets", headerName: "Pockets" },
+    { field: "warehouse", headerName: "Warehouse" },
+    { field: "mill", headerName: "Mill" },
+    { field: "sale", headerName: "Sale" },
+    { field: "price", headerName: "Price" },
+    { field: "season", headerName: "Season" },
+    { field: "status_id", headerName: "Status" },
+    { field: "buyer", headerName: "Buyer" },
   ];
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f4f6f8' }}>
-      <Box sx={{ width: { xs: '100%', sm: '30%', md: '25%', lg: '18%' }, maxWidth: 280, bgcolor: '#121330', height: '100%' }}>
-        <Sidebar />
-      </Box>
-
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', p: 2 }}>
+    <Box sx={{ display: "flex", height: "100vh", bgcolor: "#f4f6f8" }}>
+      <Sidebar />
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          p: 2,
+        }}
+      >
         <Summary data={filteredData} />
 
         <Paper
           sx={{
             p: 2,
             mb: 2,
-            backgroundColor: '#fff',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'center',
+            backgroundColor: "#fff",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
             gap: 2,
           }}
         >
-          {['grade', 'mark', 'status_id', 'sale'].map((key) => {
-            const uniqueOptions = [...new Set(coffee.map((item) => item[key]).filter(Boolean))];
+          {["grade", "mark", "status_id", "sale"].map((key) => {
+            const uniqueOptions = [
+              ...new Set(coffee.map((item) => item[key]).filter(Boolean)),
+            ];
             return (
               <TextField
                 select
@@ -149,11 +186,19 @@ const ViewCoffee = () => {
                 value={filters[key]}
                 onChange={handleFilterChange}
                 size="small"
-                sx={{ minWidth: 150, '& .MuiInputBase-input': { fontSize: '0.7rem' }, '& label': { fontSize: '0.7rem' } }}
+                sx={{
+                  minWidth: 150,
+                  "& .MuiInputBase-input": { fontSize: "0.7rem" },
+                  "& label": { fontSize: "0.7rem" },
+                }}
               >
                 <MenuItem value="">All</MenuItem>
                 {uniqueOptions.map((option) => (
-                  <MenuItem key={option} value={option} sx={{ fontSize: '0.7rem' }}>
+                  <MenuItem
+                    key={option}
+                    value={option}
+                    sx={{ fontSize: "0.7rem" }}
+                  >
                     {option}
                   </MenuItem>
                 ))}
@@ -167,18 +212,48 @@ const ViewCoffee = () => {
             value={filters.outturn}
             onChange={handleFilterChange}
             size="small"
-            sx={{ minWidth: 150, '& input': { fontSize: '0.7rem' }, '& label': { fontSize: '0.7rem' } }}
+            sx={{
+              minWidth: 150,
+              "& input": { fontSize: "0.7rem" },
+              "& label": { fontSize: "0.7rem" },
+            }}
           />
 
-          <Button variant="outlined" onClick={resetFilters} size="small" sx={{ fontSize: '0.7rem', backgroundColor: '#f0f0f0', color: '#121330' }}>
+          <Button
+            variant="outlined"
+            onClick={resetFilters}
+            size="small"
+            sx={{
+              fontSize: "0.7rem",
+              backgroundColor: "#f0f0f0",
+              color: "#121330",
+            }}
+          >
             Reset
           </Button>
-          <Button variant="contained" onClick={() => setShowSummaryModal(true)} size="small" sx={{ fontSize: '0.7rem', backgroundColor: '#121331', color: 'white' }}>
+          <Button
+            variant="contained"
+            onClick={() => setShowSummaryModal(true)}
+            size="small"
+            sx={{
+              fontSize: "0.7rem",
+              backgroundColor: "#121331",
+              color: "white",
+            }}
+          >
             Generate Stock Summary
           </Button>
         </Paper>
 
-        <Box sx={{ flex: 1, overflow: 'auto', bgcolor: '#fff', borderRadius: 1, boxShadow: 1 }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflow: "auto",
+            bgcolor: "#fff",
+            borderRadius: 1,
+            boxShadow: 1,
+          }}
+        >
           <Table
             data={filteredData}
             columns={columns}
@@ -190,13 +265,22 @@ const ViewCoffee = () => {
         </Box>
       </Box>
 
-      <Dialog open={showEditModal} onClose={() => setShowEditModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ backgroundColor: '#121330', color: 'white' }}>Edit Coffee Record</DialogTitle>
+      <Dialog
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ backgroundColor: "#121330", color: "white" }}>
+          Edit Coffee Record
+        </DialogTitle>
         <DialogContent dividers>
           {Object.entries(selectedRecord).map(([key, value]) => (
             <TextField
               key={key}
-              label={key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+              label={key
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, (c) => c.toUpperCase())}
               name={key}
               value={value}
               onChange={handleEditChange}
@@ -205,16 +289,24 @@ const ViewCoffee = () => {
               size="small"
               sx={{
                 mb: 2,
-                '& input': { fontSize: '0.75rem', color: 'grey' },
-                '& label': { fontSize: '0.7rem', color: '#121330' },
-                '& .MuiInputBase-root': { backgroundColor: '#f9f9f9' },
+                "& input": { fontSize: "0.75rem", color: "grey" },
+                "& label": { fontSize: "0.7rem", color: "#121330" },
+                "& .MuiInputBase-root": { backgroundColor: "#f9f9f9" },
               }}
-              disabled={['id', '', 'certificate', 'created_at', 'created_by', 'file', 'farmer'].includes(key)}
+              disabled={[
+                "id",
+                "",
+                "certificate",
+                "created_at",
+                "created_by",
+                "file",
+                "farmer",
+              ].includes(key)}
             />
           ))}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowEditModal(false)} sx={{ color: 'red' }}>
+          <Button onClick={() => setShowEditModal(false)} sx={{ color: "red" }}>
             Cancel
           </Button>
           <Button onClick={handleUpdate} variant="contained" color="primary">
@@ -223,18 +315,22 @@ const ViewCoffee = () => {
         </DialogActions>
       </Dialog>
 
-      <StockSummaryModal open={showSummaryModal} onClose={() => setShowSummaryModal(false)} groupedData={summaryGroups} />
+      <StockSummaryModal
+        open={showSummaryModal}
+        onClose={() => setShowSummaryModal(false)}
+        groupedData={summaryGroups}
+      />
 
       <Snackbar
         open={feedback.open}
         autoHideDuration={4000}
         onClose={() => setFeedback((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
           onClose={() => setFeedback((prev) => ({ ...prev, open: false }))}
           severity={feedback.severity}
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {feedback.message}
         </Alert>
