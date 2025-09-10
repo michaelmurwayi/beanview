@@ -191,9 +191,8 @@ const CreateCatalogue = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f4f6f8' }}>
-      <Box sx={{ width: { xs: '100%', sm: '30%', md: '25%', lg: '18%' }, maxWidth: 280, bgcolor: '#121330', height: '100%' }}>
-        <Sidebar />
-      </Box>
+      
+      <Sidebar />
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', p: 2 }}>
         <Paper
