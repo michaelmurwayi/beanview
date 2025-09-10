@@ -48,6 +48,7 @@ const CoffeeUploadForm = ({ handleSubmit }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log(name, value);
     dispatch(updateCoffeeFormField({ field: name, value }));
   };
 
@@ -150,13 +151,13 @@ const CoffeeUploadForm = ({ handleSubmit }) => {
         <Typography
           variant="h5"
           sx={{
-            fontWeight: "bold",
+            fontWeight: "bolder",
             color: "#121330",
             mb: 4,
             textAlign: "center",
           }}
         >
-          Coffee Registration
+          Coffee Upload Form
         </Typography>
 
         <form

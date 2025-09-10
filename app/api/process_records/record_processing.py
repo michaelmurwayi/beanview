@@ -187,9 +187,8 @@ def process_records(view, records):
 def process_single_record(view, data):
     failed_records = []
     mill = Mill.objects.filter(name=data["mill"]).values_list("id", flat=True).first()
-    data["mill"] = mill
+    data["mill_id"] = mill
     serializer = view.get_serializer(data=data)
-    
     if serializer.is_valid(raise_exception=True):
         view.perform_create(serializer)
         created_records = [serializer.data]

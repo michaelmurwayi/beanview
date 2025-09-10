@@ -26,9 +26,7 @@ const initialCoffeeForm = globalInitialState.coffee.CoffeeUploadFormData;
 const FormUpload = () => {
   const [formData, setFormData] = useState(initialCoffeeForm);
   const dispatch = useDispatch();
-  const { coffeeRecords, success, error, loading } = useSelector(
-    (state) => state.coffee
-  );
+  const { coffeeRecords, success, error } = useSelector((state) => state.coffee);
 
   // Fetch coffee records on mount
   useEffect(() => {
@@ -42,6 +40,8 @@ const FormUpload = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log("Updating field:", name, "with value:", value); // Debug log
+
     setFormData((prev) => ({
       ...prev,
       [name]: isNaN(value) || value === "" ? value : Number(value),
@@ -50,53 +50,41 @@ const FormUpload = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const result = await dispatch(submitCoffee(formData)).unwrap();
-      toast.success("Coffee submitted successfully!");
+      await dispatch(submitCoffee(formData)).unwrap();
+
+      // Reset form after successful submission
       setFormData(initialCoffeeForm);
-      dispatch(fetchCoffee()); // refresh list
+
+      // Refresh the coffee records list
+      dispatch(fetchCoffee());
     } catch (err) {
-      toast.error("Submission failed");
+      console.error("Coffee submission failed:", err);
     }
   };
+
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       {/* Alerts */}
       {success && (
         <Alert severity="success" sx={{ mb: 2 }}>
-          Coffee submitted successfully
+          Coffee record saved successfully.
         </Alert>
       )}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+          {error || "An error occurred while saving coffee record."}
         </Alert>
       )}
 
-      <Typography
-        variant="h5"
-        sx={{
-          color: "#121330",
-          mb: 3,
-          fontWeight: "bold",
-          textAlign: "center",
-        }}
-      >
-        Coffee Form Upload
-      </Typography>
-
       {/* Coffee Form */}
       <form onSubmit={handleSubmit}>
-        {loading && <p>Loading coffee upload form...</p>}
-        {!loading && !error && (
-          <CoffeeUploadForm
-            formData={formData}
-            handleChange={handleChange}
-            marks={uniqueMarks} // Pass unique marks to form
-          />
-        )}
+        <CoffeeUploadForm
+          formData={formData}
+          handleChange={handleChange}
+          marks={uniqueMarks} // Pass unique marks to form
+        />
 
         {/* Submit Button */}
         <Box display="flex" justifyContent="center" mt={4}>
@@ -131,14 +119,15 @@ const FileUpload = () => {
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
+      {/* Alerts */}
       {success && (
         <Alert severity="success" sx={{ mb: 2 }}>
-          Coffee submitted successfully
+          Coffee file uploaded successfully.
         </Alert>
       )}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+          {error || "An error occurred while uploading the file."}
         </Alert>
       )}
 

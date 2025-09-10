@@ -218,14 +218,6 @@ const ViewCatalogue = () => {
         </Box>
       </Box>
 
-      {/* Summary Modal */}
-      {/* <CatalogueModalSummary
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        groupedData={selectedGroupedRecords}
-      
-        title={`Catalogue Summary for Sale ${selectedSale}`}
-      /> */}
     </Box>
   );
 };

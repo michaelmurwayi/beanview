@@ -86,7 +86,7 @@ class CoffeeViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         
         data = request.data.dict() if hasattr(request.data, 'dict') else request.data
-        import ipdb;ipdb.set_trace()
+        # import ipdb;ipdb.set_trace()
         files = request.FILES
         sheets = data.get("sheetnames", "").split(",") if data.get("sheetnames") else []
         if files and sheets:

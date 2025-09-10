@@ -62,22 +62,18 @@ export const fetchCoffee = () => async (dispatch) => {
   }
 };
 
-/** Delete a coffee record */
-export const deleteCoffee = (id) => async (dispatch) => {
-  dispatch(fetchCoffeeRequest());
-
-  try {
-    await axios.delete(`${apiBaseUrl}/coffee/${id}/`);
-
-    // Option: Re-fetch after deletion
-    const response = await axios.get(`${apiBaseUrl}/coffee/`);
-    dispatch(fetchCoffeeSuccess(response.data));
-
-    // Option: dispatch deleteCoffeeSuccess(id); if you're managing state manually
-  } catch (error) {
-    dispatch(fetchCoffeeFailure(error.response?.data || error.message));
+export const deleteCoffee = createAsyncThunk(
+  "coffee/deleteCoffee",
+  async (id, { rejectWithValue }) => {
+    try {
+      await axios.delete(`${apiBaseUrl}/coffee/${id}/`);
+      const response = await axios.get(`${apiBaseUrl}/coffee/`);
+      return response.data; // updated coffee list
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
-};
+);
 
 /** Update a coffee record */
 export const updateCoffee = createAsyncThunk(

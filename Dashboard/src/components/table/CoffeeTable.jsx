@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Typography, Box, TablePagination, IconButton, TextField
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Box,
+  TablePagination,
+  IconButton,
 } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import EditIcon from '@mui/icons-material/Edit';
@@ -10,10 +19,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 const TableDisplay = ({
   data = [],
   columns = [],
-  loading = false,
   error = null,
   onEdit = () => {},
-  onDelete = () => {}
+  onDelete = () => {},
 }) => {
   const [page, setPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,8 +30,6 @@ const TableDisplay = ({
   const handleChangePage = (_, newPage) => {
     setPage(newPage);
   };
-
-  console.log('Data:', data);
 
   // Filter data by 'mark'
   const filteredData = Array.isArray(data)
@@ -35,35 +41,40 @@ const TableDisplay = ({
   // Add Actions column
   const extendedColumns = [
     ...columns,
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      isAction: true
-    }
+    { field: 'actions', headerName: 'Actions', isAction: true },
   ];
 
   const hasData = Array.isArray(filteredData) && filteredData.length > 0;
 
   return (
     <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden', m: 0, p: 0 }}>
-      {loading ? (
-        <Typography align="center" py={4}>Loading data...</Typography>
-      ) : error ? (
-        <Typography align="center" color="error" py={4}>
-          Failed to load data: {error}
-        </Typography>
+      {/* Display error message */}
+      {error ? (
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          height="300px"
+          width="100%"
+        >
+          <InfoOutlinedIcon sx={{ fontSize: 48, color: 'error.main' }} />
+          <Typography variant="h6" mt={2} color="error">
+            Failed to load data
+          </Typography>
+          <Typography variant="body2" color="text.secondary" maxWidth={400}>
+            {error || 'An unexpected error occurred. Please try again later.'}
+          </Typography>
+        </Box>
       ) : hasData ? (
         <>
           <TableContainer
             sx={{
               overflow: 'auto',
               maxHeight: '100%',
-              // Completely hide the scrollbar
               scrollbarWidth: 'none', // Firefox
               msOverflowStyle: 'none', // IE and Edge
-              '&::-webkit-scrollbar': {
-                display: 'none', // Chrome, Safari, Opera
-              },
+              '&::-webkit-scrollbar': { display: 'none' }, // Chrome, Safari, Opera
             }}
           >
             <Table stickyHeader sx={{ minWidth: 1000 }}>
@@ -86,6 +97,7 @@ const TableDisplay = ({
                   ))}
                 </TableRow>
               </TableHead>
+
               <TableBody>
                 {filteredData
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -103,11 +115,17 @@ const TableDisplay = ({
                       {columns.map((col) => (
                         <TableCell
                           key={col.field}
-                          sx={{ fontSize: '0.65rem', padding: '6px', whiteSpace: 'nowrap' }}
+                          sx={{
+                            fontSize: '0.65rem',
+                            padding: '6px',
+                            whiteSpace: 'nowrap',
+                          }}
                         >
                           {row[col.field] ?? '--'}
                         </TableCell>
                       ))}
+
+                      {/* Actions */}
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>
                         <IconButton
                           color="primary"
@@ -130,6 +148,7 @@ const TableDisplay = ({
               </TableBody>
             </Table>
           </TableContainer>
+
           <TablePagination
             component="div"
             count={filteredData.length}
@@ -140,6 +159,7 @@ const TableDisplay = ({
           />
         </>
       ) : (
+        // No data message
         <Box
           display="flex"
           flexDirection="column"
@@ -147,14 +167,14 @@ const TableDisplay = ({
           justifyContent="center"
           height="300px"
           width="100%"
-          m={0}
         >
           <InfoOutlinedIcon sx={{ fontSize: 48, color: '#999' }} />
           <Typography variant="h6" mt={2} color="textSecondary">
             No information to display
           </Typography>
           <Typography variant="body2" color="text.secondary" maxWidth={400}>
-            🤷‍♂️ It seems there’s currently no data available. Please contact the system administrator or try again later.
+            🤷‍♂️ It seems there’s currently no data available. Please check
+            back later or contact the system administrator.
           </Typography>
         </Box>
       )}
