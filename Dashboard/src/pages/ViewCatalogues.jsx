@@ -112,16 +112,7 @@ const ViewCatalogue = () => {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f4f6f8' }}>
       {/* Sidebar */}
-      <Box
-        sx={{
-          width: { xs: '100%', sm: '30%', md: '25%', lg: '18%' },
-          maxWidth: 280,
-          bgcolor: '#121330',
-          height: '100%',
-        }}
-      >
-        <Sidebar />
-      </Box>
+      <Sidebar />
 
       {/* Main Content */}
       <Box sx={{ flex: 1, p: 4 }}>

@@ -35,7 +35,9 @@ from django.http import HttpResponse
 import tempfile
 from openpyxl.worksheet.worksheet import Worksheet
 from collections import defaultdict
+import logging
 
+logger = logging.getLogger(__name__)
 
 
 
@@ -477,10 +479,10 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['POST'])
     def generate_sale_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'sale_summary_template.xlsx')
-        START_ROW = 17
+        START_ROW = 9
 
         try:
-            sale_number = request.data.get('saleNumber')
+            sale_number = request.data.get('saleNumber')["sale number"]
             if not sale_number:
                 raise ValidationError("'saleNumber' is required and must not be empty.")
 
@@ -493,7 +495,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
             coffees = Coffee.objects.filter(sale=sale_number).select_related("mark")
             serializer = CoffeeSerializer(coffees, many=True)
             coffees_data = serializer.data
-
+            print( f"Fetched {len(coffees_data)} coffee records for sale {sale_number}")
             # ✅ Step 2: Group coffees by mark
             
             grouped = {}
@@ -502,10 +504,11 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 if mark not in grouped:
                     grouped[mark] = []
                 grouped[mark].append(coffee)
-
+            print(f"Grouped into {len(grouped)} marks")
             # ✅ Step 3: Generate Excel per mark
             for mark, records in grouped.items():
                 if not records:
+                    print(f"No records for mark {mark}, skipping")
                     continue
 
                 farmer = records[0].get("farmer")
@@ -521,8 +524,9 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 ws = wb.active
 
                 # Set mark + code
-                ws['B3'] = mark
-                ws['B2'] = code
+                ws['C4'] = mark
+                ws['C5'] = sale_number
+                
 
                 # Fill rows
                 for row_offset, record in enumerate(records, start=1):
@@ -554,6 +558,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                         cell.value = value
 
                 wb.save(file_path)
+                print(f"Generated file: {file_path}")
                 generated_files.append(file_path)
 
             # ✅ Step 4: Create ZIP in memory
