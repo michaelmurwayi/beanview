@@ -479,12 +479,12 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['POST'])
     def generate_sale_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'sale_summary_template.xlsx')
-        START_ROW = 9
+        START_ROW = 26
 
         try:
             sale_number = request.data.get('saleNumber')["sale number"]
             if not sale_number:
-                raise ValidationError("'saleNumber' is required and must not be empty.")
+                raise ValidationError("Sale Number' is required and must not be empty.")
 
             base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
             os.makedirs(base_dir, exist_ok=True)
@@ -524,16 +524,18 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 ws = wb.active
 
                 # Set mark + code
-                ws['C4'] = mark
-                ws['C5'] = sale_number
+                ws['B1'] = code
+                ws['B2'] = mark
+                ws['B3'] = sale_number
                 
 
                 # Fill rows
                 for row_offset, record in enumerate(records, start=1):
-                    row = START_ROW + row_offset
-
+                    row = START_ROW 
+                        
                     values = [
                         record.get('outturn'),
+                        record.get('season'),
                         record.get('bags'),
                         record.get('pockets'),
                         record.get('weight'),
@@ -541,14 +543,12 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                         record.get('price'),
                         record.get('gross_value'),
                         record.get('warehouse_charges'),
-                        record.get('broker_charges'),
+                        record.get('brokerage_charges'),
                         record.get('milling_charges'),
                         record.get('mill'),
                         record.get('export_charges'),
                         record.get('transport_charges'),
-                        record.get('net_pay'),
-                        record.get('buyer'),
-                        
+                        record.get('net_pay'), 
                     ]
 
                     for col_index, value in enumerate(values, start=1):
