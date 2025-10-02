@@ -4,6 +4,7 @@ from .serializers import *
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum
 from datetime import datetime, timedelta
 import json
@@ -47,11 +48,13 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+
 @method_decorator(csrf_exempt, name='dispatch')
 class FarmersViewSet(viewsets.ModelViewSet):
     queryset = Farmer.objects.all()
     serializer_class = FarmerSerializer
-
+    permission_classes = [IsAuthenticated]
+    
     def list(self, request, *args, **kwargs):
         farmers = Farmer.objects.all()
         serializer = self.get_serializer(farmers, many=True)
