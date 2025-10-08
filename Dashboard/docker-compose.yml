@@ -4,9 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: dashboard:latest   # optional: gives the built image a tag
+    image: dashboard:latest # optional: gives the built image a tag
     ports:
-      - "443:443"
+      - "5137:80" # maps port 80 of the container to port 443 on the host
     environment:
       - NODE_ENV=production
     restart: always

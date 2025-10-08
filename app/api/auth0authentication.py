@@ -13,17 +13,19 @@ class Auth0JSONWebTokenAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         
         auth_header = authentication.get_authorization_header(request).split()
+        
 
         if not auth_header or auth_header[0].lower() != b"bearer":
+            print("No authentication header found.")
             return None
 
         if len(auth_header) == 1:
+            print("No credentials provided.")
             raise exceptions.AuthenticationFailed("Invalid token header. No credentials provided.")
         elif len(auth_header) > 2:
             raise exceptions.AuthenticationFailed("Invalid token header. Token string should not contain spaces.")
         
         token = auth_header[1].decode("utf-8")
-        print("f the token is {token}")
         return self.authenticate_credentials(token)
 
     def authenticate_credentials(self, token):
@@ -72,6 +74,6 @@ class Auth0JSONWebTokenAuthentication(authentication.BaseAuthentication):
         return (None, token)  # if you don't need local Django users
 
     def authenticate_header(self, request):
-        print(authentication.get_authorization_header(request).split())
+        
         return "Bearer"
 

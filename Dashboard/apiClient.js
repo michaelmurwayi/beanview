@@ -1,22 +1,26 @@
 // src/apiClient.js
 import axios from "axios";
-// import { getAccessTokenSilently } from "@auth0/auth0-react"; // via context hook later
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://f90c6cbbfc26.ngrok-free.app/api";
 
-
-// Axios instance
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
 });
 
-// Interceptor: inject token
+// Attach interceptor to include Auth0 token
 export const attachAuthInterceptor = (getAccessTokenSilentlyFn) => {
   apiClient.interceptors.request.use(async (config) => {
     try {
-      const token = await getAccessTokenSilentlyFn();
+      const token = await getAccessTokenSilentlyFn({
+        audience: "https://f90c6cbbfc26.ngrok-free.app/api",
+      });
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        console.warn("⚠️ No token returned from Auth0");
       }
     } catch (err) {
       console.error("Auth0 token fetch failed:", err);

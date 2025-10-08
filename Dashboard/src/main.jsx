@@ -33,8 +33,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       domain="dev-48vrii7xsykextuk.us.auth0.com" // ✅ your tenant domain
       clientId="gcPdRHpDodOG9dLTmM0CiXwlqqmHQdr1" // ✅ your clientId
       authorizationParams={{
-        redirect_uri: window.location.origin + "/home",
-        audience: "http://localhost:8000/api", // ✅ must match Django API identifier in Auth0
+        redirect_uri: window.location.origin,
+        audience: "https://f90c6cbbfc26.ngrok-free.app/api", // ✅ must match Django API identifier in Auth0
       }}
       onRedirectCallback={onRedirectCallback}
     >
