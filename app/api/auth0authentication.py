@@ -3,6 +3,7 @@ import requests
 from jose import jwt
 from django.conf import settings
 from rest_framework import authentication, exceptions
+from django.contrib.auth.models import AnonymousUser
 
 
 class Auth0JSONWebTokenAuthentication(authentication.BaseAuthentication):
@@ -11,9 +12,7 @@ class Auth0JSONWebTokenAuthentication(authentication.BaseAuthentication):
     """
 
     def authenticate(self, request):
-        
         auth_header = authentication.get_authorization_header(request).split()
-        
 
         if not auth_header or auth_header[0].lower() != b"bearer":
             print("No authentication header found.")
@@ -21,10 +20,14 @@ class Auth0JSONWebTokenAuthentication(authentication.BaseAuthentication):
 
         if len(auth_header) == 1:
             print("No credentials provided.")
-            raise exceptions.AuthenticationFailed("Invalid token header. No credentials provided.")
+            raise exceptions.AuthenticationFailed(
+                "Invalid token header. No credentials provided."
+            )
         elif len(auth_header) > 2:
-            raise exceptions.AuthenticationFailed("Invalid token header. Token string should not contain spaces.")
-        
+            raise exceptions.AuthenticationFailed(
+                "Invalid token header. Token string should not contain spaces."
+            )
+
         token = auth_header[1].decode("utf-8")
         return self.authenticate_credentials(token)
 
@@ -32,7 +35,9 @@ class Auth0JSONWebTokenAuthentication(authentication.BaseAuthentication):
         try:
             header = jwt.get_unverified_header(token)
         except jwt.JWTError:
-            raise exceptions.AuthenticationFailed("Invalid header. Use an RS256 signed JWT.")
+            raise exceptions.AuthenticationFailed(
+                "Invalid header. Use an RS256 signed JWT."
+            )
 
         jwks_url = f"https://{settings.AUTH0_DOMAIN}/.well-known/jwks.json"
         jwks = requests.get(jwks_url).json()
@@ -47,6 +52,7 @@ class Auth0JSONWebTokenAuthentication(authentication.BaseAuthentication):
                     "n": key["n"],
                     "e": key["e"],
                 }
+
         if not rsa_key:
             raise exceptions.AuthenticationFailed("Unable to find appropriate key.")
 
@@ -61,19 +67,33 @@ class Auth0JSONWebTokenAuthentication(authentication.BaseAuthentication):
         except jwt.ExpiredSignatureError:
             raise exceptions.AuthenticationFailed("Token has expired.")
         except jwt.JWTClaimsError:
-            raise exceptions.AuthenticationFailed("Invalid claims. Check audience and issuer.")
+            raise exceptions.AuthenticationFailed(
+                "Invalid claims. Check audience and issuer."
+            )
         except Exception:
             raise exceptions.AuthenticationFailed("Unable to parse authentication token.")
 
-        # ✅ Here you can map Auth0 users to Django users
+        # ✅ Extract user info from payload
         user_id = payload.get("sub")
         if not user_id:
             raise exceptions.AuthenticationFailed("Invalid payload: no subject claim.")
 
-        # Return (user, token) — you could look up/create a local user here
-        return (None, token)  # if you don't need local Django users
+        # ✅ Define lightweight Auth0 user object
+        class Auth0User(AnonymousUser):
+            def __init__(self, payload):
+                super().__init__()
+                self.id = payload.get("sub")
+                self.email = payload.get("email", "")
+                self._payload = payload
+
+            @property
+            def is_authenticated(self):
+                return True  # override property to always return True
+
+        user = Auth0User(payload)
+
+        # ✅ Must return (user, token)
+        return (user, token)
 
     def authenticate_header(self, request):
-        
         return "Bearer"
-

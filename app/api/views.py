@@ -37,6 +37,8 @@ import tempfile
 from openpyxl.worksheet.worksheet import Worksheet
 from collections import defaultdict
 import logging
+from rest_framework.permissions import AllowAny
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,7 @@ logger = logging.getLogger(__name__)
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -87,6 +90,7 @@ class FarmersViewSet(viewsets.ModelViewSet):
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
+    permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
         

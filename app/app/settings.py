@@ -84,7 +84,7 @@ REST_FRAMEWORK = {
         'api.auth0authentication.Auth0JSONWebTokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ),
 }
 
