@@ -56,7 +56,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class FarmersViewSet(viewsets.ModelViewSet):
     queryset = Farmer.objects.all()
     serializer_class = FarmerSerializer
-    permission_classes = [IsAuthenticated]
+   
     
     def list(self, request, *args, **kwargs):
         farmers = Farmer.objects.all()
@@ -90,7 +90,7 @@ class FarmersViewSet(viewsets.ModelViewSet):
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         

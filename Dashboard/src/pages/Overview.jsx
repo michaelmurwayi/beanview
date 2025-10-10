@@ -11,6 +11,8 @@ import {
   Paper,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuth0 } from "@auth0/auth0-react"; // ✅ import Auth0 hook
+
 import {
   PieChart,
   Pie,
@@ -90,6 +92,7 @@ const CoffeeStatusPieChart = ({ coffeeRecords }) => {
 const Overview = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const dispatch = useDispatch();
+  const { isAuthenticated, isLoading } = useAuth0(); // ✅ track Auth0 state
 
   const farmers = useSelector((state) => state.farmer.farmers || []);
   const coffeeRecords = useSelector(
@@ -115,12 +118,14 @@ const Overview = () => {
   const [filteredRecords, setFilteredRecords] = useState([]);
 
   // ==============================
-  // Fetch Farmers and Coffee Records
+  // Fetch Farmers & Coffee AFTER Auth0 ready ✅
   // ==============================
   useEffect(() => {
-    dispatch(fetchFarmers());
-    dispatch(fetchCoffee());
-  }, [dispatch]);
+    if (!isLoading && isAuthenticated) {
+      dispatch(fetchFarmers());
+      dispatch(fetchCoffee());
+    }
+  }, [dispatch, isAuthenticated, isLoading]);
 
   // ==============================
   // Filter Coffee Records
@@ -130,16 +135,13 @@ const Overview = () => {
 
     let records = [...coffeeRecords];
 
-    // Apply filters dynamically
     Object.keys(filters).forEach((key) => {
-      if (filters[key]) {
+      if (filters[key])
         records = records.filter((r) => r[key] === filters[key]);
-      }
     });
 
     setFilteredRecords(records);
 
-    // Update summary values
     const farmerCount = filters.mark ? 1 : farmers.length;
     const totalBags = records.reduce((sum, r) => sum + (r.bags || 0), 0);
     const totalWeight = records.reduce(
@@ -161,30 +163,50 @@ const Overview = () => {
   // ==============================
   // Handlers
   // ==============================
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const handleFilterChange = (e) => {
+  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
+  const handleFilterChange = (e) =>
     setFilters({ ...filters, [e.target.name]: e.target.value });
-  };
+  const handleResetFilters = () =>
+    setFilters({ sale: "", grade: "", mark: "", status: "", outturn: "" });
 
-  const handleResetFilters = () => {
-    setFilters({
-      sale: "",
-      grade: "",
-      mark: "",
-      status: "",
-      outturn: "",
-    });
-  };
-
-  // ==============================
-  // Helper to Get Unique Filter Options
-  // ==============================
   const unique = (key) => [
     ...new Set(coffeeRecords.map((r) => r[key]).filter(Boolean)),
   ];
+
+  // ==============================
+  // Render
+  // ==============================
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: "1.2rem",
+        }}
+      >
+        Loading data...
+      </Box>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: "1.2rem",
+        }}
+      >
+        Please log in to view the dashboard.
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: "flex", height: "100vh" }}>
@@ -255,176 +277,48 @@ const Overview = () => {
               gap: 2,
             }}
           >
-            {/* Grade Filter */}
-            <FormControl
-              sx={{
-                minWidth: { xs: 120, sm: 150, md: 180 },
-                height: { xs: "36px", sm: "40px", md: "44px" },
-              }}
-            >
-              <InputLabel
+            {["grade", "mark", "status", "outturn", "sale"].map((key) => (
+              <FormControl
+                key={key}
                 sx={{
-                  top: "-6px",
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                }}
-              >
-                Grade
-              </InputLabel>
-              <Select
-                name="grade"
-                value={filters.grade}
-                onChange={handleFilterChange}
-                sx={{
+                  minWidth: { xs: 120, sm: 150, md: 180 },
                   height: { xs: "36px", sm: "40px", md: "44px" },
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                  backgroundColor: "#1c1c3c",
                 }}
               >
-                <MenuItem value="">All</MenuItem>
-                {unique("grade").map((value) => (
-                  <MenuItem
-                    sx={{ backgroundColor: "white", color: "#121330" }}
-                    key={value}
-                    value={value}
-                  >
-                    {value}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                <InputLabel
+                  sx={{
+                    top: "-6px",
+                    fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                    color: "white",
+                  }}
+                >
+                  {key.charAt(0).toUpperCase() + key.slice(1)}
+                </InputLabel>
+                <Select
+                  name={key}
+                  value={filters[key]}
+                  onChange={handleFilterChange}
+                  sx={{
+                    height: { xs: "36px", sm: "40px", md: "44px" },
+                    fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
+                    color: "white",
+                    backgroundColor: "#1c1c3c",
+                  }}
+                >
+                  <MenuItem value="">All</MenuItem>
+                  {unique(key).map((value) => (
+                    <MenuItem
+                      sx={{ backgroundColor: "white", color: "#121330" }}
+                      key={value}
+                      value={value}
+                    >
+                      {value}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            ))}
 
-            {/* Mark Filter */}
-            <FormControl
-              sx={{
-                minWidth: { xs: 120, sm: 150, md: 180 },
-                height: { xs: "36px", sm: "40px", md: "44px" },
-              }}
-            >
-              <InputLabel
-                sx={{
-                  top: "-6px",
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                }}
-              >
-                Mark
-              </InputLabel>
-              <Select
-                name="mark"
-                value={filters.mark}
-                onChange={handleFilterChange}
-                sx={{
-                  height: { xs: "36px", sm: "40px", md: "44px" },
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                  backgroundColor: "#1c1c3c",
-                }}
-              >
-                <MenuItem value="">All</MenuItem>
-                {unique("mark").map((value) => (
-                  <MenuItem key={value} value={value}>
-                    {value}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Status Filter */}
-            <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel
-                sx={{
-                  top: "-6px",
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                }}
-              >
-                Status
-              </InputLabel>
-              <Select
-                name="status"
-                value={filters.status}
-                onChange={handleFilterChange}
-                sx={{
-                  height: { xs: "36px", sm: "40px", md: "44px" },
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                  backgroundColor: "#1c1c3c",
-                }}
-              >
-                <MenuItem value="">All</MenuItem>
-                {unique("status").map((value) => (
-                  <MenuItem key={value} value={value}>
-                    {value}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Outturn Filter */}
-            <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel
-                sx={{
-                  top: "-6px",
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                }}
-              >
-                Outturn
-              </InputLabel>
-              <Select
-                name="outturn"
-                value={filters.outturn}
-                onChange={handleFilterChange}
-                sx={{
-                  height: { xs: "36px", sm: "40px", md: "44px" },
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                  backgroundColor: "#1c1c3c",
-                }}
-              >
-                <MenuItem value="">All</MenuItem>
-                {unique("outturn").map((value) => (
-                  <MenuItem key={value} value={value}>
-                    {value}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Sale Filter */}
-            <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel
-                sx={{
-                  top: "-6px",
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                }}
-              >
-                Sale
-              </InputLabel>
-              <Select
-                name="sale"
-                value={filters.sale}
-                onChange={handleFilterChange}
-                sx={{
-                  height: { xs: "36px", sm: "40px", md: "44px" },
-                  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" },
-                  color: "white",
-                  backgroundColor: "#1c1c3c",
-                }}
-              >
-                <MenuItem value="">All</MenuItem>
-                {unique("sale").map((value) => (
-                  <MenuItem key={value} value={value}>
-                    {value}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Reset Button */}
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <Button
                 variant="contained"
@@ -443,10 +337,7 @@ const Overview = () => {
             {/* ===== LEFT COLUMN ===== */}
             <Grid item xs={12} md={6}>
               <Box display="flex" flexDirection="column" gap={2}>
-                {/* Top: Sales Chart */}
                 <CoffeeSalesChart coffeeRecords={filteredRecords} />
-
-                {/* Bottom: Grade Table */}
                 <CoffeeGradeTable coffeeRecords={filteredRecords} />
               </Box>
             </Grid>
@@ -454,15 +345,10 @@ const Overview = () => {
             {/* ===== RIGHT COLUMN ===== */}
             <Grid item xs={12} md={6}>
               <Box display="flex" flexDirection="column" gap={2}>
-                {/* Top: Location Breakdown */}
                 <CoffeeLocationBreakdownTable
                   filteredRecords={filteredRecords}
                 />
-
-                {/* Middle: Sale Breakdown */}
                 <CoffeeSaleBreakdownTable filteredRecords={filteredRecords} />
-
-                {/* Bottom: Coffee Status Pie Chart */}
                 <CoffeeStatusPieChart coffeeRecords={filteredRecords} />
               </Box>
             </Grid>
