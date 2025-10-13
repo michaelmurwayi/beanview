@@ -11,7 +11,8 @@ import {
   Paper,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth0 } from "@auth0/auth0-react"; // ✅ import Auth0 hook
+import { useAuth0 } from "@auth0/auth0-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   PieChart,
@@ -92,7 +93,9 @@ const CoffeeStatusPieChart = ({ coffeeRecords }) => {
 const Overview = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const dispatch = useDispatch();
-  const { isAuthenticated, isLoading } = useAuth0(); // ✅ track Auth0 state
+  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const farmers = useSelector((state) => state.farmer.farmers || []);
   const coffeeRecords = useSelector(
@@ -118,7 +121,18 @@ const Overview = () => {
   const [filteredRecords, setFilteredRecords] = useState([]);
 
   // ==============================
-  // Fetch Farmers & Coffee AFTER Auth0 ready ✅
+  // 🔐 Redirect to login if not authenticated
+  // ==============================
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      loginWithRedirect({
+        appState: { returnTo: location.pathname },
+      });
+    }
+  }, [isAuthenticated, isLoading, loginWithRedirect, location.pathname]);
+
+  // ==============================
+  // Fetch Farmers & Coffee AFTER Auth0 ready
   // ==============================
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -174,7 +188,7 @@ const Overview = () => {
   ];
 
   // ==============================
-  // Render
+  // Render States
   // ==============================
   if (isLoading) {
     return (
@@ -193,21 +207,12 @@ const Overview = () => {
   }
 
   if (!isAuthenticated) {
-    return (
-      <Box
-        sx={{
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          fontSize: "1.2rem",
-        }}
-      >
-        Please log in to view the dashboard.
-      </Box>
-    );
+    return null; // Redirect in useEffect above
   }
 
+  // ==============================
+  // Main Render
+  // ==============================
   return (
     <Box sx={{ display: "flex", height: "100vh" }}>
       <CssBaseline />

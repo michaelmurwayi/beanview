@@ -25,7 +25,7 @@ const LogoutButton = () => {
       }}
       onClick={() =>
         logout({
-          logoutParams: { returnTo: window.location.origin + "/home" },
+          logoutParams: { returnTo: "https://cebba.ke/cebba" },
         })
       }
     >

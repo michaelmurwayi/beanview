@@ -37,6 +37,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         audience: "https://f90c6cbbfc26.ngrok-free.app/api", // ✅ must match Django API identifier in Auth0
       }}
       onRedirectCallback={onRedirectCallback}
+      cacheLocation="localstorage" // <---- important for preventing logout on reload
+      useRefreshTokens={true} // <---- important for long sessions
     >
       <Provider store={store}>
         <AuthWrapper>
