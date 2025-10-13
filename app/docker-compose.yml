@@ -1,0 +1,34 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: beanview
+      MYSQL_USER: huncho
+      MYSQL_PASSWORD: C11h28no3
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+
+  web:
+    build: .
+    container_name: django-api
+    command: /entrypoint.sh
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=beanview
+      - DB_USER=huncho
+      - DB_PASSWORD=C11h28no3
+    volumes:
+      - .:/app
+
+volumes:
+  mysql_data:
