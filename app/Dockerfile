@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libmariadb-dev \
     default-libmysqlclient-dev \
     pkg-config \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
