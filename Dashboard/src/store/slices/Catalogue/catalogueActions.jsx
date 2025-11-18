@@ -1,102 +1,84 @@
 // store/slices/catalogue/catalogueActions.js
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import { toast } from "react-toastify";
+import apiClient from "../../../../apiClient";
 import { generateAuctionFileFromData } from "../../../utils/generateAuctionFile";
+import { downloadBlobFile } from "../../../utils/downloadBlobFile";
 
+// 📘 Generate Catalogue File (backend)
 export const generateCatalogueFile = createAsyncThunk(
   "catalogue/generateCatalogueFile",
   async (catalogueData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/catalogue/generate_catalogue_file/",
+      const response = await apiClient.post(
+        "/catalogue/generate_catalogue_file/",
         catalogueData,
-        {
-          responseType: "blob", // Important for binary file download
-        }
+        { responseType: "blob" }
       );
 
-      // Return full response including headers for filename
-      return {
-        data: response.data,
-        headers: response.headers,
-      };
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"],
+      });
+      const contentDisposition = response.headers["content-disposition"];
+      const filename =
+        contentDisposition?.split("filename=")[1]?.replace(/["']/g, "").trim() ||
+        "catalogue.xlsx";
+
+      downloadBlobFile(blob, filename);
+      toast.success("Catalogue file downloaded successfully");
+
+      return { success: true, filename };
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      const message = error.response?.data || error.message;
+      toast.error("Catalogue file generation failed");
+      return rejectWithValue(message);
     }
   }
 );
 
+// 📘 Generate Auction File (frontend)
 export const generateAuctionFile = createAsyncThunk(
   "catalogue/generateAuctionFile",
   async (recordData, thunkAPI) => {
     try {
       console.log("Generating auction file with data:", recordData);
-      const { fileBlob, filename } = generateAuctionFileFromData(recordData); // ✅
+      const { fileBlob, filename } = generateAuctionFileFromData(recordData);
 
-      // Trigger download
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(fileBlob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      URL.revokeObjectURL(link.href);
-      document.body.removeChild(link);
+      downloadBlobFile(fileBlob, filename);
+      toast.success("Auction file downloaded");
 
-      return { fileBlob, filename }; // ✅ match actual return
+      return { success: true, filename };
     } catch (error) {
       console.error("Auction file generation error:", error);
+      toast.error("Failed to generate auction file");
       return thunkAPI.rejectWithValue("Failed to generate auction file.");
     }
   }
 );
 
-// Generate a summary based on sale records
+// 📘 Generate Sale File (backend)
 export const generateSaleFile = createAsyncThunk(
   "catalogue/generateSaleFile",
-
-  async (saleNumber, { getState, rejectWithValue }) => {
-    console.log(saleNumber);
+  async (saleNumber, { rejectWithValue }) => {
     try {
-      const url = `http://127.0.0.1:8000/api/catalogue/generate_sale_file/`;
-
-      // ✅ Request file as blob
-      const response = await axios.post(
-        url,
+      const response = await apiClient.post(
+        "/catalogue/generate_sale_file/",
         { saleNumber },
-        {
-          responseType: "blob",
-        }
+        { responseType: "blob" }
       );
 
-      // ✅ Extract filename from Content-Disposition header
       const contentDisposition = response.headers["content-disposition"];
-      let filename = "sale_files.zip"; // default fallback
+      const filename =
+        contentDisposition?.split("filename=")[1]?.replace(/["']/g, "").trim() ||
+        "sale_files.zip";
 
-      if (contentDisposition && contentDisposition.includes("filename=")) {
-        filename = contentDisposition
-          .split("filename=")[1]
-          .replace(/["']/g, "")
-          .trim();
-      }
-
-      // ✅ Create blob and trigger download
       const blob = new Blob([response.data], {
         type: response.headers["content-type"],
       });
-      const urlBlob = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = urlBlob;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      // Clean up blob URL
-      window.URL.revokeObjectURL(urlBlob);
+      downloadBlobFile(blob, filename);
 
       toast.success("Sale file downloaded");
-      return true;
+      return { success: true, filename };
     } catch (error) {
       const message =
         error.response?.data?.error || "Sale file generation failed";
@@ -105,4 +87,3 @@ export const generateSaleFile = createAsyncThunk(
     }
   }
 );
-

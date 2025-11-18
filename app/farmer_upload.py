@@ -33,9 +33,10 @@ def ImportFarmers(file_path):
                 print(f"❌ Required column '{col}' not found in the file.")
                 return
 
-        # Fix phone numbers (keep as string and pad with zeros)
+       # Ensure phone numbers stay strings and are zero-padded to 10 digits
         if 'phonenumber' in df.columns:
-            df['phonenumber'] = df['phonenumber'].astype('Int64').astype(str).str.zfill(10)
+            df['phonenumber'] = df['phonenumber'].astype(str).str.replace(r'\D', '', regex=True).str.zfill(10)
+
 
         # Fix account numbers (as string, drop decimals)
         if 'account' in df.columns:
@@ -85,5 +86,5 @@ def ImportFarmers(file_path):
         print(f"❌ Critical error: {e}")
 
 # Run the import
-file = os.path.expanduser('~/Downloads/farmers.xlsx')
+file = os.path.expanduser('./farmers.xlsx')
 ImportFarmers(file)

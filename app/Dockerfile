@@ -4,9 +4,12 @@
 
 FROM python:3.13-slim
 
+# Set working directory
 WORKDIR /app
 
-# System dependencies
+# -------------------------------
+# 1️⃣ Install system dependencies
+# -------------------------------
 RUN apt-get update && apt-get install -y \
     gcc \
     libmariadb-dev \
@@ -15,20 +18,33 @@ RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+# -------------------------------
+# 2️⃣ Install Python dependencies
+# -------------------------------
 COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-# Copy all project files
+# -------------------------------
+# 3️⃣ Copy source code
+# -------------------------------
 COPY . .
 
-# Copy entrypoint script
+# -------------------------------
+# 4️⃣ Ensure latest farmers.xlsx
+# -------------------------------
+# Copy AFTER the rest of the project to force Docker cache refresh
+# whenever this file changes
+COPY farmers.xlsx /app/farmers.xlsx
+
+# -------------------------------
+# 5️⃣ Entrypoint setup
+# -------------------------------
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Expose port
+# -------------------------------
+# 6️⃣ Expose port & run app
+# -------------------------------
 EXPOSE 8000
-
-# Run entrypoint
 ENTRYPOINT ["/entrypoint.sh"]

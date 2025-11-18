@@ -15,7 +15,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
   return (
-    <Router>
+    <Router basename="/dashboard">
       {/* Auth Buttons */}
 
       <Routes>

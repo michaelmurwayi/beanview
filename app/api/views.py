@@ -37,8 +37,6 @@ import tempfile
 from openpyxl.worksheet.worksheet import Worksheet
 from collections import defaultdict
 import logging
-from rest_framework.permissions import AllowAny
-
 
 logger = logging.getLogger(__name__)
 
@@ -51,12 +49,11 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
 
-
 @method_decorator(csrf_exempt, name='dispatch')
 class FarmersViewSet(viewsets.ModelViewSet):
     queryset = Farmer.objects.all()
     serializer_class = FarmerSerializer
-   
+    permission_classes = [IsAuthenticated]
     
     def list(self, request, *args, **kwargs):
         farmers = Farmer.objects.all()
@@ -90,7 +87,6 @@ class FarmersViewSet(viewsets.ModelViewSet):
 class CoffeeViewSet(viewsets.ModelViewSet):
     queryset = Coffee.objects.all()
     serializer_class = CoffeeSerializer
-    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         
@@ -486,7 +482,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['POST'])
     def generate_sale_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'sale_summary_template.xlsx')
-        START_ROW = 26
+        START_ROW = 25
 
         try:
             sale_number = request.data.get('saleNumber')["sale number"]
@@ -513,6 +509,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
                 grouped[mark].append(coffee)
             print(f"Grouped into {len(grouped)} marks")
             # ✅ Step 3: Generate Excel per mark
+         
             for mark, records in grouped.items():
                 if not records:
                     print(f"No records for mark {mark}, skipping")
@@ -538,7 +535,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
 
                 # Fill rows
                 for row_offset, record in enumerate(records, start=1):
-                    row = START_ROW 
+                    row = START_ROW + row_offset
                         
                     values = [
                         record.get('outturn'),

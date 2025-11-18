@@ -128,7 +128,7 @@ DATABASES = {
         'NAME': os.getenv('DATABASE_NAME', 'beanview'),
         'USER': os.getenv('DATABASE_USER', 'huncho'),
         'PASSWORD': os.getenv('DATABASE_PASSWORD', 'C11h28no3'),
-        'HOST': os.getenv('DATABASE_HOST', 'db'),  # 👈 use service name 'db'
+        'HOST': os.getenv('DATABASE_HOST', 'localhost'),  # 👈 use service name 'db'
         'PORT': os.getenv('DATABASE_PORT', '3306'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",

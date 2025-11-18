@@ -12,39 +12,47 @@ import re
 
 
 def process_uploaded_files(view, data, sheets):
-
     data_df, file_name = read.read_xls_file(data, sheets)
+
+    # Normalize column names
     for key, df in data_df.items():
         if 'W/H' in df.columns:
             df.rename(columns={'W/H': 'WAREHOUSE'}, inplace=True)
 
-
+    # Clean SALE NO column
     for key, df in data_df.items():
         if "SALE NO" in df.columns:
-            # Ensure values are numeric
             df["SALE NO"] = pd.to_numeric(df["SALE NO"], errors='coerce')
-
-            # Convert float .0 to int
             df["SALE NO"] = df["SALE NO"].apply(
-                lambda x: int(x) if pd.notnull(x) and x.is_integer() else x
+                lambda x: int(x) if pd.notnull(x) and float(x).is_integer() else x
             )
-
-            # Update the cleaned DataFrame back in the dictionary
             data_df[key] = df
 
+    # ✅ Select the first available sheet safely
+    available_sheets = list(data_df.keys())
+    if not available_sheets:
+        return Response({
+            "success": False,
+            "message": "No sheets found in the uploaded Excel file.",
+            "errors": []
+        }, status=status.HTTP_400_BAD_REQUEST)
 
-    data =  data_df[sheets[0]].to_dict(orient='records')
-    
+    first_sheet = available_sheets[0]
+    data = data_df[first_sheet].to_dict(orient='records')
+
+    # Compare with existing records
     existing_records = get_existing_records()
     new_records = filter_new_records(data, existing_records)
+
     if not new_records:
         return Response({
             "success": False,
             "message": "No new records to upload, all records already exist in the database.",
             "errors": []
         }, status=status.HTTP_400_BAD_REQUEST)
-    
+
     return process_records(view, new_records)
+
 
 def get_existing_records():
     return set(Coffee.objects.values_list('outturn', 'grade'))
