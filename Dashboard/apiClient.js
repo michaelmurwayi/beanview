@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+  import.meta.env.VITE_API_BASE_URL || "https://209.38.148.143/api/api";
 
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
@@ -13,7 +13,7 @@ export const attachAuthInterceptor = (getAccessTokenSilentlyFn) => {
   apiClient.interceptors.request.use(async (config) => {
     try {
       const token = await getAccessTokenSilentlyFn({
-        audience: "https://f90c6cbbfc26.ngrok-free.app/api",
+        audience: "https://209.38.148.143/api",
       });
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
