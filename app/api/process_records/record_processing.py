@@ -1,70 +1,28 @@
 from rest_framework.response import Response
 from ..models import Coffee, Mill, Warehouse, CoffeeStatus, Farmer
 from ..coffee import read_file as read
-from ..coffee import clean_masterlog_df as clean
-from ..coffee import check_pockets as pockets
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 import math
-import numpy as np
 import pandas as pd
 import re
 
+# ANSI color codes for logging
+RED = "\033[91m"
+YELLOW = "\033[93m"
+RESET = "\033[0m"
+BOLD = "\033[1m"
 
-def process_uploaded_files(view, data, sheets):
-    data_df, file_name = read.read_xls_file(data, sheets)
+# ------------------- Fields Config ------------------- #
+INT_FIELDS = ['BAGS', 'SALE', 'MILL']
+FLOAT_FIELDS = [
+    'POCKETS', 'KGS', 'PRICE', 'GROSS_VALUE', 'MILLING CHARGES',
+    'NET_PAY', 'EXPORT_CHARGES', 'TRANSPORT_CHARGES',
+    'WAREHOUSE_CHARGES', 'BROKERAGE_CHARGES'
+]
+NUMERIC_FIELDS = set(INT_FIELDS + FLOAT_FIELDS)
 
-    # Normalize column names
-    for key, df in data_df.items():
-        if 'W/H' in df.columns:
-            df.rename(columns={'W/H': 'WAREHOUSE'}, inplace=True)
-
-    # Clean SALE NO column
-    for key, df in data_df.items():
-        if "SALE NO" in df.columns:
-            df["SALE NO"] = pd.to_numeric(df["SALE NO"], errors='coerce')
-            df["SALE NO"] = df["SALE NO"].apply(
-                lambda x: int(x) if pd.notnull(x) and float(x).is_integer() else x
-            )
-            data_df[key] = df
-
-    # ✅ Select the first available sheet safely
-    available_sheets = list(data_df.keys())
-    if not available_sheets:
-        return Response({
-            "success": False,
-            "message": "No sheets found in the uploaded Excel file.",
-            "errors": []
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-    first_sheet = available_sheets[0]
-    data = data_df[first_sheet].to_dict(orient='records')
-
-    # Compare with existing records
-    existing_records = get_existing_records()
-    new_records = filter_new_records(data, existing_records)
-
-    if not new_records:
-        return Response({
-            "success": False,
-            "message": "No new records to upload, all records already exist in the database.",
-            "errors": []
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-    return process_records(view, new_records)
-
-
-def get_existing_records():
-    return set(Coffee.objects.values_list('outturn', 'grade'))
-
-def filter_new_records(cleaned_data, existing_records):
-    new_records = []
-    for record in cleaned_data:
-        if isinstance(record, dict) and (str(record.get('outturn', '')), str(record.get('grade', ''))) not in existing_records:
-            new_records.append(record)
-    return new_records
-
-
+# ------------------- Utility Functions ------------------- #
 def get_foreign_key_instance(model, field_name, value):
     if not value:
         return None
@@ -74,64 +32,33 @@ def get_foreign_key_instance(model, field_name, value):
         print(f"{field_name} '{value}' not found. Creating new instance.")
         return model.objects.create(name=value)
 
+def safe_float(val):
+    """Convert value to float safely for rounding."""
+    try:
+        if val is None or val == "" or (isinstance(val, float) and math.isnan(val)):
+            return 0.0
+        return float(val)
+    except (ValueError, TypeError):
+        return 0.0
+
+def safe_int(val):
+    """Convert value to int safely."""
+    try:
+        if val is None or val == "" or (isinstance(val, float) and math.isnan(val)):
+            return 0
+        return int(float(val))
+    except (ValueError, TypeError):
+        return 0
+
 def clean_nan_values(record):
     cleaned = {}
-    for key, value in record.items():
-        if value is None:
-            cleaned[key] = ""
-        elif isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
-            cleaned[key] = ""
-        elif isinstance(value, str) and value.strip().lower() in {"nan", "inf", "-inf"}:
-            cleaned[key] = ""
+    for k, v in record.items():
+        if v is None or (isinstance(v, float) and (math.isnan(v) or math.isinf(v))) or \
+           (isinstance(v, str) and v.strip().lower() in {"nan", "inf", "-inf"}):
+            cleaned[k] = 0 if k.upper() in NUMERIC_FIELDS else ""
         else:
-            cleaned[key] = value
+            cleaned[k] = v
     return cleaned
-
-import math
-
-def preprocess_record(record):
-    # Normalize column names (strip leading/trailing spaces)
-    record = {k.strip(): v for k, v in record.items()}
-
-    # Define which fields should be int and float
-    int_fields = ['BAGS', 'SALE', 'MILL']
-    float_fields = [
-        'Pockets', 'pockets', 'KGS', 'KGS ', 'PRICE',
-        'GROSS VALUE', 'MILLING CHARGES', 'NET PAY',
-        'export_charges', 'EXPORT_CHARGES',
-        'transport_charges', 'TRANSPORT_CHARGES',
-        'WAREHOUSE_CHARGES', 'BROKERAGE_CHARGES'
-    ]
-
-    for field in int_fields:
-        if field in record:
-            val = record[field]
-            try:
-                record[field] = int(float(val))
-            except (ValueError, TypeError):
-                record[field] = 0
-
-    for field in float_fields:
-        if field in record:
-            val = record[field]
-            try:
-                if val in [None, ''] or (isinstance(val, float) and math.isnan(val)):
-                    record[field] = 0.0
-                else:
-                    record[field] = float(val)
-            except (ValueError, TypeError):
-                record[field] = 0.0
-
-    return record
-
-def clean_nans(obj):
-    if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
-        return None
-    elif isinstance(obj, dict):
-        return {k: clean_nans(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [clean_nans(i) for i in obj]
-    return obj
 
 def clean_for_json(obj):
     if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
@@ -142,93 +69,144 @@ def clean_for_json(obj):
         return [clean_for_json(v) for v in obj]
     return obj
 
+def preprocess_record(record):
+    record = {k.strip(): v for k, v in record.items()}
+    for field in INT_FIELDS:
+        record[field] = safe_int(record.get(field, 0))
+    for field in FLOAT_FIELDS:
+        record[field] = safe_float(record.get(field, 0.0))
+    return record
+
+def log_validation_error(record, errors, failed_records):
+    print(f"{BOLD}{YELLOW}Validation error:{RESET} {record}")
+    print(f"{RED}Errors: {errors}{RESET}")
+    failed_records.append({"record": record, "errors": errors})
+
+def log_exception_error(record, exception, failed_records):
+    print(f"{BOLD}{YELLOW}Exception processing record:{RESET} {record}")
+    print(f"{RED}Exception: {exception}{RESET}")
+    failed_records.append({"record": record, "errors": {"error": str(exception)}})
+
+# ------------------- Main Functions ------------------- #
+
+def process_uploaded_files(view, data, sheets):
+    data_df, file_name = read.read_xls_file(data, sheets)
+
+    # Normalize column names
+    for key, df in data_df.items():
+        df.columns = [col.strip().upper() for col in df.columns]
+        if 'W/H' in df.columns:
+            df.rename(columns={'W/H': 'WAREHOUSE'}, inplace=True)
+
+    if not data_df:
+        return Response({
+            "success": False,
+            "message": "No sheets found in uploaded Excel file",
+            "errors": []
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    first_sheet = list(data_df.keys())[0]
+    data = data_df[first_sheet].to_dict(orient='records')
+
+    existing_records = get_existing_records()
+    new_records = filter_new_records(data, existing_records)
+
+    if not new_records:
+        return Response({
+            "success": False,
+            "message": "No new records to upload, all already exist",
+            "errors": []
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    return process_records(view, new_records)
+
+def get_existing_records():
+    return set(Coffee.objects.values_list('outturn', 'grade'))
+
+def filter_new_records(cleaned_data, existing_records):
+    new_records = []
+    for record in cleaned_data:
+        key = (str(record.get('OUTTURN', '')), str(record.get('GRADE', '')))
+        if key not in existing_records:
+            new_records.append(record)
+    return new_records
+
 def process_records(view, records):
     created_records, failed_records = [], []
     headers = None
-    
-    records = [preprocess_record(rec) for rec in records]
-
 
     for record in records:
-
-        record['BULKOUTTURN'] = ""
-        record["SALE"] = record.pop("SALE NUMBER")
-        record["MILL"] = record.pop("MILLING COMPANY")
-        # import ipdb; ipdb.set_trace()  # Set a breakpoint for debugging
-        record["WAREHOUSE_CHARGES"] = round(record.pop("WAREHOUSE CHARGES"), 1)
-        record["BROKERAGE_CHARGES"] = round(record.pop("BROKERAGE FEE + NCE FEE"), 1)
-        record["EXPORT_CHARGES"] = round(record.pop("SALE OF EXPORT BAGS"), 1)
-        record["TRANSPORT_CHARGES"] = round(record.pop("TRANSPORT +HANDLING CHARGES"), 1)
-        raw_mark = record.pop("MARKS").split('/')[0]
-        cleaned_mark = re.sub(r'\s+', ' ', raw_mark.strip())
-        record["MARK"] = cleaned_mark
-        
-
-             
         try:
+            record = preprocess_record(record)
+            record = clean_nan_values(record)
 
+            # Map fields
+            record['BULKOUTTURN'] = ""
+            record["SALE"] = safe_int(record.pop("SALE NUMBER", 0))
+            record["MILL"] = record.pop("MILLING COMPANY", "")
+            record["WAREHOUSE_CHARGES"] = round(safe_float(record.pop("WAREHOUSE CHARGES", 0.0)), 1)
+            record["BROKERAGE_CHARGES"] = round(safe_float(record.pop("BROKERAGE FEE + NCE FEE", 0.0)), 1)
+            record["EXPORT_CHARGES"] = round(safe_float(record.pop("SALE OF EXPORT BAGS", 0.0)), 1)
+            record["TRANSPORT_CHARGES"] = round(safe_float(record.pop("TRANSPORT +HANDLING CHARGES", 0.0)), 1)
+            raw_mark = record.pop("MARKS", "").split('/')[0]
+            record["MARK"] = re.sub(r'\s+', ' ', raw_mark.strip())
+            record["GROSS_VALUE"] = round(safe_float(record.get("GROSS VALUE", 0.0)), 1)
+            record["NET_VALUE"] = round(safe_float(record.pop("NET PAY", 0.0)), 1)
+
+            # Foreign keys
             record["MILL_ID"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
             record['TYPE'] = ""
             record["WAREHOUSE_ID"] = ""
             record["STATUS"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("STATUS")).pk
-            
-            lowercased_record = {k.lower(): v for k, v in record.items()}
-            serializer = view.get_serializer(data=lowercased_record)
+
+            serializer = view.get_serializer(data={k.lower(): v for k, v in record.items()})
             if serializer.is_valid(raise_exception=False):
                 view.perform_create(serializer)
                 created_records.append(serializer.data)
                 headers = view.get_success_headers(serializer.instance)
             else:
                 log_validation_error(record, serializer.errors, failed_records)
-                print(f"Validation errors for record: {record}")
+
         except Exception as e:
-            print(e)
             log_exception_error(record, e, failed_records)
+
     response_data = {
         "success": bool(created_records),
-        "message": "Some records were processed successfully." if created_records else "No records were created.",
+        "message": "Some records processed successfully" if created_records else "No records were created",
         "created_records": created_records,
         "failed_records": failed_records
     }
 
-    return Response(clean_for_json(response_data),status=status.HTTP_201_CREATED if created_records else status.HTTP_400_BAD_REQUEST,headers=headers or {})
+    return Response(clean_for_json(response_data),
+                    status=status.HTTP_201_CREATED if created_records else status.HTTP_400_BAD_REQUEST,
+                    headers=headers or {})
+
 def process_single_record(view, data):
     failed_records = []
-    mill = Mill.objects.filter(name=data["mill"]).values_list("id", flat=True).first()
-    data["mill_id"] = mill
-    serializer = view.get_serializer(data=data)
-    if serializer.is_valid(raise_exception=True):
-        view.perform_create(serializer)
-        created_records = [serializer.data]
-        headers = view.get_success_headers(serializer.instance)
-        return Response({
-            "success": True,
-            "message": "Record created successfully.",
-            "created_records": created_records,
-            "failed_records": []
-        }, status=status.HTTP_201_CREATED, headers=headers)
-    
-    failed_records.append({"record": data, "errors": serializer.errors})
+    try:
+        data = preprocess_record(data)
+        data = clean_nan_values(data)
+        mill = Mill.objects.filter(name=data.get("MILL", "")).values_list("id", flat=True).first()
+        data["MILL_ID"] = mill
+
+        serializer = view.get_serializer(data={k.lower(): v for k, v in data.items()})
+        if serializer.is_valid(raise_exception=True):
+            view.perform_create(serializer)
+            created_records = [serializer.data]
+            headers = view.get_success_headers(serializer.instance)
+            return Response({
+                "success": True,
+                "message": "Record created successfully.",
+                "created_records": created_records,
+                "failed_records": []
+            }, status=status.HTTP_201_CREATED, headers=headers)
+
+    except Exception as e:
+        log_exception_error(data, e, failed_records)
+
     return Response({
         "success": False,
         "message": "Failed to create record.",
         "created_records": [],
         "failed_records": failed_records
     }, status=status.HTTP_400_BAD_REQUEST)
-
-# ANSI color codes
-RED = "\033[91m"
-YELLOW = "\033[93m"
-RESET = "\033[0m"
-BOLD = "\033[1m"
-
-def log_validation_error(record, errors, failed_records):
-    print(f"{BOLD}{YELLOW}Validation error for record:{RESET} {record}")
-    print(f"{RED}Errors: {errors}{RESET}")
-    failed_records.append({"record": record, "errors": errors})
-
-def log_exception_error(record, exception, failed_records):
-    print(f"{BOLD}{YELLOW}Error processing record:{RESET} {record}")
-    print(f"{RED}Exception: {str(exception)}{RESET}")
-    failed_records.append({"record": record, "errors": {"error": str(exception)}})
-

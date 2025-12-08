@@ -1,30 +1,28 @@
-// src/apiClient.js
 import axios from "axios";
 
 const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || "https://209.38.148.143/api/api";
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api";
 
-const apiClient = axios.create({
-  baseURL: apiBaseUrl,
-});
+const apiClient = axios.create({ baseURL: apiBaseUrl });
 
-// Attach interceptor to include Auth0 token
-export const attachAuthInterceptor = (getAccessTokenSilentlyFn) => {
+export const attachAuthInterceptor = (getAccessTokenSilently, loginWithRedirect) => {
   apiClient.interceptors.request.use(async (config) => {
-    try {
-      const token = await getAccessTokenSilentlyFn({
-        audience: "https://209.38.148.143/api",
-      });
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      } else {
-        console.warn("⚠️ No token returned from Auth0");
-      }
-    } catch (err) {
-      console.error("Auth0 token fetch failed:", err);
+    // Try to fetch token silently, fallback to login redirect if it fails
+    const token = await getAccessTokenSilently({
+      audience: apiBaseUrl,
+    }).catch(() => {
+      loginWithRedirect();
+      return null; // stop request, user will be redirected
+    });
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   });
+
+  return apiClient;
 };
 
 export default apiClient;

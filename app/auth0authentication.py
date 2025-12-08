@@ -4,7 +4,7 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
 
 AUTH0_DOMAIN = "dev-xyz123.us.auth0.com"
-API_IDENTIFIER = "https://myapi.example.com/"
+API_IDENTIFIER = "http://127.0.0.1:8000/api"
 ALGORITHMS = ["RS256"]
 
 class Auth0JWTAuthentication(BaseAuthentication):

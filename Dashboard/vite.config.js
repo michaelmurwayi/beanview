@@ -10,6 +10,7 @@ export default defineConfig({
     allowedHosts: [
       "aa3a145cacab.ngrok-free.app",
       "192.168.1.128",
+      "209.38.148.143",
     ],
   },
 });
