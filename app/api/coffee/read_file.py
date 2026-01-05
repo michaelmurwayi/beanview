@@ -20,6 +20,7 @@ def read_xls_file(file, sheet_names):
 
             # Read the sheet starting from row 5 (index 4)
             data_df[sheet] = pd.read_excel(file_path, sheet_name=sheet)
+            
             print(f"Sheet '{sheet}' loaded successfully.")
         except FileNotFoundError:
             print(f"File '{file_name}' not found.")

@@ -16,15 +16,13 @@ import {
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import CloseIcon from "@mui/icons-material/Close";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { useEffect, useState } from "react";
 import { updateCoffee } from "../../store/slices/Coffee/coffeeActions";
 import {
   generateCatalogueFile,
   generateAuctionFile,
   generateSaleFile,
-} from '../../store/slices/Catalogue/catalogueActions';
+} from "../../store/slices/Catalogue/catalogueActions";
 
 const CatalogueModalSummary = ({
   open,
@@ -32,7 +30,7 @@ const CatalogueModalSummary = ({
   groupedData,
   loading = false,
   sale,
-  title = 'Catalogue Summary',
+  title = "Catalogue Summary",
 }) => {
   const dispatch = useDispatch();
   const [localRecords, setLocalRecords] = useState([]);
@@ -61,43 +59,82 @@ const CatalogueModalSummary = ({
   };
 
   const GRADE_ORDER = [
-    "T",
-    "TT",
-    "C",
-    "AB",
-    "PB",
-    "E",
-    "AA",
-    "SB",
-    "HE",
-    "UG3",
-    "UG2",
-    "UG1",
-    "UG",
-    "NL",
-    "ML",
+    "T", "TT", "C", "AB", "PB", "E", "AA", "SB", "HE",
+    "UG3", "UG2", "UG1", "UG", "NL", "ML",
   ];
 
+  /** ---------------------- BULKING ---------------------- */
+  const handleBulking = (recordsList) => {
+    if (!Array.isArray(recordsList) || recordsList.length === 0) return [];
+
+    const safeNumber = (v) => (isNaN(Number(v)) ? 0 : Number(v));
+    const groups = {};
+
+    // Normalize and group
+    recordsList.forEach((rec) => {
+      const outturn = rec.outturn?.trim().toUpperCase();
+      const grade = rec.grade?.trim().toUpperCase();
+      const key = `${outturn}-${grade}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(rec);
+    });
+
+    const finalList = [];
+
+    Object.values(groups).forEach((group) => {
+      const base = group[0];
+      if (group.length === 1) {
+        // Only one record, no bulking
+        finalList.push(base);
+      } else {
+        // Multiple records -> bulk
+        const totalWeight = group.reduce((sum, r) => sum + safeNumber(r.weight), 0);
+        const totalBags = Math.ceil(totalWeight / 60);
+
+        finalList.push({
+          ...base,
+          weight: totalWeight,
+          bags: totalBags,
+          mark: `${base.grade} / Bulk`,
+          bulked: true,
+          pockets: base.pockets,
+          type: base.type,
+          sale: base.sale,
+          season: base.season,
+          certificate: base.certificate,
+          mill: base.mill,
+          warehouse: base.warehouse,
+          price: base.price,
+          buyer: base.buyer,
+          status: base.status,
+        });
+      }
+    });
+
+    return finalList;
+  };
+
+  /** ---------------------- useEffect ---------------------- */
   useEffect(() => {
     if (open && groupedData) {
       const dataArray = Array.isArray(groupedData)
         ? groupedData
         : Object.values(groupedData);
 
+      // Sort by grade order
       const sortedArray = dataArray.slice().sort((a, b) => {
-        const aIndex = GRADE_ORDER.indexOf(a.grade);
-        const bIndex = GRADE_ORDER.indexOf(b.grade);
-        return (
-          (aIndex === -1 ? Infinity : aIndex) -
-          (bIndex === -1 ? Infinity : bIndex)
-        );
+        const aIndex = GRADE_ORDER.indexOf(a.grade?.trim().toUpperCase());
+        const bIndex = GRADE_ORDER.indexOf(b.grade?.trim().toUpperCase());
+        return (aIndex === -1 ? Infinity : aIndex) -
+               (bIndex === -1 ? Infinity : bIndex);
       });
 
+      const bulked = handleBulking(sortedArray);
       setLocalRecords(sortedArray);
     }
   }, [open, groupedData]);
 
-  // Shared helper for both functions
+  /** ---------------------- Helpers ---------------------- */
   const getUpdatedRecords = () =>
     localRecords.map((rec, index) => ({
       ...rec,
@@ -105,10 +142,10 @@ const CatalogueModalSummary = ({
       agent_code: 49,
     }));
 
+  /** ---------------------- GENERATE FILES ---------------------- */
   const generateCatalogue = async () => {
     try {
       const updated = getUpdatedRecords();
-
       for (const rec of updated) {
         try {
           await dispatch(updateCoffee(rec)).unwrap();
@@ -118,28 +155,16 @@ const CatalogueModalSummary = ({
       }
 
       const resultAction = await dispatch(generateCatalogueFile(updated));
-
       if (generateCatalogueFile.fulfilled.match(resultAction)) {
         const { data, headers } = resultAction.payload;
-
-        const blob = new Blob([data], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-
+        const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
         const url = window.URL.createObjectURL(blob);
-        const disposition = headers["content-disposition"];
-        const match = disposition?.match(/filename="?(.+?)"?$/);
-        const filename = match ? match[1] : "catalogue.xlsx";
-
+        const filename = headers["content-disposition"]?.match(/filename="?(.+?)"?$/)?.[1] || "catalogue.xlsx";
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", filename);
-        document.body.appendChild(link);
+        link.download = filename;
         link.click();
-        link.remove();
         window.URL.revokeObjectURL(url);
-      } else {
-        console.error("Catalogue generation failed:", resultAction.payload);
       }
     } catch (error) {
       console.error("Error downloading catalogue:", error);
@@ -149,79 +174,45 @@ const CatalogueModalSummary = ({
   const handleGenerateAuction = async () => {
     try {
       const updated = getUpdatedRecords();
-
-      const result = await dispatch(generateAuctionFile(updated));
-      if (generateAuctionFile.fulfilled.match(result)) {
-        setFeedback({
-          open: true,
-          message: "Auction files generated and downloaded.",
-          severity: "success",
-        });
-      } else {
-        throw new Error(result.payload || "Auction file generation failed");
-      }
+      const res = await dispatch(generateAuctionFile(updated));
+      if (generateAuctionFile.fulfilled.match(res)) {
+        setFeedback({ open: true, message: "Auction files generated.", severity: "success" });
+      } else throw new Error(res.payload || "Auction failed");
     } catch (err) {
-      console.error("Auction generation error:", err);
-      setFeedback({
-        open: true,
-        message: "Failed to generate auction file.",
-        severity: "error",
-      });
+      console.error(err);
+      setFeedback({ open: true, message: "Failed to generate auction file.", severity: "error" });
     }
   };
+
   const handleGenerateSaleFile = async () => {
-  try {
-    console.log(sale)
-    const updated = getUpdatedRecords(); // however you prepare sale records
-    const resultAction = await dispatch(generateSaleFile({"sale number": sale}));
-
-    // ✅ check the correct thunk
-    if (generateSaleFile.fulfilled.match(resultAction)) {
-      const { data, headers } = resultAction.payload;
-
-      const blob = new Blob([data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-
-      const url = window.URL.createObjectURL(blob);
-      const disposition = headers['content-disposition'];
-      const match = disposition?.match(/filename="?(.+?)"?$/);
-      const filename = match ? match[1] : 'sale_summary.xlsx'; // ✅ correct fallback
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } else {
-      console.error('Sale summary generation failed:', resultAction.payload);
+    try {
+      const resultAction = await dispatch(generateSaleFile({ "sale number": sale }));
+      if (generateSaleFile.fulfilled.match(resultAction)) {
+        const { data, headers } = resultAction.payload;
+        const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        const url = window.URL.createObjectURL(blob);
+        const filename = headers["content-disposition"]?.match(/filename="?(.+?)"?$/)?.[1] || "sale_summary.xlsx";
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error("Sale summary error:", err);
     }
-  } catch (error) {
-    console.error('Error downloading sale summary:', error);
-  }
-};
-
+  };
 
   const handleDelete = (rec) => {
-    const updated = localRecords.filter((r) => r.id !== rec.id);
-    setLocalRecords(updated);
+    setLocalRecords(localRecords.filter((r) => r.id !== rec.id));
     setFeedback({ open: true, message: "Item removed.", severity: "success" });
   };
 
+  /** ---------------------- UI ---------------------- */
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
-        <DialogTitle
-          sx={{
-            bgcolor: "#121330",
-            color: "#fff",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
+        <DialogTitle sx={{ bgcolor: "#121330", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           {title}
           <IconButton onClick={onClose} size="small" sx={{ color: "white" }}>
             <CloseIcon />
@@ -230,65 +221,21 @@ const CatalogueModalSummary = ({
 
         <DialogContent dividers sx={{ backgroundColor: "#f5f5f5" }}>
           <Box display="flex" gap={1} mb={2}>
-            <Button
-              variant="outlined"
-              onClick={generateCatalogue}
-              size="small"
-              sx={{
-                fontSize: "0.7rem",
-                backgroundColor: "#f0f0f0",
-                color: "#121330",
-                textTransform: "none",
-              }}
-            >
-              Generate Catalogue
-            </Button>
-
-            <Button
-              variant="outlined"
-              onClick={handleGenerateAuction}
-              size="small"
-              sx={{
-                fontSize: "0.7rem",
-                backgroundColor: "#e3f2fd",
-                color: "#121330",
-                textTransform: "none",
-              }}
-            >
-              Generate Auction File
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => handleGenerateSaleFile()}
-              size="small"
-              sx={{
-                fontSize: '0.7rem',
-                backgroundColor: '#FFA500',
-                color: 'white',
-                fontWeight: 'bold',
-                textTransform: 'none',
-              }}
-            >
-              Generate Sale Summary
-            </Button>
+            <Button variant="outlined" onClick={generateCatalogue} size="small">Generate Catalogue</Button>
+            <Button variant="outlined" onClick={handleGenerateAuction} size="small">Generate Auction File</Button>
+            <Button variant="outlined" onClick={handleGenerateSaleFile} size="small" sx={{ backgroundColor: "#FFA500", color: "white" }}>Generate Sale Summary</Button>
           </Box>
 
           {loading ? (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              minHeight="200px"
-            >
+            <Box display="flex" justifyContent="center" minHeight="200px">
               <CircularProgress />
             </Box>
           ) : (
-            <Table size="small" sx={{ mt: 1, backgroundColor: "#fff" }}>
+            <Table size="small">
               <TableHead>
                 <TableRow>
                   <TableCell>Lot</TableCell>
                   <TableCell>Outturn</TableCell>
-                  <TableCell>Bulkoutturn</TableCell>
                   <TableCell>Mark</TableCell>
                   <TableCell>Type</TableCell>
                   <TableCell>Grade</TableCell>
@@ -303,15 +250,14 @@ const CatalogueModalSummary = ({
                   <TableCell>Price</TableCell>
                   <TableCell>Buyer</TableCell>
                   <TableCell>Status</TableCell>
-                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
                 {localRecords.map((rec, index) => (
                   <TableRow key={rec.id || index}>
                     <TableCell>{7301 + index}</TableCell>
                     <TableCell>{rec.outturn}</TableCell>
-                    <TableCell>{rec.bulkoutturn}</TableCell>
                     <TableCell>{rec.mark}</TableCell>
                     <TableCell>{rec.type}</TableCell>
                     <TableCell>{rec.grade}</TableCell>
@@ -334,17 +280,8 @@ const CatalogueModalSummary = ({
         </DialogContent>
       </Dialog>
 
-      <Snackbar
-        open={feedback.open}
-        autoHideDuration={3000}
-        onClose={() => setFeedback({ ...feedback, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setFeedback({ ...feedback, open: false })}
-          severity={feedback.severity}
-          sx={{ width: "100%" }}
-        >
+      <Snackbar open={feedback.open} autoHideDuration={3000} onClose={() => setFeedback({ ...feedback, open: false })}>
+        <Alert severity={feedback.severity} onClose={() => setFeedback({ ...feedback, open: false })}>
           {feedback.message}
         </Alert>
       </Snackbar>

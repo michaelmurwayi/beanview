@@ -91,14 +91,14 @@ def log_exception_error(record, exception, failed_records):
 
 def process_uploaded_files(view, data, sheets):
     data_df, file_name = read.read_xls_file(data, sheets)
-
     # Normalize column names
     for key, df in data_df.items():
         df.columns = [col.strip().upper() for col in df.columns]
         if 'W/H' in df.columns:
             df.rename(columns={'W/H': 'WAREHOUSE'}, inplace=True)
-
+    
     if not data_df:
+        
         return Response({
             "success": False,
             "message": "No sheets found in uploaded Excel file",
@@ -112,6 +112,7 @@ def process_uploaded_files(view, data, sheets):
     new_records = filter_new_records(data, existing_records)
 
     if not new_records:
+        print("No new records to upload, all already exist ")
         return Response({
             "success": False,
             "message": "No new records to upload, all already exist",
@@ -144,6 +145,7 @@ def process_records(view, records):
             record['BULKOUTTURN'] = ""
             record["SALE"] = safe_int(record.pop("SALE NUMBER", 0))
             record["MILL"] = record.pop("MILLING COMPANY", "")
+            record["MILLING_CHARGES"] = round(safe_float(record.pop("MILLING CHARGES", 0.0)), 1)
             record["WAREHOUSE_CHARGES"] = round(safe_float(record.pop("WAREHOUSE CHARGES", 0.0)), 1)
             record["BROKERAGE_CHARGES"] = round(safe_float(record.pop("BROKERAGE FEE + NCE FEE", 0.0)), 1)
             record["EXPORT_CHARGES"] = round(safe_float(record.pop("SALE OF EXPORT BAGS", 0.0)), 1)
@@ -153,10 +155,12 @@ def process_records(view, records):
             record["GROSS_VALUE"] = round(safe_float(record.get("GROSS VALUE", 0.0)), 1)
             record["NET_VALUE"] = round(safe_float(record.pop("NET PAY", 0.0)), 1)
 
+            
             # Foreign keys
             record["MILL_ID"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
             record['TYPE'] = ""
-            record["WAREHOUSE_ID"] = ""
+            
+            record["WAREHOUSE_ID"] = get_foreign_key_instance(Warehouse, "Warehouse", record.get("WAREHOUSE")).pk
             record["STATUS"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("STATUS")).pk
 
             serializer = view.get_serializer(data={k.lower(): v for k, v in record.items()})
