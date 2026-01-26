@@ -101,6 +101,7 @@ const ViewFarmers = () => {
 
   /** Update Farmer */
   const handleUpdate = () => {
+    (selectedRecord.id)
     if (!selectedRecord.id) return;
     dispatch(updateFarmer([selectedRecord]));
     setShowEditModal(false);

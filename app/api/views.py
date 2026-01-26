@@ -54,6 +54,8 @@ class FarmersViewSet(viewsets.ModelViewSet):
     queryset = Farmer.objects.all()
     serializer_class = FarmerSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+    
     
     def list(self, request, *args, **kwargs):
         farmers = Farmer.objects.all()

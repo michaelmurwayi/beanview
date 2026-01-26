@@ -135,7 +135,7 @@ def filter_new_records(cleaned_data, existing_records):
 def process_records(view, records):
     created_records, failed_records = [], []
     headers = None
-
+    
     for record in records:
         try:
             record = preprocess_record(record)
@@ -144,13 +144,14 @@ def process_records(view, records):
             # Map fields
             record['BULKOUTTURN'] = ""
             record["SALE"] = safe_int(record.pop("SALE NUMBER", 0))
+            record["season"] = record.pop("SEASON", "")
             record["MILL"] = record.pop("MILLING COMPANY", "")
             record["MILLING_CHARGES"] = round(safe_float(record.pop("MILLING CHARGES", 0.0)), 1)
             record["WAREHOUSE_CHARGES"] = round(safe_float(record.pop("WAREHOUSE CHARGES", 0.0)), 1)
             record["BROKERAGE_CHARGES"] = round(safe_float(record.pop("BROKERAGE FEE + NCE FEE", 0.0)), 1)
             record["EXPORT_CHARGES"] = round(safe_float(record.pop("SALE OF EXPORT BAGS", 0.0)), 1)
             record["TRANSPORT_CHARGES"] = round(safe_float(record.pop("TRANSPORT +HANDLING CHARGES", 0.0)), 1)
-            raw_mark = record.pop("MARKS", "").split('/')[0]
+            raw_mark = record.pop("MARKS", "").replace("–", "-").split('/')[0]
             record["MARK"] = re.sub(r'\s+', ' ', raw_mark.strip())
             record["GROSS_VALUE"] = round(safe_float(record.get("GROSS VALUE", 0.0)), 1)
             record["NET_VALUE"] = round(safe_float(record.pop("NET PAY", 0.0)), 1)
@@ -160,9 +161,11 @@ def process_records(view, records):
             record["MILL_ID"] = get_foreign_key_instance(Mill, "Mill", record.get("MILL")).pk
             record['TYPE'] = ""
             
+            
             record["WAREHOUSE_ID"] = get_foreign_key_instance(Warehouse, "Warehouse", record.get("WAREHOUSE")).pk
             record["STATUS"] = get_foreign_key_instance(CoffeeStatus, "CoffeeStatus", record.get("STATUS")).pk
 
+            print("mark", record.get("MARK"), len(record.get("MARK")))
             serializer = view.get_serializer(data={k.lower(): v for k, v in record.items()})
             if serializer.is_valid(raise_exception=False):
                 view.perform_create(serializer)
@@ -173,7 +176,6 @@ def process_records(view, records):
 
         except Exception as e:
             log_exception_error(record, e, failed_records)
-
     response_data = {
         "success": bool(created_records),
         "message": "Some records processed successfully" if created_records else "No records were created",

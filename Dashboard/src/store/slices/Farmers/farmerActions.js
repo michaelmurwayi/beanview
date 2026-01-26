@@ -76,8 +76,9 @@ export const updateFarmer = createAsyncThunk(
   "farmers/update",
   async (farmer, { rejectWithValue }) => {
     try {
-      const { id, ...payload } = farmer;
-      const response = await apiClient.put(`/farmers/${id}/`, payload);
+      const id = farmer[0].id;
+      const payload  = farmer[0];
+      const response = await apiClient.patch(`/farmers/${id}/`, payload);
       return response.data;
     } catch (error) {
       return rejectWithValue(
