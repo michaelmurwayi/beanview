@@ -105,7 +105,7 @@ class Coffee(models.Model):
     lot = models.CharField(max_length=100, default="", db_index=True)
     outturn = models.CharField(max_length=100)
     bulkoutturn = models.CharField(max_length=100, default="", blank=True)
-    mark = models.ForeignKey('Farmer', to_field='mark', on_delete=models.SET_NULL, null=True, blank=True, related_name='coffees')
+    code = models.ForeignKey('Farmer', to_field='code', on_delete=models.SET_NULL, null=True, blank=True, related_name='coffee')
     type = models.CharField(max_length=100, default="", blank=True, null=True)
     grade = models.CharField(max_length=50, default="")
     bags = models.IntegerField(null=True, blank=True, default=0)

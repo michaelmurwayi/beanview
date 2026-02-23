@@ -37,6 +37,9 @@ import tempfile
 from openpyxl.worksheet.worksheet import Worksheet
 from collections import defaultdict
 import logging
+from openpyxl.drawing.image import Image as XLImage
+import shutil
+
 
 logger = logging.getLogger(__name__)
 
@@ -180,9 +183,30 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": f"Error fetching daily deliveries: {str(e)}"}, status=400)
 
+  
     # generate stock summary from farmer records
-        
     @action(detail=False, methods=['POST'])
+    def add_company_logo(ws, logo_path):
+
+        logo = XLImage(logo_path)
+
+        total_width = 0
+        for col in range(5, 13):  # E to L
+            total_width += ws.column_dimensions[
+                chr(64 + col)
+            ].width or 8
+
+        total_height = 0
+        for row in range(1, 10):
+            total_height += ws.row_dimensions[row].height or 15
+
+        logo.width = total_width * 7
+        logo.height = total_height * 1.3
+
+        logo.anchor = "E1"
+
+        ws.add_image(logo)
+
     def generate_summary_file(self, request, *args, **kwargs):
         TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock_summary_template.xlsx')
         START_ROW = 32
@@ -214,7 +238,6 @@ class CoffeeViewSet(viewsets.ModelViewSet):
 
                 wb = load_workbook(TEMPLATE_PATH)
                 ws = wb.active
-
                 # Set mark name in cell B6
                 ws['B3'] = code
                 ws['B4'] = mark
@@ -400,246 +423,359 @@ def replace_warehouse_ids_with_names(df):
     return df
 
 class CatalogueViewSet(viewsets.ModelViewSet):
+
     queryset = Catalogue.objects.all()
     serializer_class = CatalogueSerializer
 
-    
-    @action(detail=False, methods=['POST'])     
-    def generate_auction_file(self, request, *args, **kwargs):
+
+    def add_company_logo(self, ws: Worksheet, logo_path: str) -> None:
+        """
+        Add company logo to worksheet spanning E1:L9
+        """
+
         try:
-            sale_number = request.data.get("sale")
-            records = request.data.get("records", [])
-            
-            if not sale_number or not records:
-                raise ValidationError("Both 'sale' and 'records' are required and must not be empty.")
 
-            # Create directory for this sale
-            sale_dir = os.path.join(settings.MEDIA_ROOT, 'auctions', str(sale_number))
-            os.makedirs(sale_dir, exist_ok=True)
+            if not os.path.exists(logo_path):
 
-            # Get all status IDs
-            status_ids = {record.get("status") for record in records if record.get("status") is not None}
-            status_map = {
-                status.id: status.name
-                for status in CoffeeStatus.objects.filter(id__in=status_ids)
-            }
+                logger.warning(
+                    f"Logo file not found: {logo_path}"
+                )
 
+                return
 
-            # Prepare file path
-            filename = f"auction_{sale_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-            file_path = os.path.join(sale_dir, filename)
+            logo = XLImage(logo_path)
 
-            # Create new workbook and worksheet
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Auction File"
+            total_width = sum(
+                ws.column_dimensions.get(chr(64 + col)).width or 8
+                for col in range(5, 13)
+            )
 
-            
-            # Header
-            headers = [
-                'Lot', 'Mark', 'Grade', 'Bags',
-                'Pockets', 'Weight', 'Sale Number', 'Season', 'Certificate',
-                'Agent Code','Remarks'
-            ]
-            ws.append(headers)
+            total_height = sum(
+                ws.row_dimensions.get(row).height or 15
+                for row in range(1, 10)
+            )
 
-            for record in records:
-        
-                status_id = record.get("status")
-                status_name = status_map.get(status_id, "")
-                Agent_Code = "049"
-                remarks = ""
-                
-                values = [
-                    record.get("lot"),
-                    record.get("mark"),
-                    record.get("grade"),
-                    record.get("bags"),
-                    record.get("pockets"),
-                    record.get("weight"),
-                    record.get("sale"),
-                    record.get("season"),
-                    record.get("certificate"),
-                    Agent_Code,
-                    remarks,
-                ]
-                ws.append(values)
+            logo.width = total_width * 7
+            logo.height = total_height * 1.3
+            logo.anchor = "E1"
 
-            wb.save(file_path)
+            ws.add_image(logo)
 
-            return Response({
-                "message": "Auction file generated",
-                "file": file_path
-            }, status=status.HTTP_200_OK)
-
-        except ValidationError as e:
-            traceback.print_exc()
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            logger.info("Company logo added successfully")
 
         except Exception as e:
-            traceback.print_exc()
-            return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
+            logger.exception(
+                f"Failed to add company logo: {str(e)}"
+            )
+
+
     @action(detail=False, methods=['POST'])
     def generate_sale_file(self, request, *args, **kwargs):
-        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'sale_summary_template.xlsx')
-        START_ROW = 25
+
+        TEMPLATE_PATH = os.path.join(
+            settings.MEDIA_ROOT,
+            "templates",
+            "sale_summary_template.xlsx"
+        )
+
+        LOGO_PATH = os.path.join(
+            settings.MEDIA_ROOT,
+            "templates",
+            "logo.png"
+        )
+
+        START_ROW = 24
+
 
         try:
-            sale_number = request.data.get('saleNumber')["sale number"]
-            if not sale_number:
-                raise ValidationError("Sale Number' is required and must not be empty.")
 
-            base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
-            os.makedirs(base_dir, exist_ok=True)
+            sale_data = request.data.get("saleNumber")
+
+            if not sale_data:
+
+                raise ValidationError(
+                    "saleNumber is required"
+                )
+
+            sale_number = sale_data.get("sale number")
+
+            if not sale_number:
+
+                raise ValidationError(
+                    "Sale Number must not be empty"
+                )
+
+
+            logger.info(
+                f"Generating sale file for sale: {sale_number}"
+            )
+
+
+            base_dir = os.path.join(
+                settings.MEDIA_ROOT,
+                "summaries"
+            )
+
+            os.makedirs(
+                base_dir,
+                exist_ok=True
+            )
+
 
             generated_files = []
 
-            # ✅ Step 1: Get coffees for this sale
-            coffees = Coffee.objects.filter(sale=sale_number).select_related("mark")
-            serializer = CoffeeSerializer(coffees, many=True)
+
+            coffees = Coffee.objects.filter(
+                sale=sale_number
+            ).select_related("code")
+
+
+            serializer = CoffeeSerializer(
+                coffees,
+                many=True
+            )
+
             coffees_data = serializer.data
-            print( f"Fetched {len(coffees_data)} coffee records for sale {sale_number}")
-            # ✅ Step 2: Group coffees by mark
-            
+
+
+            logger.info(
+                f"Fetched {len(coffees_data)} coffee records"
+            )
+
+
             grouped = {}
+
             for coffee in coffees_data:
-                mark = coffee.get("mark")
-                if mark not in grouped:
-                    grouped[mark] = []
-                grouped[mark].append(coffee)
-            print(f"Grouped into {len(grouped)} marks")
-            # ✅ Step 3: Generate Excel per mark
-         
-            for mark, records in grouped.items():
-                if not records:
-                    print(f"No records for mark {mark}, skipping")
+
+                code = coffee.get("code")
+
+                if not code:
+
+                    logger.warning(
+                        "Skipping coffee record with no code"
+                    )
+
                     continue
 
-                farmer = records[0].get("farmer")
-                code = farmer.get("code")
-                
-                mark_dir = os.path.join(base_dir, mark)
-                os.makedirs(mark_dir, exist_ok=True)
+                grouped.setdefault(
+                    code,
+                    []
+                ).append(coffee)
 
-                filename = f"{mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-                file_path = os.path.join(mark_dir, filename)
 
-                wb = load_workbook(TEMPLATE_PATH)
-                ws = wb.active
+            logger.info(
+                f"Grouped into {len(grouped)} codes"
+            )
 
-                # Set mark + code
-                ws['B1'] = code
-                ws['B2'] = mark
-                ws['B3'] = sale_number
-                
 
-                # Fill rows
-                for row_offset, record in enumerate(records, start=1):
-                    row = START_ROW + row_offset
-                        
-                    values = [
-                        record.get('outturn'),
-                        record.get('season'),
-                        record.get('bags'),
-                        record.get('pockets'),
-                        record.get('weight'),
-                        record.get('grade'),
-                        record.get('price'),
-                        record.get('gross_value'),
-                        record.get('warehouse_charges'),
-                        record.get('brokerage_charges'),
-                        record.get('milling_charges'),
-                        record.get('mill'),
-                        record.get('export_charges'),
-                        record.get('transport_charges'),
-                        record.get('net_pay'), 
-                    ]
+            for code, records in grouped.items():
 
-                    for col_index, value in enumerate(values, start=1):
-                        cell = ws.cell(row=row, column=col_index)
-                        if isinstance(cell, MergedCell):
-                            continue
-                        cell.value = value
+                try:
 
-                wb.save(file_path)
-                print(f"Generated file: {file_path}")
-                generated_files.append(file_path)
+                    if not records:
 
-            # ✅ Step 4: Create ZIP in memory
+                        continue
+
+
+                    mark = (
+                        records[0]
+                        .get("farmer", {})
+                        .get("mark")
+                    )
+
+
+                    code_dir = os.path.join(
+                        base_dir,
+                        code
+                    )
+
+                    os.makedirs(
+                        code_dir,
+                        exist_ok=True
+                    )
+
+
+                    filename = (
+                        f"{code}_summary_"
+                        f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                    )
+
+
+                    file_path = os.path.join(
+                        code_dir,
+                        filename
+                    )
+
+
+                    shutil.copy(
+                        TEMPLATE_PATH,
+                        file_path
+                    )
+
+
+                    wb = load_workbook(
+                        file_path,
+                        data_only=False,
+                        keep_vba=True
+                    )
+
+
+                    ws = wb.active
+
+
+                    # Optional logo
+                    # self.add_company_logo(ws, LOGO_PATH)
+
+
+                    ws["B1"].value = code
+                    ws["B2"].value = mark
+                    ws["B3"].value = sale_number
+
+
+                    for row_offset, record in enumerate(
+                        records,
+                        start=1
+                    ):
+
+                        row = START_ROW + row_offset
+
+
+                        values = [
+
+                            record.get("outturn"),
+                            record.get("season"),
+                            record.get("bags"),
+                            record.get("pockets"),
+                            record.get("weight"),
+                            record.get("grade"),
+                            record.get("price"),
+                            record.get("gross_value"),
+                            record.get("warehouse_charges"),
+                            record.get("brokerage_charges"),
+                            record.get("milling_charges"),
+                            record.get("mill"),
+                            record.get("export_charges"),
+                            record.get("transport_charges"),
+                            record.get("net_value"),
+
+                        ]
+
+
+                        for col_index, value in enumerate(
+                            values,
+                            start=1
+                        ):
+
+                            cell = ws.cell(
+                                row=row,
+                                column=col_index
+                            )
+
+
+                            if isinstance(
+                                cell,
+                                MergedCell
+                            ):
+                                continue
+
+
+                            cell.value = value
+
+
+                    wb.save(file_path)
+
+
+                    generated_files.append(
+                        file_path
+                    )
+
+
+                    logger.info(
+                        f"Generated file: {file_path}"
+                    )
+
+
+                except Exception as e:
+
+                    logger.exception(
+                        f"Failed generating file for code {code}: {str(e)}"
+                    )
+
+
+            if not generated_files:
+
+                raise ValidationError(
+                    "No files were generated"
+                )
+
+
             zip_buffer = BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+
+
+            with zipfile.ZipFile(
+                zip_buffer,
+                "w"
+            ) as zip_file:
+
                 for file_path in generated_files:
-                    arcname = os.path.basename(file_path)
-                    zip_file.write(file_path, arcname=arcname)
+
+                    zip_file.write(
+                        file_path,
+                        os.path.basename(file_path)
+                    )
+
 
             zip_buffer.seek(0)
 
-            # ✅ Step 5: Return as downloadable ZIP
-            return FileResponse(
-                zip_buffer,
-                as_attachment=True,
-                filename=f"stock_summaries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
-                content_type='application/zip'
+
+            logger.info(
+                "ZIP file generated successfully"
             )
 
+
+            return FileResponse(
+
+                zip_buffer,
+
+                as_attachment=True,
+
+                filename=(
+                    "stock_summaries_"
+                    f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+                ),
+
+                content_type="application/zip"
+
+            )
+
+
         except ValidationError as e:
-            traceback.print_exc()
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        except Exception as e:
-            traceback.print_exc()
-            return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.warning(str(e))
 
-    @action(detail=False, methods=['POST'])
-    def generate_catalogue_file(self, request):
-        catalogue_data = request.data  # Expecting a list of records
-
-        if not isinstance(catalogue_data, list) or not catalogue_data:
-            return Response({"error": "Invalid or empty catalogue data."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'catalogue_template.xlsx')
-            wb = load_workbook(TEMPLATE_PATH)
-            ws = wb.active  # Assuming writing to the first worksheet
-            
-
-            # Start writing at row 2 (assuming row 1 is headers)
-            
-            START_ROW = 84
-
-            for idx, item in enumerate(catalogue_data, start=START_ROW):
-                ws.cell(row=idx, column=1).value = item.get('lot', '')
-                ws.cell(row=idx, column=2).value = item.get('outturn', '')
-                ws.cell(row=idx, column=3).value = item.get('mark', '')
-                ws.cell(row=idx, column=4).value = item.get('grade', '')
-                ws.cell(row=idx, column=5).value = item.get('bags', '')
-                ws.cell(row=idx, column=6).value = item.get('pockets', '')
-                ws.cell(row=idx, column=7).value = item.get('weight', '')
-                ws.cell(row=idx, column=8).value = item.get('sale', '')
-                ws.cell(row=idx, column=9).value = item.get('season', '')
-                ws.cell(row=idx, column=10).value = item.get('certificate', '')
-                ws.cell(row=idx, column=11).value = item.get('mill', '')
-                ws.cell(row=idx, column=12).value = item.get('warehouse', '')
-                ws.cell(row=idx, column=13).value = "49"
-                
-                # Add more columns if needed
-
-            # Save the workbook to a temporary file and return as response
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-                wb.save(tmp.name)
-                tmp.seek(0)
-                filename = "generated_catalogue.xlsx"
-                response = HttpResponse(
-                    tmp.read(),
-                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
-                response['Content-Disposition'] = f'attachment; filename={filename}'
-                return response
-
-        except Exception as e:
-            print(f"Failed to generate file: {e}")
             return Response(
-                {"error": f"Failed to generate file: {str(e)}"},
+
+                {"error": str(e)},
+
+                status=status.HTTP_400_BAD_REQUEST
+
+            )
+
+
+        except Exception as e:
+
+            logger.exception(
+                "Internal server error during sale file generation"
+            )
+
+            return Response(
+
+                {
+                    "error":
+                    "Internal server error"
+                },
+
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+
             )

@@ -132,6 +132,17 @@ def filter_new_records(cleaned_data, existing_records):
             new_records.append(record)
     return new_records
 
+def clean_grower_code(mark):
+    """
+    Removes spaces, full stops, colons, semicolons,
+    and all special characters. Keeps only letters and numbers.
+    """
+    if mark is None:
+        return ""
+
+    cleaned = re.sub(r'[^A-Za-z0-9]', '', str(mark))
+    return cleaned
+
 def process_records(view, records):
     created_records, failed_records = [], []
     headers = None
@@ -140,15 +151,17 @@ def process_records(view, records):
         try:
             record = preprocess_record(record)
             record = clean_nan_values(record)
+            code_mark = record.get("MARKS")
 
             # Map fields
             record['BULKOUTTURN'] = ""
+            record["code"]= clean_grower_code(record.get("MARKS").split("/", 1)[1] if code_mark and "/" in code_mark else None)
             record["SALE"] = safe_int(record.pop("SALE NUMBER", 0))
             record["season"] = record.pop("SEASON", "")
             record["MILL"] = record.pop("MILLING COMPANY", "")
             record["MILLING_CHARGES"] = round(safe_float(record.pop("MILLING CHARGES", 0.0)), 1)
             record["WAREHOUSE_CHARGES"] = round(safe_float(record.pop("WAREHOUSE CHARGES", 0.0)), 1)
-            record["BROKERAGE_CHARGES"] = round(safe_float(record.pop("BROKERAGE FEE + NCE FEE", 0.0)), 1)
+            record["BROKERAGE_CHARGES"] = round(safe_float(record.pop("BROKERAGE CHARGES", 0.0)), 1)
             record["EXPORT_CHARGES"] = round(safe_float(record.pop("SALE OF EXPORT BAGS", 0.0)), 1)
             record["TRANSPORT_CHARGES"] = round(safe_float(record.pop("TRANSPORT +HANDLING CHARGES", 0.0)), 1)
             raw_mark = record.pop("MARKS", "").replace("–", "-").split('/')[0]

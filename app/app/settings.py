@@ -17,6 +17,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "http://localhost:5173/",
     "127.0.0.1",
+    "192.168.1.244",
     "f90c6cbbfc26.ngrok-free.app",
     "dev-48vrii7xsykextuk.us.auth0.com/api/v2/",  # ✅ your public backend URL
     "*",  # for development (you can remove in production)

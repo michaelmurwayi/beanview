@@ -1,12 +1,23 @@
 import pandas as pd
 import os
 import django
+import re
 
 # Set up Django environment
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 django.setup()
 
 from api.models import Farmer
+def clean_grower_code(mark):
+    """
+    Removes spaces, full stops, colons, semicolons,
+    and all special characters. Keeps only letters and numbers.
+    """
+    if mark is None:
+        return ""
+
+    cleaned = re.sub(r'[^A-Za-z0-9]', '', str(mark))
+    return cleaned
 
 def ImportFarmers(file_path):
     try:
@@ -14,7 +25,6 @@ def ImportFarmers(file_path):
         df = pd.read_excel(file_path)
 
         print("📄 Excel file loaded. Preview:")
-        print(df.head())
 
         # Normalize column names
         df.columns = [col.strip().lower() for col in df.columns]
@@ -60,7 +70,7 @@ def ImportFarmers(file_path):
                 }
 
                 farmer, created = Farmer.objects.update_or_create(
-                    code=cleaned_data['code'],
+                    code= clean_grower_code(cleaned_data['code']),
                     defaults={
                         'name': cleaned_data.get('name'),
                         'mark': cleaned_data.get('mark'),

@@ -34,7 +34,7 @@ class FarmerSerializer(serializers.ModelSerializer):
 
 class CoffeeSerializer(serializers.ModelSerializer):
     farmer = serializers.SerializerMethodField()
-    mark = serializers.SlugRelatedField(slug_field='mark', queryset=Farmer.objects.all())
+    code = serializers.SlugRelatedField(slug_field='code', queryset=Farmer.objects.all())
 
     status_id = serializers.PrimaryKeyRelatedField(
         queryset=CoffeeStatus.objects.all(),
@@ -72,10 +72,9 @@ class CoffeeSerializer(serializers.ModelSerializer):
 
     def get_farmer(self, obj):
         return {
-            "name": obj.mark.name,
-            "mark": obj.mark.mark,
-            "code": obj.mark.code,
-            "County": obj.mark.county if obj.mark.county else None,
+            "name": obj.code.name,
+            "mark": obj.code.mark,
+            "County": obj.code.county if obj.code.county else None,
         }
 
     def update(self, instance, validated_data):
