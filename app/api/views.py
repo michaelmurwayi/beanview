@@ -98,6 +98,7 @@ class CatalogueViewSet(viewsets.ModelViewSet):
     def generate_sale_file(self, request):
         return generate_sales_file(request)
 
-    @action(detail=False, methods=["POST"], url_path="upload-payout")
+    
+    @action(detail=False, methods=["POST"])
     def upload_payout(self, request):
         return upload_payout_file(request)
