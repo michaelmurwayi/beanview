@@ -2,109 +2,124 @@ import os
 import zipfile
 from io import BytesIO
 import logging
-import shutil
 import traceback
-
-from ..models import *
-from ..serializers import *
-from django.http import FileResponse
+import re
+from datetime import datetime
 from django.conf import settings
-from datetime import datetime, timedelta
-from openpyxl import load_workbook
-from openpyxl.cell.cell import MergedCell
-
+from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from openpyxl import load_workbook
+from openpyxl.cell.cell import MergedCell
 
+logger = logging.getLogger(__name__)
+
+def clean_mark(mark: str) -> str:
+    """Remove spaces and special characters from mark."""
+    if not mark:
+        return "UNKNOWN"
+    return re.sub(r'[^A-Za-z0-9]', '', mark.strip())
 
 def generate_summary_files(request):
-        TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock_summary_template.xlsx')
-        START_ROW = 32
+    """
+    Generates Excel summary files for each growerCode using provided records.
+    Returns a ZIP file with all generated summaries.
+    """
+    TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock_summary_template.xlsx')
+    START_ROW = 32
 
-        try:
-            summaries = request.data.get('summaries', [])
+    try:
+        summaries = request.data.get('summaries', [])
 
-            if not summaries:
-                raise ValidationError("'summaries' is required and must not be empty.")
+        if not summaries:
+            raise ValidationError("'summaries' is required and must not be empty.")
 
-            base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
-            os.makedirs(base_dir, exist_ok=True)
+        if not os.path.exists(TEMPLATE_PATH):
+            raise ValidationError(f"Template not found at {TEMPLATE_PATH}")
 
-            generated_files = []
+        base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
+        os.makedirs(base_dir, exist_ok=True)
 
-            for summary in summaries:
-                mark = summary.get('mark')
-                records = summary.get('records', [])
-                code = summary.get("records")[0]["code"]
+        generated_files = []
 
-                if not mark or not records:
-                    continue
+        for summary in summaries:
+            grower_code = summary.get('growerCode')
+            records = summary.get('records', [])
 
-                mark_dir = os.path.join(base_dir, mark)
-                os.makedirs(mark_dir, exist_ok=True)
+            if not grower_code or not records:
+                logger.warning(f"Skipping summary: growerCode={grower_code}, records={len(records)}")
+                continue
 
-                filename = f"{mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-                file_path = os.path.join(mark_dir, filename)
+            mark = clean_mark(records[0].get('mark'))
+            mark_dir = os.path.join(base_dir, mark)
+            os.makedirs(mark_dir, exist_ok=True)
 
-                wb = load_workbook(TEMPLATE_PATH)
-                ws = wb.active
-                # Set mark name in cell B6
-                ws['B3'] = code
-                ws['B4'] = mark
-                
-                for row_offset, record in enumerate(records, start=1):
-                    row = START_ROW + row_offset
+            filename = f"{mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            file_path = os.path.join(mark_dir, filename)
 
-                    values = [
-                        record.get('outturn'),
-                        record.get('bulkoutturn'),
-                        record.get('mark'),
-                        record.get('type'),
-                        record.get('grade'),
-                        record.get('bags'),
-                        record.get('pockets'),
-                        record.get('weight'),
-                        record.get('sale_number'),
-                        record.get('season'),
-                        record.get('certificate'),
-                        record.get('mill'),
-                        record.get('warehouse'),
-                        record.get('price'),
-                        record.get('buyer'),
-                        record.get('status'),
-                    ]
+            # Load template
+            wb = load_workbook(TEMPLATE_PATH)
+            ws = wb.active
 
-                    for col_index, value in enumerate(values, start=1):
-                        cell = ws.cell(row=row, column=col_index)
-                        if isinstance(cell, MergedCell):
-                            continue
-                        cell.value = value
+            # Write grower code and mark
+            ws['B3'] = grower_code
+            ws['B4'] = mark
 
-                wb.save(file_path)
-                generated_files.append(file_path)
+            # Write all records
+            for row_offset, record in enumerate(records, start=1):
+                row = START_ROW + row_offset
+                values = [
+                    record.get('outturn'),
+                    record.get('bulkoutturn'),
+                    record.get('mark'),
+                    record.get('type'),
+                    record.get('grade'),
+                    record.get('bags'),
+                    record.get('pockets'),
+                    record.get('weight'),
+                    record.get('sale'),
+                    record.get('season'),
+                    record.get('certificate'),
+                    record.get('mill'),
+                    record.get('warehouse'),
+                    record.get('price'),
+                    record.get('buyer'),
+                    record.get('status'),
+                ]
 
-            # ✅ Create ZIP in memory
-            zip_buffer = BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                for file_path in generated_files:
-                    arcname = os.path.basename(file_path)
-                    zip_file.write(file_path, arcname=arcname)
+                for col_index, value in enumerate(values, start=1):
+                    cell = ws.cell(row=row, column=col_index)
+                    if isinstance(cell, MergedCell):
+                        continue
+                    cell.value = value
 
-            zip_buffer.seek(0)
+            # Save individual file
+            wb.save(file_path)
+            generated_files.append(file_path)
+            logger.info(f"Generated summary file: {file_path}")
 
-            # ✅ Return as downloadable file
-            return FileResponse(
-                zip_buffer,
-                as_attachment=True,
-                filename=f"stock_summaries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
-                content_type='application/zip'
-            )
+        if not generated_files:
+            raise ValidationError("No summary files were generated. Check input data and template path.")
 
-        except ValidationError as e:
-            traceback.print_exc()
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # Create ZIP in memory
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+            for file_path in generated_files:
+                zip_file.write(file_path, arcname=os.path.basename(file_path))
+        zip_buffer.seek(0)
 
-        except Exception as e:
-            traceback.print_exc()
-            return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return FileResponse(
+            zip_buffer,
+            as_attachment=True,
+            filename=f"stock_summaries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+            content_type='application/zip'
+        )
+
+    except ValidationError as e:
+        logger.warning(traceback.format_exc())
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
