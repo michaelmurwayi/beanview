@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -11,6 +11,7 @@ import {
   Box,
   TablePagination,
   IconButton,
+  TextField
 } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import EditIcon from '@mui/icons-material/Edit';
@@ -27,28 +28,38 @@ const TableDisplay = ({
   const [searchTerm, setSearchTerm] = useState('');
   const rowsPerPage = 65;
 
-  const handleChangePage = (_, newPage) => {
-    setPage(newPage);
-  };
+  // Reset page when data or search changes
+  useEffect(() => setPage(0), [data, searchTerm]);
 
-  // Filter data by 'mark'
-  const filteredData = Array.isArray(data)
-    ? data.filter((row) =>
-        row.mark?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  // Flatten nested fields for safe access
+  const flattenedData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    return data.map((row) => ({
+      ...row,
+      mark: row.farmer?.mark || '--',
+      farmer_name: row.farmer?.name || '--',
+      county: row.farmer?.County || '--',
+    }));
+  }, [data]);
 
-  // Add Actions column
-  const extendedColumns = [
-    ...columns,
-    { field: 'actions', headerName: 'Actions', isAction: true },
-  ];
+  // Filter data based on search term
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return flattenedData;
+    const lowerSearch = searchTerm.toLowerCase();
+    return flattenedData.filter((row) =>
+      String(row.mark).toLowerCase().includes(lowerSearch)
+    );
+  }, [flattenedData, searchTerm]);
 
-  const hasData = Array.isArray(filteredData) && filteredData.length > 0;
+  const extendedColumns = [...columns, { field: 'actions', headerName: 'Actions', isAction: true }];
+  const hasData = filteredData.length > 0;
+
+  const handleChangePage = (_, newPage) => setPage(newPage);
 
   return (
-    <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden', m: 0, p: 0 }}>
-      {/* Display error message */}
+    <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden' }}>
+      {/* Search Input */}
+      {/* Error Display */}
       {error ? (
         <Box
           display="flex"
@@ -56,28 +67,24 @@ const TableDisplay = ({
           alignItems="center"
           justifyContent="center"
           height="300px"
-          width="100%"
         >
           <InfoOutlinedIcon sx={{ fontSize: 48, color: 'error.main' }} />
           <Typography variant="h6" mt={2} color="error">
             Failed to load data
           </Typography>
-          <Typography variant="body2" color="text.secondary" maxWidth={400}>
-            {error || 'An unexpected error occurred. Please try again later.'}
-          </Typography>
+          <Typography variant="body2" color="text.secondary">{error}</Typography>
         </Box>
       ) : hasData ? (
         <>
+          {/* Table */}
           <TableContainer
             sx={{
-              overflow: 'auto',
-              maxHeight: '100%',
-              scrollbarWidth: 'none', // Firefox
-              msOverflowStyle: 'none', // IE and Edge
-              '&::-webkit-scrollbar': { display: 'none' }, // Chrome, Safari, Opera
+              maxHeight: '75vh',
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': { display: 'none' },
             }}
           >
-            <Table stickyHeader sx={{ minWidth: 1000 }}>
+            <Table stickyHeader size="small">
               <TableHead>
                 <TableRow>
                   {extendedColumns.map((col) => (
@@ -89,7 +96,6 @@ const TableDisplay = ({
                         backgroundColor: '#121330',
                         color: 'white',
                         padding: '6px',
-                        whiteSpace: 'nowrap',
                       }}
                     >
                       {col.headerName}
@@ -103,43 +109,25 @@ const TableDisplay = ({
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row, idx) => (
                     <TableRow
-                      key={idx}
+                      key={row.id || idx}
                       hover
-                      sx={{
-                        '&:hover': {
-                          backgroundColor: '#ACCAFD',
-                          cursor: 'pointer',
-                        },
-                      }}
+                      sx={{ '&:hover': { backgroundColor: '#ACCAFD' } }}
                     >
                       {columns.map((col) => (
                         <TableCell
                           key={col.field}
-                          sx={{
-                            fontSize: '0.65rem',
-                            padding: '6px',
-                            whiteSpace: 'nowrap',
-                          }}
+                          sx={{ fontSize: '0.7rem', padding: '6px' }}
                         >
                           {row[col.field] ?? '--'}
                         </TableCell>
                       ))}
 
                       {/* Actions */}
-                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          onClick={() => onEdit(row)}
-                          sx={{ mr: 1 }}
-                        >
+                      <TableCell>
+                        <IconButton color="primary" size="small" onClick={() => onEdit(row)}>
                           <EditIcon fontSize="inherit" />
                         </IconButton>
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() => onDelete(row)}
-                        >
+                        <IconButton color="error" size="small" onClick={() => onDelete(row)}>
                           <DeleteIcon fontSize="inherit" />
                         </IconButton>
                       </TableCell>
@@ -149,6 +137,7 @@ const TableDisplay = ({
             </Table>
           </TableContainer>
 
+          {/* Pagination */}
           <TablePagination
             component="div"
             count={filteredData.length}
@@ -159,23 +148,11 @@ const TableDisplay = ({
           />
         </>
       ) : (
-        // No data message
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          height="300px"
-          width="100%"
-        >
+        /* No Data */
+        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="300px">
           <InfoOutlinedIcon sx={{ fontSize: 48, color: '#999' }} />
-          <Typography variant="h6" mt={2} color="textSecondary">
-            No information to display
-          </Typography>
-          <Typography variant="body2" color="text.secondary" maxWidth={400}>
-            🤷‍♂️ It seems there’s currently no data available. Please check
-            back later or contact the system administrator.
-          </Typography>
+          <Typography variant="h6" mt={2}>No information to display</Typography>
+          <Typography variant="body2" color="text.secondary">No records found</Typography>
         </Box>
       )}
     </Paper>
