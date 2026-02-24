@@ -12,6 +12,7 @@ import Sidebar from '../components/sidebar/Sidebar';
 import CatalogueCardRow from '../components/catalogue/CatalogueCardRow';
 import CatalogueModalSummary from '../components/catalogue/CatalogueModalSummary';
 import { fetchCoffee } from '../store/slices/Coffee/coffeeActions';
+import PayoutUpload from '../components/payout/PayoutUpload';
 
 const ViewCatalogue = () => {
   const dispatch = useDispatch();
@@ -23,61 +24,49 @@ const ViewCatalogue = () => {
   const [selectedGroupedRecords, setSelectedGroupedRecords] = useState([]);
   const [selectedSale, setSelectedSale] = useState('');
 
-  // Fetch coffee records when component mounts
+  // Fetch coffee records on mount
   useEffect(() => {
     dispatch(fetchCoffee());
-    console.log('Coffee records fetched');
   }, [dispatch]);
 
-  // Function to merge bulk outturn records
-  const checkBulkOutturn = (rows) => {
+  // Merge bulk outturn records
+  const mergeBulkOutturn = (records) => {
     const bulked = [];
     const groupedMap = new Map();
     const mergedRecords = [];
 
-    rows.forEach((record) => {
+    records.forEach((record) => {
       const bulkoutturn = record.bulkoutturn?.trim();
       const grade = record.grade?.trim();
 
       if (!bulkoutturn) {
-        bulked.push(record); // Missing bulkoutturn
+        bulked.push(record);
         return;
       }
 
       const key = `${bulkoutturn}_${grade}`;
-
-      if (!groupedMap.has(key)) {
-        groupedMap.set(key, []);
-      }
-
+      if (!groupedMap.has(key)) groupedMap.set(key, []);
       groupedMap.get(key).push(record);
     });
 
-    // Merge grouped records
-    groupedMap.forEach((records, key) => {
+    groupedMap.forEach((recordsGroup, key) => {
       const [bulkoutturn, grade] = key.split('_');
-      const totalWeight = records.reduce((sum, r) => sum + parseFloat(r.weight || 0), 0);
+      const totalWeight = recordsGroup.reduce((sum, r) => sum + parseFloat(r.weight || 0), 0);
       const bags = Math.floor(totalWeight / 50);
       const pockets = Math.round(totalWeight % 50);
 
-      const base = records[0]; // take fields from first record
-
-      const merged = {
+      const base = recordsGroup[0];
+      mergedRecords.push({
         ...base,
         outturn: bulkoutturn,
         mark: `${grade}/Bulk`,
         weight: totalWeight.toFixed(2),
         bags,
         pockets,
-      };
-
-      mergedRecords.push(merged);
+      });
     });
 
-    // Combine mergedRecords and bulked into filtered records
-    const filteredRecords = [...mergedRecords, ...bulked];
-
-    return filteredRecords;
+    return [...mergedRecords, ...bulked];
   };
 
   // Reset filters
@@ -86,7 +75,7 @@ const ViewCatalogue = () => {
     setSaleNumber('');
   };
 
-  // Apply filters to coffee records
+  // Filter records based on season and sale number
   const filteredRecordsRaw = useMemo(() => {
     return coffeeRecords.filter((record) => {
       return (
@@ -96,12 +85,10 @@ const ViewCatalogue = () => {
     });
   }, [coffeeRecords, season, saleNumber]);
 
-  // Merge bulk outturn records after filtering
-  const filteredRecords = useMemo(() => {
-    return checkBulkOutturn(filteredRecordsRaw);
-  }, [filteredRecordsRaw]);
+  // Merge bulk outturn after filtering
+  const filteredRecords = useMemo(() => mergeBulkOutturn(filteredRecordsRaw), [filteredRecordsRaw]);
 
-  // When a card is clicked, open the modal and set grouped records
+  // Open modal when a catalogue card is clicked
   const handleCardClick = (sale) => {
     const saleRecords = filteredRecords.filter((r) => r.sale === sale);
     setSelectedGroupedRecords(saleRecords);
@@ -114,71 +101,55 @@ const ViewCatalogue = () => {
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
+      {/* Main content */}
       <Box sx={{ flex: 1, p: 4 }}>
-        {/* Header Paper */}
+        {/* Header */}
         <Paper
           elevation={3}
           sx={{
             borderRadius: 3,
             p: 4,
+            mb: 4,
             background: 'linear-gradient(to right, #4CB8C4, #3CD3AD)',
             color: 'white',
             backgroundImage: `url("https://i.pinimg.com/736x/d1/73/b5/d173b5f9086434078208a8ecb43fef99.jpg")`,
             backgroundRepeat: 'repeat',
           }}
         >
-          <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
-            Catalogue Guide
-          </Typography>
+          {/* Top row: title + upload */}
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" mb={3}>
+            <Box>
+              <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
+                Catalogue Guide
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#f0f0f0' }}>
+                View generated catalogue records, generate catalogue upload files and sale summaries.
+              </Typography>
+            </Box>
+            <PayoutUpload />
+          </Box>
 
-          <Typography variant="body2" sx={{ color: '#f0f0f0', mb: 4 }}>
-            View generated catalogue records, generate catalogue upload files and sale summaries.
-          </Typography>
-
+          {/* Filters */}
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
             <TextField
               select
               label="Season"
-              placeholder="Select Season"
-              variant="outlined"
-              size="small"
               value={season}
               onChange={(e) => setSeason(e.target.value)}
-              sx={{
-                backgroundColor: 'white',
-                borderRadius: 1,
-                minWidth: 150,
-                '& .MuiInputBase-input::placeholder': {
-                  color: '#333',
-                  fontWeight: 600,
-                  opacity: 1,
-                },
-              }}
+              size="small"
+              sx={{ backgroundColor: 'white', borderRadius: 1, minWidth: 150 }}
             >
               {['2024/2025'].map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
+                <MenuItem key={option} value={option}>{option}</MenuItem>
               ))}
             </TextField>
 
             <TextField
               label="Sale Number"
-              placeholder="Enter Sale"
-              variant="outlined"
-              size="small"
               value={saleNumber}
               onChange={(e) => setSaleNumber(e.target.value)}
-              sx={{
-                backgroundColor: 'white',
-                borderRadius: 1,
-                '& .MuiInputBase-input::placeholder': {
-                  color: '#333',
-                  fontWeight: 600,
-                  opacity: 1,
-                },
-              }}
+              size="small"
+              sx={{ backgroundColor: 'white', borderRadius: 1 }}
             />
 
             <Button
@@ -189,10 +160,7 @@ const ViewCatalogue = () => {
                 textTransform: 'none',
                 fontWeight: 'bold',
                 bgcolor: '#1976d2',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: '#115293',
-                },
+                '&:hover': { bgcolor: '#115293' },
               }}
             >
               Reset Filters
@@ -201,14 +169,18 @@ const ViewCatalogue = () => {
         </Paper>
 
         {/* Catalogue cards */}
-        <Box mt={4}>
-          <CatalogueCardRow
-            data={filteredRecords}
-            onClick={handleCardClick}
-          />
+        <Box>
+          <CatalogueCardRow data={filteredRecords} onClick={handleCardClick} />
         </Box>
-      </Box>
 
+        {/* Summary Modal */}
+        <CatalogueModalSummary
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          groupedData={selectedGroupedRecords}
+          sale={selectedSale}
+        />
+      </Box>
     </Box>
   );
 };
