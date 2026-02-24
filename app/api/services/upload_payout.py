@@ -12,11 +12,13 @@ from ..models import Coffee
 
 logger = logging.getLogger(__name__)
 
+
 def clean_mark(mark: str) -> str:
     """Remove spaces and special characters from a mark string."""
     if not mark:
         return ""
     return "".join(c for c in mark if c.isalnum() or c == '/').strip()
+
 
 def extract_code_from_mark(mark: str) -> str:
     """
@@ -28,11 +30,13 @@ def extract_code_from_mark(mark: str) -> str:
     code_part = cleaned_mark.split('/')[-1]
     return "".join(c for c in code_part if c.isalnum())
 
+
 def upload_payout_file(request):
     """
     Upload an Excel/CSV payout file and update Coffee records.
     Matches records using code (from MARKS), OUTTURN, and GRADE.
     Updates all matching records if multiple exist.
+    Also updates the `sale` field from SALE_NUMBER if present.
     """
     try:
         uploaded_file = request.FILES.get("file")
@@ -63,7 +67,7 @@ def upload_payout_file(request):
             "BAGS", "POCKETS", "WEIGHT", "PRICE", "GROSS_VALUE",
             "WAREHOUSE_CHARGES", "BROKERAGE_CHARGES", "MILLING_CHARGES",
             "MILLING_COMPANY", "SALE_OF_EXPORT_BAGS.", "TRANSPORT_+_HANDLING_CHARGES",
-            "BROKERS_TRANSPORT", "NET_PAY"
+            "BROKERS_TRANSPORT", "NET_PAY", "SALE_NUMBER"
         ]
 
         updated_count = 0
@@ -73,6 +77,7 @@ def upload_payout_file(request):
             code = extract_code_from_mark(row.get("MARKS"))
             outturn = row.get("OUTTURN")
             grade = row.get("GRADE")
+            sale_number = row.get("SALE_NUMBER")  # optional
 
             if not (code and outturn and grade):
                 unmatched_rows.append({"row": idx + 2, "reason": "Missing key fields"})
@@ -94,14 +99,19 @@ def upload_payout_file(request):
                     for field in update_fields:
                         value = row.get(field)
                         if pd.notna(value):
-                            setattr(coffee, field.lower(), value)
+                            if field.upper() == "SALE_NUMBER":
+                                coffee.sale = value
+                            else:
+                                setattr(coffee, field.lower(), value)
                     coffee.save()
                     updated_count += 1
-                    logger.info(f"Updated Coffee record: CODE={code}, OUTTURN={outturn}, GRADE={grade}, ID={coffee.id}")
+                    logger.info(
+                        f"Updated Coffee record: CODE={code}, OUTTURN={outturn}, GRADE={grade}, ID={coffee.id}, SALE={sale_number}"
+                    )
 
             except Exception as e:
                 unmatched_rows.append({"row": idx + 2, "reason": f"Error: {str(e)}"})
-                logger.exception(f"Error updating row {idx+2}")
+                logger.exception(f"Error updating row {idx + 2}")
 
         # Delete temporary file
         default_storage.delete(temp_path)
