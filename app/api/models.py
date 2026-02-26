@@ -104,7 +104,8 @@ class Coffee(models.Model):
 
     lot = models.CharField(max_length=100, default="", db_index=True)
     outturn = models.CharField(max_length=100)
-    bulkoutturn = models.CharField(max_length=100, default="", blank=True)
+    parchment_outturn = models.CharField(max_length=100, default="", blank=True)
+    clean_outturn = models.CharField(max_length=100, default="", blank=True)
     code = models.ForeignKey('Farmer', to_field='code', on_delete=models.SET_NULL, null=True, blank=True, related_name='coffee')
     type = models.CharField(max_length=100, default="", blank=True, null=True)
     grade = models.CharField(max_length=50, default="")
@@ -124,7 +125,7 @@ class Coffee(models.Model):
     net_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     gross_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     certificate = models.CharField(max_length=100, null=True, blank=True, default="")
-    status = models.ForeignKey('CoffeeStatus', on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey('CoffeeStatus', on_delete=models.SET_NULL, null=True, blank=True, default=1)
     catalogue = models.ForeignKey('Catalogue', on_delete=models.SET_NULL, null=True, blank=True)
     catalogue_type = models.CharField(max_length=100, null=True, blank=True, default="")
     reserve = models.IntegerField(null=True, blank=True, default=0)
