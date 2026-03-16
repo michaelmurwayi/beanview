@@ -39,7 +39,7 @@ const CatalogueSummary = ({
       setLocalGroupedData(JSON.parse(JSON.stringify(groupedData))); // Deep clone
     }
   }, [open, groupedData]);
-
+  console.log('Local Grouped Data in Modal:', localGroupedData);
   const MILL_MAP = {
     1: "ICM", 2: "BU", 3: "HM", 4: "TY", 5: "IM", 6: "KF", 7: "RF",
     8: "TK", 9: "KM", 10: "LE", 11: "nan", 12: "KK", 13: "US", 14: "FH", 15: "GR",
@@ -55,9 +55,8 @@ const CatalogueSummary = ({
         const updatedRec = {
           ...rec,
           status: 'CATALOGUED',
-          status_id: 2, // Assuming 1 is the ID for 'CATALOG
+          status_id: 2, // Adjust to correct status ID
         };
-        console.log(`Updating record ID ${updatedRec} with status_id 1`);
         try {
           await dispatch(updateCoffee(updatedRec)).unwrap();
           updatedRecords.push(updatedRec);
@@ -68,7 +67,6 @@ const CatalogueSummary = ({
 
       updatedSummaries.push({ mark, records: updatedRecords });
     }
-
   };
 
   const handleDelete = (rec) => {
@@ -131,7 +129,6 @@ const CatalogueSummary = ({
                     <TableRow>
                       <TableCell>Lot</TableCell>
                       <TableCell>Outturn</TableCell>
-                      <TableCell>Bulkoutturn</TableCell>
                       <TableCell>Mark</TableCell>
                       <TableCell>Type</TableCell>
                       <TableCell>Grade</TableCell>
@@ -154,8 +151,8 @@ const CatalogueSummary = ({
                       <TableRow key={rec.id || index}>
                         <TableCell>{7301 + index}</TableCell>
                         <TableCell>{rec.outturn}</TableCell>
-                        <TableCell>{rec.bulkoutturn}</TableCell>
-                        <TableCell>{rec.mark}</TableCell>
+                        {/* Display correct mark from nested farmer */}
+                        <TableCell>{rec.farmer?.mark || rec.mark || ''}</TableCell>
                         <TableCell>{rec.type}</TableCell>
                         <TableCell>{rec.grade}</TableCell>
                         <TableCell>{rec.bags}</TableCell>

@@ -74,14 +74,22 @@ const PayoutUpload = () => {
         )}
 
         <Button
-          fullWidth
-          variant="outlined"
-          color="white"
-          onClick={handleUpload}
-          disabled={!selectedFile || loading}
-        >
-          Upload
-        </Button>
+            fullWidth
+            variant="outlined"
+            onClick={handleUpload}
+            disabled={!selectedFile || loading}
+            sx={{
+                color: '#121330',         // Text color
+                borderColor: '#121330',   // Outline color
+                '&:hover': {
+                backgroundColor: '#f0f0f0', // Optional hover background
+                borderColor: '#121330',     // Keep outline same on hover
+                },
+                textTransform: 'none',      // Optional: keeps text as-is
+            }}
+            >
+            Upload
+            </Button>
       </Box>
 
       <Box mt={2}>

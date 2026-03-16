@@ -39,7 +39,7 @@ const CatalogueModalSummary = ({
     message: "",
     severity: "success",
   });
-
+  console.log("Grouped Data in Modal:", groupedData);
   const MILL_MAP = {
     1: "ICM",
     2: "BU",
@@ -117,6 +117,7 @@ const CatalogueModalSummary = ({
   /** ---------------------- useEffect ---------------------- */
   useEffect(() => {
     if (open && groupedData) {
+      console.log("Processing grouped data for modal:", groupedData);
       const dataArray = Array.isArray(groupedData)
         ? groupedData
         : Object.values(groupedData);
@@ -254,26 +255,31 @@ const CatalogueModalSummary = ({
               </TableHead>
 
               <TableBody>
-                {localRecords.map((rec, index) => (
-                  <TableRow key={rec.id || index}>
-                    <TableCell>{7301 + index}</TableCell>
-                    <TableCell>{rec.outturn}</TableCell>
-                    <TableCell>{rec.mark}</TableCell>
-                    <TableCell>{rec.type}</TableCell>
-                    <TableCell>{rec.grade}</TableCell>
-                    <TableCell>{rec.bags}</TableCell>
-                    <TableCell>{rec.pockets}</TableCell>
-                    <TableCell>{rec.weight}</TableCell>
-                    <TableCell>{rec.sale}</TableCell>
-                    <TableCell>{rec.season}</TableCell>
-                    <TableCell>{rec.certificate}</TableCell>
-                    <TableCell>{MILL_MAP[rec.mill] || rec.mill}</TableCell>
-                    <TableCell>{rec.warehouse}</TableCell>
-                    <TableCell>{rec.price}</TableCell>
-                    <TableCell>{rec.buyer}</TableCell>
-                    <TableCell>{rec.status}</TableCell>
-                  </TableRow>
-                ))}
+                {localRecords.map((recGroup, index) => {
+                  // Ensure we always have an array to loop through
+                  const records = Array.isArray(recGroup) ? recGroup : [recGroup];
+
+                  return records.map((rec, subIndex) => (
+                    <TableRow key={rec.id || `${index}-${subIndex}`}>
+                      <TableCell>{7301 + index + subIndex}</TableCell>
+                      <TableCell>{rec.outturn}</TableCell>
+                      <TableCell>{rec.farmer?.mark || rec.mark}</TableCell>
+                      <TableCell>{rec.type}</TableCell>
+                      <TableCell>{rec.grade}</TableCell>
+                      <TableCell>{rec.bags}</TableCell>
+                      <TableCell>{rec.pockets}</TableCell>
+                      <TableCell>{rec.weight}</TableCell>
+                      <TableCell>{rec.sale}</TableCell>
+                      <TableCell>{rec.season}</TableCell>
+                      <TableCell>{rec.certificate}</TableCell>
+                      <TableCell>{MILL_MAP[rec.mill] || rec.mill}</TableCell>
+                      <TableCell>{rec.warehouse}</TableCell>
+                      <TableCell>{rec.price}</TableCell>
+                      <TableCell>{rec.buyer}</TableCell>
+                      <TableCell>{rec.status}</TableCell>
+                    </TableRow>
+                  ));
+                })}
               </TableBody>
             </Table>
           )}
