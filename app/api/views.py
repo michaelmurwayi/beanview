@@ -17,6 +17,7 @@ from .serializers import UserSerializer, FarmerSerializer, CoffeeSerializer, Cat
 from .services.sale_file import generate_sales_file
 from .services.summary_file import generate_summary_files
 from .services.upload_payout import upload_payout_file
+from .process_records.record_processing import process_uploaded_files
 
 logger = logging.getLogger(__name__)
 
@@ -69,10 +70,9 @@ class CoffeeViewSet(viewsets.ModelViewSet):
         data = request.data.dict() if hasattr(request.data, "dict") else request.data
         sheets = data.get("sheetnames", "").split(",") if data.get("sheetnames") else []
         if request.FILES and sheets:
-            from .process_records.record_processing import process_uploaded_files
+            
             return process_uploaded_files(self, data, sheets)
 
-        from .process_records.record_processing import process_single_record
         return process_single_record(self, data)
 
     def update(self, request, *args, **kwargs):

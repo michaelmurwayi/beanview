@@ -13,7 +13,10 @@ from rest_framework.exceptions import ValidationError
 from openpyxl import load_workbook
 from openpyxl.cell.cell import MergedCell
 
+from ..models import Coffee
+
 logger = logging.getLogger(__name__)
+
 
 def clean_mark(mark: str) -> str:
     """Remove spaces and special characters from mark."""
@@ -21,9 +24,10 @@ def clean_mark(mark: str) -> str:
         return "UNKNOWN"
     return re.sub(r'[^A-Za-z0-9]', '', mark.strip())
 
+
 def generate_summary_files(request):
     """
-    Generates Excel summary files for each growerCode using provided records.
+    Generates Excel summary files for each growerCode using provided Coffee records.
     Returns a ZIP file with all generated summaries.
     """
     TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock_summary_template.xlsx')
@@ -45,13 +49,20 @@ def generate_summary_files(request):
 
         for summary in summaries:
             grower_code = summary.get('growerCode')
-            records = summary.get('records', [])
-
-            if not grower_code or not records:
-                logger.warning(f"Skipping summary: growerCode={grower_code}, records={len(records)}")
+            if not grower_code:
+                logger.warning("Skipping summary: missing growerCode")
                 continue
 
-            mark = clean_mark(records[0].get('mark'))
+            # Fetch Coffee records for this grower code
+            coffees = Coffee.objects.select_related('farmer', 'mill', 'warehouse', 'status').filter(
+                farmer__code=grower_code
+            )
+
+            if not coffees.exists():
+                logger.warning(f"No coffee records found for grower code: {grower_code}")
+                continue
+
+            mark = clean_mark(coffees.first().farmer.mark)
             mark_dir = os.path.join(base_dir, mark)
             os.makedirs(mark_dir, exist_ok=True)
 
@@ -66,26 +77,26 @@ def generate_summary_files(request):
             ws['B3'] = grower_code
             ws['B4'] = mark
 
-            # Write all records
-            for row_offset, record in enumerate(records, start=1):
+            # Write coffee records starting from START_ROW
+            for row_offset, coffee in enumerate(coffees, start=1):
                 row = START_ROW + row_offset
                 values = [
-                    record.get('outturn'),
-                    record.get('bulkoutturn'),
-                    record.get('mark'),
-                    record.get('type'),
-                    record.get('grade'),
-                    record.get('bags'),
-                    record.get('pockets'),
-                    record.get('weight'),
-                    record.get('sale'),
-                    record.get('season'),
-                    record.get('certificate'),
-                    record.get('mill'),
-                    record.get('warehouse'),
-                    record.get('price'),
-                    record.get('buyer'),
-                    record.get('status'),
+                    coffee.outturn,
+                    getattr(coffee, 'bulkoutturn', ''),  # optional field
+                    coffee.farmer.mark if coffee.farmer else '',
+                    coffee.type,
+                    coffee.grade,
+                    coffee.bags,
+                    coffee.pockets,
+                    coffee.weight,
+                    coffee.sale,
+                    coffee.season,
+                    coffee.certificate,
+                    coffee.mill.name if coffee.mill else '',
+                    coffee.warehouse.name if coffee.warehouse else '',
+                    coffee.price,
+                    coffee.buyer,
+                    coffee.status.name if coffee.status else '',
                 ]
 
                 for col_index, value in enumerate(values, start=1):

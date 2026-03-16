@@ -94,6 +94,8 @@ class CoffeeStatus(models.Model):
     def __str__(self):
         return self.name
 
+
+
 class Coffee(models.Model):
     class Status(models.TextChoices):
         RECEIVED = "RECEIVED", "Received"
@@ -106,11 +108,19 @@ class Coffee(models.Model):
     outturn = models.CharField(max_length=100)
     parchment_outturn = models.CharField(max_length=100, default="", blank=True)
     clean_outturn = models.CharField(max_length=100, default="", blank=True)
-    code = models.ForeignKey('Farmer', to_field='code', on_delete=models.SET_NULL, null=True, blank=True, related_name='coffee')
+
+    farmer = models.ForeignKey(
+        'Farmer',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='coffee'
+    )
+
     type = models.CharField(max_length=100, default="", blank=True, null=True)
     grade = models.CharField(max_length=50, default="")
     bags = models.IntegerField(null=True, blank=True, default=0)
-    pockets = models.FloatField(null=True, blank=True, default=0.0)  # Changed to FloatField
+    pockets = models.FloatField(null=True, blank=True, default=0.0)
     weight = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     sale = models.CharField(max_length=52, null=True, blank=True, default="")
     season = models.CharField(max_length=100, default="2024/2025")
@@ -119,8 +129,8 @@ class Coffee(models.Model):
     warehouse = models.ForeignKey('Warehouse', on_delete=models.SET_NULL, null=True)
     warehouse_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     brokerage_charges = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
-    export_charges = models.FloatField(null=True, blank=True, default=0.0)  # Changed to FloatField
-    transport_charges = models.FloatField(null=True, blank=True, default=0.0)  # Changed to FloatField
+    export_charges = models.FloatField(null=True, blank=True, default=0.0)
+    transport_charges = models.FloatField(null=True, blank=True, default=0.0)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     net_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)
     gross_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0.00)

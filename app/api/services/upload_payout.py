@@ -3,12 +3,11 @@
 import logging
 import pandas as pd
 from django.core.files.storage import default_storage
-from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 
-from ..models import Coffee
+from ..models import Coffee, Farmer
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +33,7 @@ def extract_code_from_mark(mark: str) -> str:
 def upload_payout_file(request):
     """
     Upload an Excel/CSV payout file and update Coffee records.
-    Matches records using code (from MARKS), OUTTURN, and GRADE.
+    Matches records using farmer code (from MARKS), OUTTURN, and GRADE.
     Updates all matching records if multiple exist.
     Also updates the `sale` field from SALE_NUMBER if present.
     """
@@ -63,12 +62,21 @@ def upload_payout_file(request):
             if col not in df.columns:
                 raise ValidationError(f"Missing required column: {col}")
 
-        update_fields = [
-            "BAGS", "POCKETS", "WEIGHT", "PRICE", "GROSS_VALUE",
-            "WAREHOUSE_CHARGES", "BROKERAGE_CHARGES", "MILLING_CHARGES",
-            "MILLING_COMPANY", "SALE_OF_EXPORT_BAGS.", "TRANSPORT_+_HANDLING_CHARGES",
-            "BROKERS_TRANSPORT", "NET_PAY", "SALE_NUMBER"
-        ]
+        # Map Excel columns to Coffee model fields
+        FIELD_MAPPING = {
+            "BAGS": "bags",
+            "POCKETS": "pockets",
+            "WEIGHT": "weight",
+            "PRICE": "price",
+            "GROSS_VALUE": "gross_value",
+            "WAREHOUSE_CHARGES": "warehouse_charges",
+            "BROKERAGE_CHARGES": "brokerage_charges",
+            "MILLING_CHARGES": "milling_charges",
+            "TRANSPORT_+_HANDLING_CHARGES": "transport_charges",
+            "NET_PAY": "net_value",
+            "SALE_NUMBER": "sale",
+            # Add any other mappings needed here
+        }
 
         updated_count = 0
         unmatched_rows = []
@@ -77,16 +85,15 @@ def upload_payout_file(request):
             code = extract_code_from_mark(row.get("MARKS"))
             outturn = row.get("OUTTURN")
             grade = row.get("GRADE")
-            sale_number = row.get("SALE_NUMBER")  # optional
 
             if not (code and outturn and grade):
                 unmatched_rows.append({"row": idx + 2, "reason": "Missing key fields"})
                 continue
 
             try:
-                # Find all matching Coffee records
+                # Find all matching Coffee records using farmer__code
                 coffees = Coffee.objects.filter(
-                    code=code,
+                    farmer__code=code,
                     outturn=outturn,
                     grade=grade
                 )
@@ -96,17 +103,14 @@ def upload_payout_file(request):
                     continue
 
                 for coffee in coffees:
-                    for field in update_fields:
-                        value = row.get(field)
+                    for col_name, model_field in FIELD_MAPPING.items():
+                        value = row.get(col_name)
                         if pd.notna(value):
-                            if field.upper() == "SALE_NUMBER":
-                                coffee.sale = value
-                            else:
-                                setattr(coffee, field.lower(), value)
+                            setattr(coffee, model_field, value)
                     coffee.save()
                     updated_count += 1
                     logger.info(
-                        f"Updated Coffee record: CODE={code}, OUTTURN={outturn}, GRADE={grade}, ID={coffee.id}, SALE={sale_number}"
+                        f"Updated Coffee record: FARMER_CODE={code}, OUTTURN={outturn}, GRADE={grade}, ID={coffee.id}, SALE={coffee.sale}"
                     )
 
             except Exception as e:
