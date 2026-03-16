@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import {
   Box,
@@ -13,14 +13,9 @@ import CatalogueModalSummary from './CatalogueModalSummary';
 const CatalogueCardRow = ({ data }) => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
-  const [selectedRecords, setSelectedRecords] = useState([]);
+  const [groupedByMark, setGroupedByMark] = useState({});
 
-  useEffect(() => {
-    if (selectedRecords.length > 0) {
-      console.log('Selected records updated:', selectedRecords);
-    }
-  }, [selectedRecords]);
-
+  // Group sales by sale number
   const salesGrouped = data.reduce((acc, record) => {
     const sale = record.sale || 'No Sale';
     if (!acc[sale]) acc[sale] = [];
@@ -29,24 +24,33 @@ const CatalogueCardRow = ({ data }) => {
   }, {});
 
   const handleOpenModal = (sale) => {
-    setSelectedRecords(salesGrouped[sale]);
-    
+    const records = salesGrouped[sale] || [];
+
+    // Group by farmer.mark directly here
+    const grouped = records.reduce((acc, record) => {
+      const mark = record.farmer?.mark || 'No Mark';
+      if (!acc[mark]) acc[mark] = [];
+      acc[mark].push(record);
+      return acc;
+    }, {});
+    console.log('Grouped by Mark for Sale', sale, grouped);
+    setGroupedByMark(grouped);
     setSelectedSale(sale);
     setOpenModal(true);
   };
 
   const uniqueSales = Array.from(
-  new Map(
-    data
-      .filter((item) => item.sale && item.season)
-      .map((item) => [item.sale, item])
+    new Map(
+      data
+        .filter((item) => item.sale && item.season)
+        .map((item) => [item.sale, item])
+    )
   )
-)
-  .map(([sale, record]) => ({
-    sale,
-    season: record.season,
-  }))
-  .sort((a, b) => Number(b.sale) - Number(a.sale)); // Sort by sale descending
+    .map(([sale, record]) => ({
+      sale,
+      season: record.season,
+    }))
+    .sort((a, b) => Number(b.sale) - Number(a.sale)); // Sort by sale descending
 
   return (
     <Box sx={{ mt: 4 }}>
@@ -95,7 +99,7 @@ const CatalogueCardRow = ({ data }) => {
       <CatalogueModalSummary
         open={openModal}
         onClose={() => setOpenModal(false)}
-        groupedData={selectedRecords}
+        groupedData={groupedByMark} // Pass grouped by mark
         sale={selectedSale}
         title={`Catalogue Summary for Sale ${selectedSale}`}
       />

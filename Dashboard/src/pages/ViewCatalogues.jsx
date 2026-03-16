@@ -16,12 +16,12 @@ import PayoutUpload from '../components/payout/PayoutUpload';
 
 const ViewCatalogue = () => {
   const dispatch = useDispatch();
-  const { coffeeRecords } = useSelector((state) => state.coffee);
+  const { coffeeRecords, loading } = useSelector((state) => state.coffee);
 
   const [season, setSeason] = useState('');
   const [saleNumber, setSaleNumber] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedGroupedRecords, setSelectedGroupedRecords] = useState([]);
+  const [selectedGroupedRecords, setSelectedGroupedRecords] = useState({});
   const [selectedSale, setSelectedSale] = useState('');
 
   // Fetch coffee records on mount
@@ -29,7 +29,7 @@ const ViewCatalogue = () => {
     dispatch(fetchCoffee());
   }, [dispatch]);
 
-  // Merge bulk outturn records
+  // Merge bulk outturn records while preserving nested objects
   const mergeBulkOutturn = (records) => {
     const bulked = [];
     const groupedMap = new Map();
@@ -51,15 +51,18 @@ const ViewCatalogue = () => {
 
     groupedMap.forEach((recordsGroup, key) => {
       const [bulkoutturn, grade] = key.split('_');
-      const totalWeight = recordsGroup.reduce((sum, r) => sum + parseFloat(r.weight || 0), 0);
+      const totalWeight = recordsGroup.reduce(
+        (sum, r) => sum + parseFloat(r.weight || 0),
+        0
+      );
       const bags = Math.floor(totalWeight / 50);
       const pockets = Math.round(totalWeight % 50);
 
-      const base = recordsGroup[0];
+      const base = recordsGroup[0]; // preserve nested objects
       mergedRecords.push({
-        ...base,
+        ...base, // keeps farmer, mill, warehouse, catalogue, etc.
         outturn: bulkoutturn,
-        mark: `${grade}/Bulk`,
+        mark: base.farmer?.mark || grade, // use farmer.mark if available
         weight: totalWeight.toFixed(2),
         bags,
         pockets,
@@ -86,12 +89,24 @@ const ViewCatalogue = () => {
   }, [coffeeRecords, season, saleNumber]);
 
   // Merge bulk outturn after filtering
-  const filteredRecords = useMemo(() => mergeBulkOutturn(filteredRecordsRaw), [filteredRecordsRaw]);
+  const filteredRecords = useMemo(
+    () => mergeBulkOutturn(filteredRecordsRaw),
+    [filteredRecordsRaw]
+  );
 
-  // Open modal when a catalogue card is clicked
+  // Open modal grouped by mark
   const handleCardClick = (sale) => {
     const saleRecords = filteredRecords.filter((r) => r.sale === sale);
-    setSelectedGroupedRecords(saleRecords);
+
+    // Group by farmer.mark
+    const grouped = saleRecords.reduce((acc, record) => {
+      const mark = record.farmer?.mark || 'No Mark';
+      if (!acc[mark]) acc[mark] = [];
+      acc[mark].push(record);
+      return acc;
+    }, {});
+
+    setSelectedGroupedRecords(grouped);
     setSelectedSale(sale);
     setModalOpen(true);
   };
@@ -117,13 +132,20 @@ const ViewCatalogue = () => {
           }}
         >
           {/* Top row: title + upload */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" mb={3}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            flexWrap="wrap"
+            mb={3}
+          >
             <Box>
               <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
                 Catalogue Guide
               </Typography>
               <Typography variant="body2" sx={{ color: '#f0f0f0' }}>
-                View generated catalogue records, generate catalogue upload files and sale summaries.
+                View generated catalogue records, generate catalogue upload files
+                and sale summaries.
               </Typography>
             </Box>
             <PayoutUpload />
@@ -140,7 +162,9 @@ const ViewCatalogue = () => {
               sx={{ backgroundColor: 'white', borderRadius: 1, minWidth: 150 }}
             >
               {['2024/2025'].map((option) => (
-                <MenuItem key={option} value={option}>{option}</MenuItem>
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
               ))}
             </TextField>
 
