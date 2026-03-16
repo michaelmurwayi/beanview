@@ -3,17 +3,18 @@ import zipfile
 from io import BytesIO
 import logging
 import shutil
-
-from ..models import Coffee
-from ..serializers import CoffeeSerializer
-from django.http import FileResponse
-from django.conf import settings
 from datetime import datetime
-from openpyxl import load_workbook
-from openpyxl.cell.cell import MergedCell
+
+from django.conf import settings
+from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from openpyxl import load_workbook
+from openpyxl.cell.cell import MergedCell
+
+from ..models import Coffee
+from ..serializers import CoffeeSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,11 @@ def generate_sales_file(request):
 
         generated_files = []
 
-        coffees = Coffee.objects.filter(sale=sale_number).select_related("code")
+        # ✅ Fix here: select_related only on valid foreign keys
+        coffees = Coffee.objects.filter(sale=sale_number).select_related(
+            "farmer", "mill", "warehouse", "status"
+        )
+
         serializer = CoffeeSerializer(coffees, many=True)
         coffees_data = serializer.data
 
@@ -71,11 +76,8 @@ def generate_sales_file(request):
             wb = load_workbook(file_path, data_only=False, keep_vba=True)
             ws = wb.active
 
-            # Optional: add logo if needed
-            # self.add_company_logo(ws, LOGO_PATH)
-
-            ws["B1"].value = mark  # mark in B1
-            ws["B2"].value = sale_number  # sale number in B2
+            ws["B1"].value = mark
+            ws["B2"].value = sale_number
 
             for row_offset, record in enumerate(records, start=1):
                 row = START_ROW + row_offset
