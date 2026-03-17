@@ -5,6 +5,7 @@ from datetime import datetime
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.db import transaction, IntegrityError
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -18,6 +19,7 @@ from .services.sale_file import generate_sales_file
 from .services.summary_file import generate_summary_files
 from .services.upload_payout import upload_payout_file
 from .process_records.record_processing import process_uploaded_files
+from .process_records.record_processing import process_single_record
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +61,61 @@ class FarmersViewSet(viewsets.ModelViewSet):
                 {"error": "An unexpected error occurred", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    def partial_update(self, request, *args, **kwargs):
+        """
+        PATCH /api/farmers/<id>/
+        Allows updating farmer code safely even when related Coffee records exist.
+        """
+        farmer = self.get_object()
+        old_code = farmer.code
+        try:
+            new_code = request.data.get("code", old_code)
 
+            if new_code is not None:
+                new_code = str(new_code).strip()
+
+            # Check duplicate code manually
+            if new_code != old_code:
+                existing = Farmer.objects.filter(code=new_code).exclude(id=farmer.id).first()
+                if existing:
+                    return Response(
+                        {
+                            "error": "Validation failed",
+                            "details": {
+                                "code": [f"Farmer code '{new_code}' already exists."]
+                            }
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            serializer = self.get_serializer(farmer, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+
+            with transaction.atomic():
+                serializer.save()
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except ValidationError:
+            return Response(
+                {"error": "Validation failed", "details": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except IntegrityError as e:
+            logger.exception("Integrity error updating Farmer")
+            return Response(
+                {"error": "Database integrity error", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Exception as e:
+            logger.exception("Error updating Farmer")
+            return Response(
+                {"error": "An unexpected error occurred", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+   
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CoffeeViewSet(viewsets.ModelViewSet):

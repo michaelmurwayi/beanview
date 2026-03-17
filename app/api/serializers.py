@@ -1,6 +1,15 @@
 from rest_framework import serializers
 from .models import User, Role, Farmer, Buyer, Catalogue, Warehouse, Mill, CoffeeStatus, Coffee
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction, IntegrityError
+from django.shortcuts import get_object_or_404
 
+
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,22 +73,11 @@ class UserSerializer(serializers.ModelSerializer):
 class FarmerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Farmer
-        fields = [
-            "id",
-            "code",
-            "name",
-            "mark",
-            "address",
-            "phonenumber",
-            "email",
-            "county",
-            "town",
-            "bank",
-            "branch",
-            "account",
-            "currency",
-        ]
-
+        fields = '__all__'
+        extra_kwargs = {
+            'code': {'required': False},  # allow write
+        }
+   
 
 class BuyerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -130,8 +128,8 @@ class CoffeeStatusSerializer(serializers.ModelSerializer):
 
 
 class CoffeeSerializer(serializers.ModelSerializer):
-    # Read-only nested farmer object for API output
-    farmer = FarmerSerializer(read_only=True)
+    # Nested farmer output
+    farmer = serializers.SerializerMethodField(read_only=True)
 
     # Preferred write field
     farmer_id = serializers.PrimaryKeyRelatedField(
@@ -142,11 +140,11 @@ class CoffeeSerializer(serializers.ModelSerializer):
         allow_null=True
     )
 
-    # Backward compatibility for old payloads: {"code": "GR001"}
+    # Backward compatibility
     code = serializers.SlugRelatedField(
         slug_field="code",
         queryset=Farmer.objects.all(),
-        source="farmer",  # points to actual FK
+        source="farmer",
         write_only=True,
         required=False,
         allow_null=True
@@ -205,37 +203,18 @@ class CoffeeSerializer(serializers.ModelSerializer):
             "warehouse": {"read_only": True},
             "catalogue": {"read_only": True},
             "created_by": {"read_only": True},
-
-            "lot": {"required": False, "allow_blank": True},
-            "outturn": {"required": False, "allow_blank": True},
-            "parchment_outturn": {"required": False, "allow_blank": True},
-            "clean_outturn": {"required": False, "allow_blank": True},
-            "type": {"required": False, "allow_blank": True, "allow_null": True},
-            "grade": {"required": False, "allow_blank": True},
-            "sale": {"required": False, "allow_blank": True, "allow_null": True},
-            "season": {"required": False, "allow_blank": True},
-            "certificate": {"required": False, "allow_blank": True, "allow_null": True},
-            "catalogue_type": {"required": False, "allow_blank": True, "allow_null": True},
-            "buyer": {"required": False, "allow_blank": True, "allow_null": True},
-            "remarks": {"required": False, "allow_blank": True, "allow_null": True},
-            "file": {"required": False, "allow_blank": True},
-
-            "bags": {"required": False},
-            "pockets": {"required": False},
-            "weight": {"required": False},
-            "milling_charges": {"required": False},
-            "warehouse_charges": {"required": False},
-            "brokerage_charges": {"required": False},
-            "export_charges": {"required": False},
-            "transport_charges": {"required": False},
-            "price": {"required": False},
-            "net_value": {"required": False},
-            "gross_value": {"required": False},
-            "reserve": {"required": False},
         }
 
-    def validate(self, attrs):
-        return attrs
+    def get_farmer(self, obj):
+        if obj.farmer:
+            return {
+                "id": obj.farmer.id,
+                "name": obj.farmer.name,
+                "mark": obj.farmer.mark,
+                "county": obj.farmer.county,
+                "code": obj.farmer.code,
+            }
+        return None
 
     def create(self, validated_data):
         return Coffee.objects.create(**validated_data)
@@ -245,12 +224,3 @@ class CoffeeSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-
-    def get_farmer(self, obj):
-        if obj.farmer:
-            return {
-                "name": obj.farmer.name,
-                "mark": obj.farmer.mark,
-                "county": obj.farmer.county,
-            }
-        return None

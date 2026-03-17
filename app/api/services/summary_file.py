@@ -48,6 +48,7 @@ def generate_summary_files(request):
         generated_files = []
 
         for summary in summaries:
+            import ipdb; ipdb.set_trace()
             grower_code = summary.get('growerCode')
             if not grower_code:
                 logger.warning("Skipping summary: missing growerCode")

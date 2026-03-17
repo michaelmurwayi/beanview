@@ -299,11 +299,7 @@ def process_records(view, records):
             )
 
             
-            record["SALE"] = safe_int(
-
-                record.get("SALE NUMBER")
-
-            )
+            record["sale"] = "" if pd.isna(record.get("SALE NUMBER")) or str(record.get("SALE NUMBER")).strip() == "" else str(int(float(record.get("SALE NUMBER"))))
 
 
             record["SEASON"] = record.get("SEASON", "")

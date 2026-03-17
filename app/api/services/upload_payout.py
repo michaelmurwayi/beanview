@@ -88,6 +88,7 @@ def upload_payout_file(request):
 
             if not (code and outturn and grade):
                 unmatched_rows.append({"row": idx + 2, "reason": "Missing key fields"})
+                print(unmatched_rows)
                 continue
 
             try:
