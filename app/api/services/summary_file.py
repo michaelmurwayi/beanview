@@ -5,15 +5,16 @@ import logging
 import traceback
 import re
 from datetime import datetime
+
+import pandas as pd
 from django.conf import settings
 from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from openpyxl import load_workbook
-from openpyxl.cell.cell import MergedCell
 
 from ..models import Coffee
+from .file_to_pdf import dataframe_to_pdf_buffer
 
 logger = logging.getLogger(__name__)
 
@@ -22,40 +23,67 @@ def clean_mark(mark: str) -> str:
     """Remove spaces and special characters from mark."""
     if not mark:
         return "UNKNOWN"
-    return re.sub(r'[^A-Za-z0-9]', '', mark.strip())
+    return re.sub(r'[^A-Za-z0-9]', '', str(mark).strip())
+
+
+def build_coffee_dataframe(coffees):
+    """
+    Build a DataFrame from coffee queryset for PDF export.
+    """
+    rows = []
+
+    for coffee in coffees:
+        rows.append({
+            "Outturn": coffee.outturn,
+            "Bulk Outturn": getattr(coffee, 'bulkoutturn', ''),
+            "Mark": coffee.farmer.mark if coffee.farmer else '',
+            "Type": getattr(coffee, 'type', ''),
+            "Grade": coffee.grade,
+            "Bags": coffee.bags,
+            "Pockets": coffee.pockets,
+            "Weight": coffee.weight,
+            "Sale": coffee.sale,
+            "Season": getattr(coffee, 'season', ''),
+            "Certificate": getattr(coffee, 'certificate', ''),
+            "Mill": coffee.mill.name if coffee.mill else '',
+            "Warehouse": coffee.warehouse.name if coffee.warehouse else '',
+            "Price": coffee.price,
+            "Buyer": coffee.buyer,
+            "Status": coffee.status.name if coffee.status else '',
+        })
+
+    return pd.DataFrame(rows)
 
 
 def generate_summary_files(request):
     """
-    Generates Excel summary files for each growerCode using provided Coffee records.
-    Returns a ZIP file with all generated summaries.
+    Generates PDF summary files for each growerCode using Coffee records.
+    - If one growerCode: returns single PDF directly
+    - If multiple growerCodes: returns ZIP containing PDFs only
     """
-    TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, 'templates', 'stock_summary_template.xlsx')
-    START_ROW = 32
-
     try:
+        logger.warning(">>> NEW PDF generate_summary_files CALLED <<<")
+        print(">>> NEW PDF generate_summary_files CALLED <<<")
+
         summaries = request.data.get('summaries', [])
 
         if not summaries:
             raise ValidationError("'summaries' is required and must not be empty.")
 
-        if not os.path.exists(TEMPLATE_PATH):
-            raise ValidationError(f"Template not found at {TEMPLATE_PATH}")
-
         base_dir = os.path.join(settings.MEDIA_ROOT, 'summaries')
         os.makedirs(base_dir, exist_ok=True)
 
-        generated_files = []
+        generated_pdf_files = []
 
         for summary in summaries:
-            import ipdb; ipdb.set_trace()
             grower_code = summary.get('growerCode')
             if not grower_code:
                 logger.warning("Skipping summary: missing growerCode")
                 continue
 
-            # Fetch Coffee records for this grower code
-            coffees = Coffee.objects.select_related('farmer', 'mill', 'warehouse', 'status').filter(
+            coffees = Coffee.objects.select_related(
+                'farmer', 'mill', 'warehouse', 'status'
+            ).filter(
                 farmer__code=grower_code
             )
 
@@ -63,70 +91,60 @@ def generate_summary_files(request):
                 logger.warning(f"No coffee records found for grower code: {grower_code}")
                 continue
 
-            mark = clean_mark(coffees.first().farmer.mark)
+            first_coffee = coffees.first()
+            mark = clean_mark(first_coffee.farmer.mark if first_coffee and first_coffee.farmer else grower_code)
+
             mark_dir = os.path.join(base_dir, mark)
             os.makedirs(mark_dir, exist_ok=True)
 
-            filename = f"{mark}_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-            file_path = os.path.join(mark_dir, filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            pdf_filename = f"{mark}_summary_{timestamp}.pdf"
+            pdf_file_path = os.path.join(mark_dir, pdf_filename)
 
-            # Load template
-            wb = load_workbook(TEMPLATE_PATH)
-            ws = wb.active
+            pdf_df = build_coffee_dataframe(coffees)
+            pdf_title = f"Stock Summary Report - {mark} ({grower_code})"
 
-            # Write grower code and mark
-            ws['B3'] = grower_code
-            ws['B4'] = mark
+            pdf_buffer = dataframe_to_pdf_buffer(pdf_df, title=pdf_title)
 
-            # Write coffee records starting from START_ROW
-            for row_offset, coffee in enumerate(coffees, start=1):
-                row = START_ROW + row_offset
-                values = [
-                    coffee.outturn,
-                    getattr(coffee, 'bulkoutturn', ''),  # optional field
-                    coffee.farmer.mark if coffee.farmer else '',
-                    coffee.type,
-                    coffee.grade,
-                    coffee.bags,
-                    coffee.pockets,
-                    coffee.weight,
-                    coffee.sale,
-                    coffee.season,
-                    coffee.certificate,
-                    coffee.mill.name if coffee.mill else '',
-                    coffee.warehouse.name if coffee.warehouse else '',
-                    coffee.price,
-                    coffee.buyer,
-                    coffee.status.name if coffee.status else '',
-                ]
+            with open(pdf_file_path, "wb") as pdf_file:
+                pdf_file.write(pdf_buffer.getvalue())
 
-                for col_index, value in enumerate(values, start=1):
-                    cell = ws.cell(row=row, column=col_index)
-                    if isinstance(cell, MergedCell):
-                        continue
-                    cell.value = value
+            generated_pdf_files.append(pdf_file_path)
+            logger.info(f"Generated PDF summary file: {pdf_file_path}")
 
-            # Save individual file
-            wb.save(file_path)
-            generated_files.append(file_path)
-            logger.info(f"Generated summary file: {file_path}")
+        if not generated_pdf_files:
+            raise ValidationError("No PDF summary files were generated. Check input data.")
 
-        if not generated_files:
-            raise ValidationError("No summary files were generated. Check input data and template path.")
+        # Return single PDF directly
+        if len(generated_pdf_files) == 1:
+            pdf_path = generated_pdf_files[0]
+            response = FileResponse(
+                open(pdf_path, 'rb'),
+                as_attachment=True,
+                filename=os.path.basename(pdf_path),
+                content_type='application/pdf'
+            )
+            response["Content-Disposition"] = f'attachment; filename="{os.path.basename(pdf_path)}"'
+            return response
 
-        # Create ZIP in memory
+        # Return ZIP of PDFs only
         zip_buffer = BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-            for file_path in generated_files:
-                zip_file.write(file_path, arcname=os.path.basename(file_path))
+        zip_filename = f"stock_summaries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for pdf_path in generated_pdf_files:
+                zip_file.write(pdf_path, arcname=os.path.basename(pdf_path))
+
         zip_buffer.seek(0)
 
-        return FileResponse(
+        response = FileResponse(
             zip_buffer,
             as_attachment=True,
-            filename=f"stock_summaries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+            filename=zip_filename,
             content_type='application/zip'
         )
+        response["Content-Disposition"] = f'attachment; filename="{zip_filename}"'
+        return response
 
     except ValidationError as e:
         logger.warning(traceback.format_exc())

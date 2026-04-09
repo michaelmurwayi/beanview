@@ -1,6 +1,8 @@
 import logging
 import os
 from datetime import datetime
+from copy import deepcopy
+import math
 
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -61,18 +63,50 @@ class FarmersViewSet(viewsets.ModelViewSet):
                 {"error": "An unexpected error occurred", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    def clean_nan_value(self, value):
+        if value is None:
+            return None
+
+        if isinstance(value, float) and math.isnan(value):
+            return None
+
+        if isinstance(value, str):
+            cleaned = value.strip()
+            if cleaned == "" or cleaned.lower() in ["nan", "none", "null"]:
+                return None
+            return cleaned
+
+        return value
+
+
     def partial_update(self, request, *args, **kwargs):
         """
         PATCH /api/farmers/<id>/
-        Allows updating farmer code safely even when related Coffee records exist.
+        Allows updating farmer safely even when related Coffee records exist.
+        Cleans NaN values from Excel/pandas imports.
         """
         farmer = self.get_object()
         old_code = farmer.code
-        try:
-            new_code = request.data.get("code", old_code)
 
+        try:
+            data = request.data.copy()
+
+            # Clean optional fields that may come as NaN
+            optional_fields = [
+                "mark", "address", "phonenumber", "email",
+                "county", "town", "bank", "branch",
+                "account", "currency"
+            ]
+
+            for field in optional_fields:
+                if field in data:
+                    data[field] = self.clean_nan_value(data.get(field))
+
+            # Clean and validate code
+            new_code = data.get("code", old_code)
             if new_code is not None:
                 new_code = str(new_code).strip()
+                data["code"] = new_code
 
             # Check duplicate code manually
             if new_code != old_code:
@@ -88,7 +122,7 @@ class FarmersViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-            serializer = self.get_serializer(farmer, data=request.data, partial=True)
+            serializer = self.get_serializer(farmer, data=data, partial=True)
             serializer.is_valid(raise_exception=True)
 
             with transaction.atomic():
@@ -115,7 +149,7 @@ class FarmersViewSet(viewsets.ModelViewSet):
                 {"error": "An unexpected error occurred", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-   
+    
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CoffeeViewSet(viewsets.ModelViewSet):

@@ -265,7 +265,7 @@ def clean_grower_code(mark):
 
     if not mark:
         return "UNKNOWN"
-
+        print(f"Original MARK: {mark}")
     return re.sub(r'[^A-Za-z0-9]', '', str(mark))
 
 
@@ -288,10 +288,11 @@ def process_records(view, records):
 
             record = clean_nan_values(record)
 
-
+            
+            record["type"] = record.get("Coffee Type", "")
             record['BULKOUTTURN'] = ""
 
-
+            
             record["CODE"] = clean_grower_code(
 
                 record.get("CODE")

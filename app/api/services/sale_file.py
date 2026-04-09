@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def generate_sales_file(request):
     TEMPLATE_PATH = os.path.join(settings.MEDIA_ROOT, "templates", "sale_summary_template.xlsx")
-    START_ROW = 25
+    START_ROW = 20
 
     try:
         sale_data = request.data.get("saleNumber")
@@ -76,10 +76,12 @@ def generate_sales_file(request):
             wb = load_workbook(file_path, data_only=False, keep_vba=True)
             ws = wb.active
 
-            ws["B1"].value = mark
-            ws["B2"].value = sale_number
+            ws["B1"].value = records[0]["farmer"]["code"]
+            ws["B2"].value = mark
+            ws["B3"].value = sale_number
 
             for row_offset, record in enumerate(records, start=1):
+                
                 row = START_ROW + row_offset
                 values = [
                     record.get("outturn"),
@@ -96,7 +98,9 @@ def generate_sales_file(request):
                     record.get("mill"),
                     record.get("export_charges"),
                     record.get("transport_charges"),
+                    record.get("broker_transport"),
                     record.get("net_value"),
+                    record.get("buyer")
                 ]
                 for col_index, value in enumerate(values, start=1):
                     cell = ws.cell(row=row, column=col_index)

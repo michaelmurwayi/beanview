@@ -14,13 +14,7 @@ SECRET_KEY = 'django-insecure-g#j^ols89tug61d&$5n*f-)#skz91ic+3#l_#x&3%%!^k2b+ee
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "localhost",
-    "http://localhost:5173/",
-    "127.0.0.1",
-    "192.168.1.244",
-    "f90c6cbbfc26.ngrok-free.app",
-    "dev-48vrii7xsykextuk.us.auth0.com/api/v2/",  # ✅ your public backend URL
-    "*",  # for development (you can remove in production)
+    "*"  # for development (you can remove in production)
 ]
 
 # ------------------------------------------------------------
