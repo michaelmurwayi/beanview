@@ -17,7 +17,8 @@ const CoffeeLocationBreakdownTable = ({
   const breakdown = useMemo(
     () =>
       filteredRecords.reduce((acc, record) => {
-        const location = record?.farmer?.County || "Unknown";
+        const location = record?.farmer?.county || "Unknown";
+        console.log(record.farmer);
         if (!acc[location]) {
           acc[location] = { bags: 0, weight: 0 };
         }

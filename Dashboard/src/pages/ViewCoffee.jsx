@@ -75,7 +75,7 @@ const ViewCoffee = () => {
   // --- Summary Groups ---
   const summaryGroups = useMemo(() => {
     return filteredData.reduce((acc, rec) => {
-      const growerCode = rec.code || "Unmarked";
+      const growerCode = rec.farmer?.code || "Unmarked";
       acc[growerCode] = acc[growerCode] || [];
       acc[growerCode].push(rec);
       return acc;

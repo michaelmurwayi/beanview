@@ -43,6 +43,7 @@ const StockSummaryModal = ({ open, onClose, groupedData = {}, loading = false })
 
   // Export handler
   const handleExport = () => {
+    console.log("Preparing data for export...", groupedData);
     const summaries = Object.entries(groupedData).map(([growerCode, records]) => ({
       growerCode,
       records,
