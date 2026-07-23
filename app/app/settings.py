@@ -72,7 +72,7 @@ CORS_ALLOW_HEADERS = [
 # AUTH0 CONFIGURATION
 # ------------------------------------------------------------
 AUTH0_DOMAIN = "dev-48vrii7xsykextuk.us.auth0.com"
-AUTH0_API_IDENTIFIER = "https://f90c6cbbfc26.ngrok-free.app/api"  # ✅ must match Auth0 API Identifier
+AUTH0_API_IDENTIFIER = "https://4fe9-41-139-221-205.ngrok-free.app/api"  # ✅ must match Auth0 API Identifier
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

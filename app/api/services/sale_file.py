@@ -85,7 +85,7 @@ def generate_sales_file(request):
                 row = START_ROW + row_offset
                 values = [
                     record.get("outturn"),
-                    record.get("season"),
+                    "2025/2026",
                     record.get("bags"),
                     record.get("pockets"),
                     record.get("weight"),
