@@ -1,18 +1,13 @@
 # app/api/services/upload_payout.py
 
 import logging
-import os
 import pandas as pd
-from io import BytesIO
-
 from django.core.files.storage import default_storage
-from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 
 from ..models import Coffee, Farmer
-from .file_to_pdf import dataframe_to_pdf_buffer
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +37,8 @@ def upload_payout_file(request):
     Updates all matching records if multiple exist.
     If no matching record exists, inserts a new Coffee record.
     Also updates the `sale` field from SALE_NUMBER if present.
-
-    Returns a PDF summary file after processing.
+    Logs rows that failed to insert.
     """
-    temp_path = None
-
     try:
         uploaded_file = request.FILES.get("file")
         if not uploaded_file:
@@ -72,6 +64,7 @@ def upload_payout_file(request):
             if col not in df.columns:
                 raise ValidationError(f"Missing required column: {col}")
 
+        # Map Excel columns to Coffee model fields
         FIELD_MAPPING = {
             "BAGS": "bags",
             "POCKETS": "pockets",
@@ -81,12 +74,13 @@ def upload_payout_file(request):
             "WAREHOUSE_CHARGES": "warehouse_charges",
             "BROKERAGE_CHARGES": "brokerage_charges",
             "MILLING_CHARGES": "milling_charges",
-            "TRANSPORT_+_HANDLING_CHARGES": "transport_charges",
-            "BROKERS_TRANSPORT": "broker_transport",
+            "HANDLING_CHARGES": "transport_charges",
+            "BROKERS_TRANSPORT": "broker_transport",   # ensure this field exists in Coffee model
             "SALE_OF_EXPORT_BAGS.": "export_charges",
             "NET_PAY": "net_value",
             "SALE_NUMBER": "sale",
             "BUYER": "buyer"
+            # Add any other mappings needed here
         }
 
         updated_count = 0
@@ -105,6 +99,7 @@ def upload_payout_file(request):
                 continue
 
             try:
+                # Find farmer by code
                 farmer = Farmer.objects.filter(code=code).first()
                 if not farmer:
                     unmatched_rows.append({
@@ -114,18 +109,23 @@ def upload_payout_file(request):
                     logger.warning(f"Row {idx + 2}: Farmer with code '{code}' not found")
                     continue
 
+                # Find all matching Coffee records using farmer__code
                 coffees = Coffee.objects.filter(
                     farmer__code=code,
                     outturn=outturn,
                     grade=grade
                 )
 
+                # -------------------------
+                # UPDATE existing records
+                # -------------------------
                 if coffees.exists():
                     for coffee in coffees:
                         for col_name, model_field in FIELD_MAPPING.items():
                             value = row.get(col_name)
 
                             if pd.notna(value):
+                                # Normalize sale field
                                 if model_field == "sale":
                                     if str(value).strip() == "":
                                         value = ""
@@ -142,6 +142,10 @@ def upload_payout_file(request):
                         logger.info(
                             f"Updated Coffee record: FARMER_CODE={code}, OUTTURN={outturn}, GRADE={grade}, ID={coffee.id}, SALE={coffee.sale}"
                         )
+
+                # -------------------------
+                # INSERT new record if missing
+                # -------------------------
                 else:
                     try:
                         new_record_data = {
@@ -154,6 +158,7 @@ def upload_payout_file(request):
                             value = row.get(col_name)
 
                             if pd.notna(value):
+                                # Normalize sale field
                                 if model_field == "sale":
                                     if str(value).strip() == "":
                                         value = ""
@@ -165,6 +170,7 @@ def upload_payout_file(request):
 
                                 new_record_data[model_field] = value
 
+                        # Create new Coffee record
                         new_coffee = Coffee.objects.create(**new_record_data)
                         inserted_count += 1
 
@@ -188,55 +194,17 @@ def upload_payout_file(request):
                 unmatched_rows.append({"row": idx + 2, "reason": f"Error: {str(e)}"})
                 logger.exception(f"Error updating row {idx + 2}")
 
-        # Build summary dataframe for PDF
-        summary_data = [
-            {"Metric": "Updated Records", "Value": updated_count},
-            {"Metric": "Inserted Records", "Value": inserted_count},
-            {"Metric": "Unmatched Rows", "Value": len(unmatched_rows)},
-            {"Metric": "Not Inserted Rows", "Value": len(not_inserted_rows)},
-        ]
+        # Delete temporary file
+        default_storage.delete(temp_path)
 
-        # Add unmatched rows section if any
-        detail_rows = []
-        for row in unmatched_rows:
-            detail_rows.append({
-                "Type": "Unmatched",
-                "Row": row.get("row"),
-                "Reason": row.get("reason"),
-            })
-
-        for row in not_inserted_rows:
-            detail_rows.append({
-                "Type": "Insert Failed",
-                "Row": row.get("row"),
-                "Reason": row.get("reason"),
-            })
-
-        summary_df = pd.DataFrame(summary_data)
-        detail_df = pd.DataFrame(detail_rows) if detail_rows else pd.DataFrame([{
-            "Type": "Info",
-            "Row": "",
-            "Reason": "No unmatched or failed rows."
-        }])
-
-        # Combine into one report dataframe
-        spacer_df = pd.DataFrame([{"Metric": "", "Value": ""}])
-        detail_header_df = pd.DataFrame([{"Metric": "Details", "Value": ""}])
-
-        combined_df = pd.concat([
-            summary_df,
-            spacer_df,
-            detail_header_df,
-            detail_df.rename(columns={"Type": "Metric", "Row": "Value", "Reason": "Extra"})
-        ], ignore_index=True)
-
-        pdf_buffer = dataframe_to_pdf_buffer(combined_df, title="Payout Upload Summary Report")
-
-        return FileResponse(
-            pdf_buffer,
-            as_attachment=True,
-            filename="payout_upload_summary.pdf",
-            content_type="application/pdf"
+        return Response(
+            {
+                "updated_records": updated_count,
+                "inserted_records": inserted_count,
+                "unmatched_rows": unmatched_rows,
+                "not_inserted_rows": not_inserted_rows
+            },
+            status=status.HTTP_200_OK
         )
 
     except ValidationError as ve:
@@ -246,10 +214,3 @@ def upload_payout_file(request):
     except Exception as e:
         logger.exception("Internal error during payout upload")
         return Response({"error": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    finally:
-        if temp_path:
-            try:
-                default_storage.delete(temp_path)
-            except Exception:
-                logger.warning("Failed to delete temp file")
