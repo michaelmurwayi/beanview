@@ -5,7 +5,7 @@ import apiClient from "../../../../apiClient";
 import { generateAuctionFileFromData } from "../../../utils/generateAuctionFile";
 import { downloadBlobFile } from "../../../utils/downloadBlobFile";
 
-// 📘 Generate Catalogue File (backend)
+// 📘 Generate Catalogue File (backend - PDF)
 export const generateCatalogueFile = createAsyncThunk(
   "catalogue/generateCatalogueFile",
   async (catalogueData, { rejectWithValue }) => {
@@ -17,20 +17,23 @@ export const generateCatalogueFile = createAsyncThunk(
       );
 
       const blob = new Blob([response.data], {
-        type: response.headers["content-type"],
+        type: response.headers["content-type"] || "application/pdf",
       });
+
       const contentDisposition = response.headers["content-disposition"];
       const filename =
-        contentDisposition?.split("filename=")[1]?.replace(/["']/g, "").trim() ||
-        "catalogue.xlsx";
+        contentDisposition
+          ?.split("filename=")[1]
+          ?.replace(/["']/g, "")
+          .trim() || "catalogue.pdf";
 
       downloadBlobFile(blob, filename);
-      toast.success("Catalogue file downloaded successfully");
+      toast.success("Catalogue PDF downloaded successfully");
 
       return { success: true, filename };
     } catch (error) {
       const message = error.response?.data || error.message;
-      toast.error("Catalogue file generation failed");
+      toast.error("Catalogue PDF generation failed");
       return rejectWithValue(message);
     }
   }
